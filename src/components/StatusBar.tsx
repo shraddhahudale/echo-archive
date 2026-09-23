@@ -1,8 +1,18 @@
 import { BatteryFull, Signal, Wifi } from "lucide-react";
 
-export function StatusBar() {
+type StatusBarProps = {
+  /** `dark` = black icons (light screens). `light` = white icons (dark screens). */
+  tone?: "dark" | "light";
+};
+
+export function StatusBar({ tone = "dark" }: StatusBarProps) {
+  const color = tone === "light" ? "#FFFFFF" : "var(--text-900)";
+
   return (
-    <header className="relative z-30 flex h-[47px] shrink-0 items-center justify-between px-5 text-[var(--text-900)]">
+    <header
+      className="relative z-30 flex h-[47px] shrink-0 items-center justify-between px-5"
+      style={{ color }}
+    >
       <time className="text-[15px] leading-5 font-semibold" dateTime="09:41">
         9:41
       </time>

@@ -3,7 +3,7 @@ import { PhoneFrame } from "../components/PhoneFrame";
 import { StatusBar } from "../components/StatusBar";
 import { TabBar, type TabId } from "../components/TabBar";
 import { Archive } from "../screens/Archive";
-import { Breath } from "../screens/Breath";
+import { Breath } from "../screens/Breath/index";
 import { Home } from "../screens/Home";
 import { Timeline } from "../screens/Timeline";
 import { Wrapped } from "../screens/Wrapped";
@@ -16,6 +16,7 @@ export function App() {
   const [tab, setTab] = useState<TabId>("home");
   const connectStone = useArchiveStore((state) => state.connectStone);
   const wrappedOpen = useArchiveStore((state) => state.wrappedOpen);
+  const isBreath = tab === "breath";
 
   useEffect(() => {
     if (useArchiveStore.getState().stoneConnected) return;
@@ -28,16 +29,20 @@ export function App() {
   return (
     <PhoneFrame>
       <div className="relative flex h-full flex-col">
-        <StatusBar />
-        <main className="min-h-0 flex-1 overflow-hidden" data-screen={tab}>
-          {tab === "home" && <Home />}
-          {tab === "timeline" && <Timeline />}
-          {tab === "archive" && <Archive />}
-          {tab === "breath" && <Breath />}
-        </main>
-        <div className="absolute inset-x-0 bottom-0 z-10">
-          <TabBar active={tab} onChange={setTab} />
-        </div>
+        <StatusBar tone={isBreath ? "light" : "dark"} />
+        {!isBreath && (
+          <>
+            <main className="min-h-0 flex-1 overflow-hidden" data-screen={tab}>
+              {tab === "home" && <Home />}
+              {tab === "timeline" && <Timeline />}
+              {tab === "archive" && <Archive />}
+            </main>
+            <div className="absolute inset-x-0 bottom-0 z-10">
+              <TabBar active={tab} onChange={setTab} />
+            </div>
+          </>
+        )}
+        {isBreath && <Breath onBackHome={() => setTab("home")} />}
         <SheetHost />
         {wrappedOpen ? <Wrapped /> : null}
       </div>

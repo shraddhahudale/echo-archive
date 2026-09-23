@@ -1,0 +1,141 @@
+import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { instructionFor, type BreathPhase, type BreathingPattern } from "../../data/breathPatterns";
+import { useBreathingCycle } from "../../hooks/useBreathingCycle";
+import { BreathBlob, BreathVignette } from "./BreathBlob";
+import { DarkPill } from "./DarkPill";
+
+export type SessionResult = {
+  cycles: number;
+  elapsed: number;
+  endedEarly: boolean;
+};
+
+type SessionProps = {
+  pattern: BreathingPattern;
+  onComplete: (result: SessionResult) => void;
+  onEnd: (result: SessionResult) => void;
+};
+
+export function Session({ pattern, onComplete, onEnd }: SessionProps) {
+  const reduce = useReducedMotion();
+  const [active, setActive] = useState(true);
+  const finished = useRef(false);
+  const cycle = useBreathingCycle(pattern, active, (result) => {
+    if (finished.current) return;
+    finished.current = true;
+    setActive(false);
+    onComplete({ ...result, endedEarly: false });
+  });
+
+  const cycleRef = useRef(cycle);
+  cycleRef.current = cycle;
+
+  const displayPhase: BreathPhase | "paused" = cycle.paused ? "paused" : cycle.phase;
+  const word = cycle.paused ? "paused" : cycle.phase;
+  const instruction = cycle.paused ? "Tap to resume" : instructionFor(pattern, cycle.phase);
+  const progressFill = cycle.phase === "hold" ? 1 - cycle.phaseProgress : cycle.phaseProgress;
+  const countLabel = cycle.countLeft === 1 ? "1 COUNT" : `${cycle.countLeft} COUNTS`;
+  const wordY = reduce || cycle.paused ? 0 : cycle.phase === "inhale" ? -4 : 0;
+
+  function endEarly() {
+    if (finished.current) return;
+    finished.current = true;
+    const snap = cycleRef.current;
+    snap.end();
+    setActive(false);
+    const completed = Math.max(0, snap.cycle - 1);
+    onEnd({ cycles: completed, elapsed: snap.elapsed, endedEarly: true });
+  }
+
+  const endEarlyRef = useRef(endEarly);
+  endEarlyRef.current = endEarly;
+
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      if (event.key === " " || event.code === "Space") {
+        event.preventDefault();
+        const snap = cycleRef.current;
+        if (snap.paused) snap.resume();
+        else snap.pause();
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        endEarlyRef.current();
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  function togglePause() {
+    if (cycle.paused) cycle.resume();
+    else cycle.pause();
+  }
+
+  return (
+    <div className="relative flex h-full min-h-0 flex-1 flex-col px-5">
+      <button
+        type="button"
+        aria-label={cycle.paused ? "Resume breathing" : "Pause breathing"}
+        onClick={togglePause}
+        className="absolute inset-0 z-[5] cursor-pointer border-0 bg-transparent"
+      />
+      <BreathBlob
+        breath={cycle.breath}
+        phase={displayPhase === "paused" ? "paused" : cycle.phase}
+        dimmed={cycle.paused}
+      />
+      <BreathVignette breath={cycle.breath} />
+
+      <div className="pointer-events-none relative z-10 pt-2">
+        <p className="text-center text-[10px] leading-3 font-medium tracking-[0.2em] text-white/50 uppercase">
+          Relief mode · {pattern.eyebrowName}
+        </p>
+      </div>
+
+      <div className="pointer-events-none relative z-10 flex flex-1 flex-col items-center justify-center">
+        <div className="flex flex-col items-center" style={{ transform: `translateY(${wordY}px)` }}>
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={word}
+              initial={{ opacity: 0, y: reduce ? 0 : 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: reduce ? 0 : -4 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="font-serif text-[44px] leading-[48px] font-normal text-white italic"
+              aria-live="polite"
+            >
+              {word}
+            </motion.p>
+          </AnimatePresence>
+          <p className="mt-3 text-center text-[14px] leading-5 text-white/55">{instruction}</p>
+        </div>
+
+        <div className="mt-10 flex flex-col items-center gap-3">
+          <div
+            className="h-0.5 w-[120px] overflow-hidden rounded-full bg-white/20"
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round(progressFill * 100)}
+            aria-label="Phase progress"
+          >
+            <div
+              className="h-full rounded-full bg-white/90"
+              style={{ width: `${Math.min(100, Math.max(0, progressFill * 100))}%` }}
+            />
+          </div>
+          <p className="text-[10px] leading-3 font-medium tracking-[0.2em] text-white/45 uppercase">
+            {cycle.paused ? "PAUSED" : countLabel}
+          </p>
+        </div>
+      </div>
+
+      <div className="relative z-10 flex justify-center pb-12">
+        <DarkPill onClick={endEarly} aria-label="End session">
+          End Session
+        </DarkPill>
+      </div>
+    </div>
+  );
+}
