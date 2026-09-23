@@ -1,0 +1,104 @@
+@import "tailwindcss";
+@import "./tokens.css";
+
+@theme inline {
+  --font-sans: var(--font-sans);
+  --font-serif: var(--font-serif);
+
+  --color-bg: var(--bg);
+  --color-bg-tint: var(--bg-tint);
+  --color-purple-500: var(--purple-500);
+  --color-purple-300: var(--purple-300);
+  --color-purple-100: var(--purple-100);
+  --color-purple-50: var(--purple-50);
+  --color-pink-500: var(--pink-500);
+  --color-pink-200: var(--pink-200);
+  --color-pink-50: var(--pink-50);
+  --color-green-100: var(--green-100);
+  --color-green-600: var(--green-600);
+  --color-text-900: var(--text-900);
+  --color-text-700: var(--text-700);
+  --color-text-400: var(--text-400);
+  --color-line: var(--line);
+  --color-chip-inactive: var(--chip-inactive);
+  --color-dark-bg: var(--dark-bg);
+  --color-dark-glow: var(--dark-glow);
+  --color-rec-red: var(--rec-red);
+  --color-ok-green: var(--ok-green);
+  --color-amber-500: var(--amber-500);
+  --color-amber-100: var(--amber-100);
+  --color-amber-50: var(--amber-50);
+  --color-frame: var(--frame);
+
+  --radius-card: var(--radius-card);
+  --radius-row: var(--radius-row);
+  --radius-album: var(--radius-album);
+  --radius-pill: var(--radius-pill);
+  --radius-sheet: var(--radius-sheet);
+  --radius-phone: var(--radius-phone);
+
+  --shadow-card: var(--shadow-card);
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--text-900);
+  background: var(--frame);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--purple-500);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.frame-page {
+  box-sizing: border-box;
+  display: flex;
+  min-height: 100dvh;
+  align-items: safe center;
+  justify-content: center;
+  padding: 32px 16px;
+  background: var(--frame);
+}
+
+.phone-frame {
+  width: 390px;
+  height: 844px;
+  flex: none;
+  overflow: hidden;
+  border-radius: var(--radius-phone);
+  background-color: var(--bg);
+  background-image: radial-gradient(90% 42% at 100% 0%, var(--bg-tint), transparent 70%);
+}
+
+@media (max-width: 480px) {
+  .frame-page {
+    padding: 0;
+    background: var(--bg);
+  }
+
+  .phone-frame {
+    width: 100%;
+    height: 100dvh;
+    border-radius: 0;
+  }
+}

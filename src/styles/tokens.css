@@ -1,0 +1,54 @@
+:root {
+  --bg: #ffffff;
+  --bg-tint: #fbf8ff;
+  --purple-500: #8f59e2;
+  --purple-300: #b28dec;
+  --purple-100: #f0e9fb;
+  --purple-50: #f4edfd;
+  --pink-500: #f472b6;
+  --pink-200: #fccee8;
+  --pink-50: #fbf1fa;
+  --green-100: #d9eeb3;
+  --green-600: #5e9a2c;
+  --text-900: #111111;
+  --text-700: #3a3a3c;
+  --text-400: #a1a5b0;
+  --line: #e6e6ea;
+  --chip-inactive: #e5e5e5;
+  --dark-bg: #1a1a1a;
+  --dark-glow: #7b579d;
+  --dark-pill: rgba(255, 255, 255, 0.18);
+  --rec-red: #e5484d;
+  --ok-green: #30a46c;
+  --amber-500: #f2a541;
+  --amber-100: #fdebd3;
+  --amber-50: #fff6ea;
+
+  --frame: #d9d9d9;
+  --feel-lavender: #c9b8ff;
+  --feel-pink: #f7a8d0;
+  --feel-peach: #ffd39a;
+
+  --wrap-anxious-from: #a385f7;
+  --wrap-anxious-to: #6d2bdb;
+  --wrap-3am-from: #5da4f4;
+  --wrap-3am-to: #157898;
+  --wrap-holocene-from: #f7c9e6;
+  --wrap-holocene-to: #c32969;
+  --wrap-times-from: #f6d2a8;
+  --wrap-times-to: #83431d;
+  --wrap-shift-from: #f06ab4;
+  --wrap-shift-to: #8b2bcb;
+
+  --font-sans: "Inter", -apple-system, system-ui, sans-serif;
+  --font-serif: "Source Serif 4", Georgia, serif;
+
+  --space-screen: 20px;
+  --radius-card: 20px;
+  --radius-row: 16px;
+  --radius-album: 12px;
+  --radius-pill: 999px;
+  --radius-sheet: 28px;
+  --radius-phone: 44px;
+  --shadow-card: 0 8px 24px rgba(143, 89, 226, 0.08);
+}
