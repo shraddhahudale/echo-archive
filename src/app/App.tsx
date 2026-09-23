@@ -5,8 +5,9 @@ import { TabBar, type TabId } from "../components/TabBar";
 import { Archive } from "../screens/Archive";
 import { Breath } from "../screens/Breath";
 import { Home } from "../screens/Home";
-import { SheetHost } from "../sheets/SheetHost";
 import { Timeline } from "../screens/Timeline";
+import { Wrapped } from "../screens/Wrapped";
+import { SheetHost } from "../sheets/SheetHost";
 import { useArchiveStore } from "../store/useArchiveStore";
 
 let stoneIntroStartedAt = 0;
@@ -14,6 +15,7 @@ let stoneIntroStartedAt = 0;
 export function App() {
   const [tab, setTab] = useState<TabId>("home");
   const connectStone = useArchiveStore((state) => state.connectStone);
+  const wrappedOpen = useArchiveStore((state) => state.wrappedOpen);
 
   useEffect(() => {
     if (useArchiveStore.getState().stoneConnected) return;
@@ -37,6 +39,7 @@ export function App() {
           <TabBar active={tab} onChange={setTab} />
         </div>
         <SheetHost />
+        {wrappedOpen ? <Wrapped /> : null}
       </div>
     </PhoneFrame>
   );

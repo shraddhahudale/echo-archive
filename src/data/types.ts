@@ -60,3 +60,15 @@ export type User = {
   trimester: number;
   stoneConnected: boolean;
 };
+
+export type TimelineEntry = {
+  id: string;
+  date: string;
+  time: string;
+  kind: "song" | "voice" | "echo";
+  title: string;
+  artist?: string;
+  art?: string;
+  songId?: string;
+  contributorId?: string;
+};
