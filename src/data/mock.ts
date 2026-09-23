@@ -9,6 +9,20 @@ export const user: User = {
 
 export const songs: Song[] = [
   {
+    id: "let-it-happen",
+    title: "Let It Happen",
+    artist: "Tame Impala",
+    art: "/img/let-it-happen.jpg",
+    gradient: "linear-gradient(145deg, var(--feel-lavender), var(--purple-500))",
+  },
+  {
+    id: "breathe-deeper",
+    title: "Breathe Deeper",
+    artist: "Tame Impala",
+    art: "/img/breathe-deeper.jpg",
+    gradient: "linear-gradient(145deg, var(--wrap-holocene-from), var(--wrap-holocene-to))",
+  },
+  {
     id: "chandaniya",
     title: "Chandaniya",
     artist: "Sajid Wajid",
@@ -94,7 +108,7 @@ export const sheetRecentlyPlayedIds = [
   "she-will-be-loved",
 ];
 
-export const playbackQueueIds = ["chandaniya", ...recentlyPlayedIds];
+export const playbackQueueIds = ["let-it-happen", ...recentlyPlayedIds];
 
 function notes(
   person: string,

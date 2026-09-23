@@ -79,9 +79,9 @@ function pushTimeline(entries: TimelineEntry[], next: TimelineEntry | TimelineEn
 }
 
 const heavyPlays = [
+  { id: "breathe-deeper", plays: 44 },
   { id: "holocene", plays: 41 },
   { id: "breathe", plays: 36 },
-  { id: "yellow", plays: 29 },
 ] as const;
 
 export const useArchiveStore = create<ArchiveState>((set, get) => ({
@@ -89,7 +89,7 @@ export const useArchiveStore = create<ArchiveState>((set, get) => ({
   songs: seedSongs,
   recentlyPlayedIds,
   playbackQueueIds,
-  currentTrackId: "chandaniya",
+  currentTrackId: "let-it-happen",
   playing: true,
   sheet: null,
   entries: [],
@@ -373,7 +373,7 @@ export function heavyRotations(songs: Song[]) {
 }
 
 export function wrappedStats(songs: Song[], contributors: Contributor[]) {
-  const topSong = songById(songs, "holocene") ?? songs[0];
+  const topSong = songById(songs, "breathe-deeper") ?? songs[0];
   const order = ["mom", "grandma", "seema", "jake"] as const;
   const people = order.map((id) => {
     const person = contributors.find((item) => item.id === id);
