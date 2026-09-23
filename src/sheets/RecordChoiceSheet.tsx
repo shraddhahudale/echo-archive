@@ -68,9 +68,6 @@ export function RecordChoiceSheet({ titleId, onVoice, onSong, onEcho }: RecordCh
         <SoftMark icon={Users} soft="var(--amber-100)" core="var(--amber-500)" size={56} />
         <span className="min-w-0 flex-1">
           <span className="block text-[15px] leading-5 font-semibold text-[var(--text-900)]">Add an echo</span>
-          <span className="mt-0.5 block text-[12px] leading-4 text-[var(--text-400)]">
-            Invite someone or add what they've shared
-          </span>
         </span>
         <ChevronRight size={20} strokeWidth={2} className="shrink-0 text-[var(--text-400)]" aria-hidden="true" />
       </motion.button>

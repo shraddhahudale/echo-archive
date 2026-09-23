@@ -26,6 +26,7 @@
   --color-rec-red: var(--rec-red);
   --color-ok-green: var(--ok-green);
   --color-amber-500: var(--amber-500);
+  --color-amber-600: var(--amber-600);
   --color-amber-100: var(--amber-100);
   --color-amber-50: var(--amber-50);
   --color-frame: var(--frame);
@@ -57,6 +58,30 @@ body {
 :focus-visible {
   outline: 2px solid var(--purple-500);
   outline-offset: 2px;
+}
+
+.song-note {
+  border: 1.5px solid transparent;
+}
+
+.song-note:focus-visible {
+  outline: none;
+  border-color: #d6408a;
+  box-shadow: 0 0 0 3px rgba(214, 64, 138, 0.15);
+}
+
+.echo-search {
+  border: 1.5px solid transparent;
+}
+
+.echo-search:focus-visible,
+.echo-search:focus-within {
+  outline: none;
+  border-color: #d98a1f;
+}
+
+.echo-search input:focus-visible {
+  outline: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

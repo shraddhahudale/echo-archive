@@ -18,7 +18,13 @@ export function SheetHost() {
   const openSheet = useArchiveStore((state) => state.openSheet);
   const closeSheet = useArchiveStore((state) => state.closeSheet);
   const last = useRef<SheetId | null>(null);
+  const generation = useRef(0);
+  const previousSheet = useRef<SheetId | null>(sheet);
   if (sheet) last.current = sheet;
+  if (sheet !== previousSheet.current) {
+    if (sheet === "song" || sheet === "echo") generation.current += 1;
+    previousSheet.current = sheet;
+  }
   const shown = sheet ?? last.current;
 
   return (
@@ -32,8 +38,8 @@ export function SheetHost() {
         />
       ) : null}
       {shown === "voice" ? <VoiceNoteSheet titleId={titleIds.voice} /> : null}
-      {shown === "song" ? <AddSongSheet titleId={titleIds.song} /> : null}
-      {shown === "echo" ? <EchoHubSheet titleId={titleIds.echo} /> : null}
+      {shown === "song" ? <AddSongSheet key={generation.current} titleId={titleIds.song} /> : null}
+      {shown === "echo" ? <EchoHubSheet key={generation.current} titleId={titleIds.echo} /> : null}
     </BottomSheet>
   );
 }

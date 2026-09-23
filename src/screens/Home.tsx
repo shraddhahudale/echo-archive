@@ -1,9 +1,10 @@
 import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
-import { Heart, Moon, Sun, type LucideIcon } from "lucide-react";
+import { Heart, Mic, Moon, Music, Sun, type LucideIcon } from "lucide-react";
 import { AlbumTile } from "../components/AlbumTile";
 import { MiniPlayer } from "../components/MiniPlayer";
 import { Orb } from "../components/Orb";
 import { tabBarHeight } from "../components/TabBar";
+import type { Entry } from "../data/types";
 import { useShallow } from "zustand/react/shallow";
 import { selectCurrentTrack, selectRecentlyPlayed, trimesterName, useArchiveStore } from "../store/useArchiveStore";
 
@@ -22,6 +23,8 @@ export function Home() {
   const skipTrack = useArchiveStore((state) => state.skipTrack);
   const selectTrack = useArchiveStore((state) => state.selectTrack);
   const openSheet = useArchiveStore((state) => state.openSheet);
+  const openSongDetails = useArchiveStore((state) => state.openSongDetails);
+  const entries = useArchiveStore((state) => state.entries);
   const playerRef = useRef<HTMLDivElement>(null);
   const [playerHeight, setPlayerHeight] = useState(0);
 
@@ -107,9 +110,36 @@ export function Home() {
           ))}
         </DragRow>
       </section>
+
+      <section className="mt-8" aria-labelledby="this-week">
+        <h2 id="this-week" className="text-[15px] leading-5 font-normal text-[var(--text-400)]">
+          This week
+        </h2>
+        {entries.filter((entry) => entry.week === user.week).length === 0 ? (
+          <p className="mt-3 text-[13px] leading-5 text-[var(--text-400)]">
+            Nothing saved this week yet. Tap the orb to start.
+          </p>
+        ) : (
+          <DragRow className="pb-4">
+            {entries
+              .filter((entry) => entry.week === user.week)
+              .map((entry) => (
+                <li key={entry.id} className="shrink-0 snap-start">
+                  <WeekCard entry={entry} />
+                </li>
+              ))}
+          </DragRow>
+        )}
+      </section>
     </section>
     <div ref={playerRef} className="absolute inset-x-5 z-10" style={{ bottom: tabBarHeight + 8 }}>
-      <MiniPlayer track={current} playing={playing} onTogglePlay={togglePlay} onSkip={skipTrack} />
+      <MiniPlayer
+        track={current}
+        playing={playing}
+        onTogglePlay={togglePlay}
+        onSkip={skipTrack}
+        onAdd={() => openSongDetails(current.id)}
+      />
     </div>
     </div>
   );
@@ -202,6 +232,58 @@ function DragRow({ className = "", children }: { className?: string; children: R
     >
       {children}
     </ul>
+  );
+}
+
+function formatToday(iso: string) {
+  const date = new Date(iso);
+  let hours = date.getHours();
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const suffix = hours >= 12 ? "pm" : "am";
+  hours = hours % 12 || 12;
+  const time = `${hours}:${minutes} ${suffix}`;
+  return date.toDateString() === new Date().toDateString() ? `Today, ${time}` : time;
+}
+
+function WeekCard({ entry }: { entry: Entry }) {
+  return (
+    <article className="flex w-[200px] items-center gap-3 rounded-[16px] border border-[var(--line)] bg-white p-3 shadow-[var(--shadow-card)]">
+      <WeekMark entry={entry} />
+      <div className="min-w-0">
+        <p className="truncate text-[15px] leading-5 font-semibold text-[var(--text-900)]">{entry.title}</p>
+        <p className="truncate text-[12px] leading-4 text-[var(--text-400)]">
+          {entry.kind === "voice" && entry.number
+            ? `#${String(entry.number).padStart(2, "0")} / W ${entry.week}`
+            : formatToday(entry.createdAt)}
+        </p>
+      </div>
+    </article>
+  );
+}
+
+function WeekMark({ entry }: { entry: Entry }) {
+  if (entry.kind === "song" && entry.art) {
+    return <img src={entry.art} alt="" className="size-11 shrink-0 rounded-[8px] object-cover" />;
+  }
+  if (entry.kind === "song") {
+    return (
+      <span className="grid size-11 shrink-0 place-items-center rounded-[8px] bg-[var(--pink-50)] text-[var(--pink-500)]">
+        <Music size={20} strokeWidth={2} aria-hidden="true" />
+      </span>
+    );
+  }
+  if (entry.kind === "echo") {
+    return (
+      <span className="relative grid size-11 shrink-0 place-items-center rounded-full bg-[var(--amber-100)] text-[13px] font-semibold text-[var(--amber-500)]">
+        {(entry.title[0] ?? "E").toUpperCase()}
+        <span className="absolute -right-0.5 -bottom-0.5 size-3 rounded-full border-2 border-white bg-[var(--amber-500)]" />
+      </span>
+    );
+  }
+  return (
+    <span className="grid size-11 shrink-0 place-items-center rounded-[8px] bg-[var(--purple-100)] text-[var(--purple-500)]">
+      <Mic size={20} strokeWidth={2} aria-hidden="true" />
+    </span>
   );
 }
 

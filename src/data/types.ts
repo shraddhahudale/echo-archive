@@ -6,6 +6,7 @@ export type Entry = {
   id: string;
   kind: Kind;
   title: string;
+  number?: number;
   artist?: string;
   art?: string;
   feelings: string[];
@@ -16,24 +17,31 @@ export type Entry = {
   week: number;
 };
 
-export type EchoItem = {
+export type Contact = {
   id: string;
-  kind: "voice" | "song";
+  name: string;
+  phone?: string;
+  email?: string;
+};
+
+export type ContributorNote = {
+  id: string;
   title: string;
-  artist?: string;
-  durationSec?: number;
-  addedToArchive: boolean;
+  durationSec: number;
+  week: number;
   seen: boolean;
+  inArchive: boolean;
 };
 
 export type Contributor = {
   id: string;
   name: string;
-  relationship: Relationship;
-  contact: string;
-  status: "pending" | "active";
+  relationship: string;
   avatar?: string;
-  echoes: EchoItem[];
+  status: "invited" | "active";
+  totalCount: number;
+  since?: number;
+  notes: ContributorNote[];
 };
 
 export type Song = {

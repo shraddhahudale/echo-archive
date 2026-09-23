@@ -14,9 +14,10 @@ type MiniPlayerProps = {
   playing: boolean;
   onTogglePlay: () => void;
   onSkip: () => void;
+  onAdd: () => void;
 };
 
-export function MiniPlayer({ track, playing, onTogglePlay, onSkip }: MiniPlayerProps) {
+export function MiniPlayer({ track, playing, onTogglePlay, onSkip, onAdd }: MiniPlayerProps) {
   const [failedId, setFailedId] = useState<string | null>(null);
   const artFailed = failedId === track.id;
 
@@ -62,6 +63,7 @@ export function MiniPlayer({ track, playing, onTogglePlay, onSkip }: MiniPlayerP
         <button
           type="button"
           aria-label="Add song"
+          onClick={onAdd}
           className="grid h-11 w-[22px] cursor-pointer place-items-center border-0 bg-transparent p-0 text-inherit"
         >
           <Plus size={22} strokeWidth={2} />

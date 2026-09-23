@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useDragControls, useReducedMotion, type PanInfo } from "framer-motion";
 import type { ReactNode } from "react";
 
@@ -83,10 +83,41 @@ export function BottomSheet({ open, onClose, labelledBy, children }: BottomSheet
             >
               <span className="h-1 w-9 rounded-full" style={{ background: "#D9D9D9" }} />
             </div>
-            {children}
+            {children ? <SheetBody reduce={reduce}>{children}</SheetBody> : null}
           </motion.div>
         </motion.div>
       ) : null}
     </AnimatePresence>
+  );
+}
+
+function SheetBody({ children, reduce }: { children: ReactNode; reduce: boolean | null }) {
+  const innerRef = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState<number | null>(null);
+  const [grow, setGrow] = useState(false);
+
+  useLayoutEffect(() => {
+    const node = innerRef.current;
+    if (!node) return;
+    const update = () => setHeight(node.offsetHeight);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(node);
+    const frame = requestAnimationFrame(() => setGrow(true));
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  return (
+    <motion.div
+      className="overflow-hidden"
+      initial={false}
+      animate={{ height: height ?? "auto" }}
+      transition={grow ? (reduce ? { duration: 0.15 } : openSpring) : { duration: 0 }}
+    >
+      <div ref={innerRef}>{children}</div>
+    </motion.div>
   );
 }

@@ -1,4 +1,4 @@
-import type { Contributor, Song, User } from "./types";
+import type { Contact, Contributor, ContributorNote, Song, User } from "./types";
 
 export const user: User = {
   name: "Sarah",
@@ -55,12 +55,14 @@ export const songs: Song[] = [
     id: "bohemian-rhapsody",
     title: "Bohemian Rhapsody",
     artist: "Queen",
+    art: "/img/bohemian-rhapsody.jpg",
     gradient: "linear-gradient(145deg, var(--purple-300), var(--purple-500))",
   },
   {
     id: "songs-about-jane",
     title: "Songs About Jane",
     artist: "Maroon 5",
+    art: "/img/songs-about-jane.jpg",
     gradient: "linear-gradient(145deg, var(--pink-50), var(--pink-500))",
   },
   {
@@ -85,64 +87,91 @@ export const recentlyPlayedIds = [
   "holocene",
 ];
 
+export const sheetRecentlyPlayedIds = [
+  "songs-about-jane",
+  "hotel-california",
+  "bohemian-rhapsody",
+  "she-will-be-loved",
+];
+
 export const playbackQueueIds = ["chandaniya", ...recentlyPlayedIds];
+
+function notes(person: string, items: Omit<ContributorNote, "id" | "seen" | "inArchive">[], unseen = 0): ContributorNote[] {
+  return items.map((item, index) => ({
+    ...item,
+    id: `${person}-${index + 1}`,
+    seen: index >= unseen,
+    inArchive: false,
+  }));
+}
 
 export const contributors: Contributor[] = [
   {
-    id: "mum",
-    name: "Mum",
-    relationship: "Mum",
-    contact: "mum@example.com",
+    id: "jake",
+    name: "Jake",
+    relationship: "partner",
     status: "active",
-    echoes: [
-      {
-        id: "mum-sleep",
-        kind: "voice",
-        title: "For when you can't sleep",
-        durationSec: 42,
-        addedToArchive: false,
-        seen: false,
-      },
-      {
-        id: "mum-grandma",
-        kind: "voice",
-        title: "Your great-grandma's song",
-        durationSec: 75,
-        addedToArchive: false,
-        seen: false,
-      },
-      {
-        id: "mum-week-21",
-        kind: "voice",
-        title: "Week 21 hello",
-        durationSec: 30,
-        addedToArchive: false,
-        seen: false,
-      },
-      {
-        id: "mum-lag-ja-gale",
-        kind: "song",
-        title: "Lag Ja Gale",
-        artist: "Lata Mangeshkar",
-        addedToArchive: false,
-        seen: true,
-      },
-      {
-        id: "mum-here-comes-the-sun",
-        kind: "song",
-        title: "Here Comes the Sun",
-        artist: "The Beatles",
-        addedToArchive: false,
-        seen: true,
-      },
-    ],
+    totalCount: 5,
+    since: 18,
+    notes: notes("jake", [
+      { title: "Kick count", durationSec: 38, week: 22 },
+      { title: "On my way home", durationSec: 51, week: 21 },
+      { title: "Sunday morning", durationSec: 44, week: 20 },
+      { title: "For the drive", durationSec: 63, week: 19 },
+    ], 2),
   },
   {
-    id: "daniel",
-    name: "Daniel",
-    relationship: "Partner",
-    contact: "daniel@example.com",
+    id: "seema",
+    name: "Seema Aunty",
+    relationship: "aunty / uncle",
     status: "active",
-    echoes: [],
+    totalCount: 6,
+    since: 14,
+    notes: notes("seema", [
+      { title: "A blessing", durationSec: 70, week: 22 },
+      { title: "Recipe for later", durationSec: 95, week: 20 },
+      { title: "Your name", durationSec: 40, week: 18 },
+      { title: "From the wedding", durationSec: 55, week: 16 },
+    ]),
   },
+  {
+    id: "mom",
+    name: "Mom",
+    relationship: "mum",
+    status: "active",
+    totalCount: 15,
+    since: 9,
+    notes: notes("mom", [
+      { title: "Good morning, little one", durationSec: 42, week: 22 },
+      { title: "When you were born", durationSec: 135, week: 21 },
+      { title: "Your nani's lullaby", durationSec: 68, week: 20 },
+      { title: "Sunday call", durationSec: 55, week: 19 },
+    ], 2),
+  },
+  {
+    id: "grandma",
+    name: "Grandma",
+    relationship: "grandparent",
+    status: "active",
+    totalCount: 12,
+    since: 10,
+    notes: notes("grandma", [
+      { title: "A story from home", durationSec: 80, week: 21 },
+      { title: "Sleep now", durationSec: 48, week: 19 },
+      { title: "The old song", durationSec: 62, week: 17 },
+      { title: "For your mother", durationSec: 36, week: 15 },
+    ]),
+  },
+];
+
+export const contacts: Contact[] = [
+  { id: "mom", name: "Mom", phone: "0412 111 222" },
+  { id: "priya", name: "Priya Sharma", phone: "0412 345 678" },
+  { id: "priyanka", name: "Priyanka D", email: "priyanka@gmail.com" },
+  { id: "daniel", name: "Daniel Chen", email: "daniel@example.com" },
+  { id: "arun", name: "Arun Mehta", phone: "0413 222 018" },
+  { id: "neha", name: "Neha Kapoor", email: "neha@example.com" },
+  { id: "liam", name: "Liam O'Brien", phone: "0421 880 014" },
+  { id: "aisha", name: "Aisha Rahman", email: "aisha@example.com" },
+  { id: "tom", name: "Tom Nguyen", phone: "0433 100 452" },
 ];

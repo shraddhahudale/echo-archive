@@ -3,6 +3,7 @@ import { contributors as seedContributors, playbackQueueIds, recentlyPlayedIds, 
 import type { Contributor, Entry, Relationship, Song } from "../data/types";
 
 type VoiceNoteInput = {
+  title?: string;
   feelings: string[];
   note?: string;
   durationSec: number;
@@ -33,6 +34,7 @@ type ArchiveState = {
   entries: Entry[];
   contributors: Contributor[];
   nextVoiceNoteNumber: number;
+  songDraftId: string | null;
   togglePlay: () => void;
   skipTrack: () => void;
   selectTrack: (id: string) => void;
@@ -44,6 +46,7 @@ type ArchiveState = {
   removeEcho: (contributorId: string, echoId: string) => void;
   markSeen: (contributorId: string) => void;
   openSheet: (sheet: SheetId) => void;
+  openSongDetails: (songId: string) => void;
   closeSheet: () => void;
 };
 
@@ -62,6 +65,7 @@ export const useArchiveStore = create<ArchiveState>((set, get) => ({
   entries: [],
   contributors: seedContributors,
   nextVoiceNoteNumber: 8,
+  songDraftId: null,
 
   togglePlay: () => set({ playing: !get().playing }),
 
@@ -74,12 +78,14 @@ export const useArchiveStore = create<ArchiveState>((set, get) => ({
 
   selectTrack: (id) => set({ currentTrackId: id, playing: true }),
 
-  saveVoiceNote: ({ feelings, note, durationSec }) => {
+  saveVoiceNote: ({ title, feelings, note, durationSec }) => {
     const { nextVoiceNoteNumber, user, entries } = get();
+    const fallback = `Voice note #${String(nextVoiceNoteNumber).padStart(2, "0")}`;
     const entry: Entry = {
       id: crypto.randomUUID(),
       kind: "voice",
-      title: `Voice note #${String(nextVoiceNoteNumber).padStart(2, "0")}`,
+      title: title?.trim() || fallback,
+      number: nextVoiceNoteNumber,
       feelings,
       note,
       durationSec,
@@ -109,13 +115,13 @@ export const useArchiveStore = create<ArchiveState>((set, get) => ({
   inviteMember: ({ name, relationship, contact }) => {
     const contributor: Contributor = {
       id: crypto.randomUUID(),
-      name,
+      name: name.trim() || contact,
       relationship,
-      contact,
-      status: "pending",
-      echoes: [],
+      status: "invited",
+      totalCount: 0,
+      notes: [],
     };
-    set({ contributors: [...get().contributors, contributor] });
+    set({ contributors: [contributor, ...get().contributors] });
   },
 
   addEchoesToArchive: (contributorId, echoIds) => {
@@ -123,15 +129,14 @@ export const useArchiveStore = create<ArchiveState>((set, get) => ({
     const contributor = contributors.find((item) => item.id === contributorId);
     if (!contributor) return;
     const chosen = new Set(echoIds);
-    const added: Entry[] = contributor.echoes
-      .filter((echo) => chosen.has(echo.id) && !echo.addedToArchive)
-      .map((echo) => ({
+    const added: Entry[] = contributor.notes
+      .filter((note) => chosen.has(note.id) && !note.inArchive)
+      .map((note) => ({
         id: crypto.randomUUID(),
         kind: "echo" as const,
-        title: echo.title,
-        artist: echo.artist,
+        title: note.title,
         feelings: [],
-        durationSec: echo.durationSec,
+        durationSec: note.durationSec,
         contributorId,
         createdAt: new Date().toISOString(),
         week: user.week,
@@ -142,9 +147,7 @@ export const useArchiveStore = create<ArchiveState>((set, get) => ({
         item.id === contributorId
           ? {
               ...item,
-              echoes: item.echoes.map((echo) =>
-                chosen.has(echo.id) ? { ...echo, addedToArchive: true, seen: true } : echo,
-              ),
+              notes: item.notes.map((note) => (chosen.has(note.id) ? { ...note, inArchive: true, seen: true } : note)),
             }
           : item,
       ),
@@ -155,10 +158,7 @@ export const useArchiveStore = create<ArchiveState>((set, get) => ({
     set({
       contributors: get().contributors.map((item) =>
         item.id === contributorId
-          ? {
-              ...item,
-              echoes: item.echoes.map((echo) => (echo.id === echoId ? { ...echo, title } : echo)),
-            }
+          ? { ...item, notes: item.notes.map((note) => (note.id === echoId ? { ...note, title } : note)) }
           : item,
       ),
     });
@@ -168,7 +168,7 @@ export const useArchiveStore = create<ArchiveState>((set, get) => ({
     set({
       contributors: get().contributors.map((item) =>
         item.id === contributorId
-          ? { ...item, echoes: item.echoes.filter((echo) => echo.id !== echoId) }
+          ? { ...item, notes: item.notes.filter((note) => note.id !== echoId) }
           : item,
       ),
     });
@@ -178,13 +178,14 @@ export const useArchiveStore = create<ArchiveState>((set, get) => ({
     set({
       contributors: get().contributors.map((item) =>
         item.id === contributorId
-          ? { ...item, echoes: item.echoes.map((echo) => ({ ...echo, seen: true })) }
+          ? { ...item, notes: item.notes.map((note) => ({ ...note, seen: true })) }
           : item,
       ),
     });
   },
 
-  openSheet: (sheet) => set({ sheet }),
+  openSheet: (sheet) => set({ sheet, songDraftId: null }),
+  openSongDetails: (songId) => set({ sheet: "song", songDraftId: songId }),
   closeSheet: () => set({ sheet: null }),
 }));
 
