@@ -10,6 +10,8 @@ export const tabs = [
 
 export type TabId = (typeof tabs)[number]["id"];
 
+export const tabBarHeight = 83;
+
 type TabBarProps = {
   active: TabId;
   onChange: (tab: TabId) => void;

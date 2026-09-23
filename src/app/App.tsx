@@ -12,15 +12,17 @@ export function App() {
 
   return (
     <PhoneFrame>
-      <div className="flex h-full flex-col">
+      <div className="relative flex h-full flex-col">
         <StatusBar />
-        <main className="min-h-0 flex-1" data-screen={tab}>
+        <main className="min-h-0 flex-1 overflow-hidden" data-screen={tab}>
           {tab === "home" && <Home />}
           {tab === "timeline" && <Timeline />}
           {tab === "archive" && <Archive />}
           {tab === "breath" && <Breath />}
         </main>
-        <TabBar active={tab} onChange={setTab} />
+        <div className="absolute inset-x-0 bottom-0 z-10">
+          <TabBar active={tab} onChange={setTab} />
+        </div>
       </div>
     </PhoneFrame>
   );

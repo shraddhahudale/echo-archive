@@ -80,6 +80,14 @@ body {
   background: var(--frame);
 }
 
+.scroll-row {
+  scrollbar-width: none;
+}
+
+.scroll-row::-webkit-scrollbar {
+  display: none;
+}
+
 .phone-frame {
   width: 390px;
   height: 844px;
