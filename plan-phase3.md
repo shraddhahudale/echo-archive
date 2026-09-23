@@ -2,7 +2,7 @@
 
 Phase 3 = the **Breath tab**: a dark, calm "Relief mode" where Sarah picks a breathing pattern, counts in 3-2-1, and breathes along with a glowing blob that **grows and brightens as she inhales, pauses while she holds, and shrinks and dims as she exhales**, in real time.
 
-- Visual tokens and components: `design.md` section 4.8 (Breath). Reuse the Phase 1 and 2 tokens, fonts (serif italic for the big words), PhoneFrame and pill button styles.
+- Visual tokens and components: `design.md` section 4.8 (Breath). Reuse the Phase 1 and 2 tokens, fonts (serif italic for the big words), PhoneFrame and button styles.
 - If this file and `design.md` conflict, this file wins for Phase 3.
 - Don't restyle Home, the flows, Timeline or Wrapped.
 
@@ -21,10 +21,8 @@ Breath tab
     │   └── B2 Countdown 3 → 2 → 1   [Cancel → B1]
     │       └── B3 Session loop: inhale → hold → exhale → hold …
     │           ├── Tap the screen → B3p Paused   [Resume / End Session]
-    │           ├── End Session → B4 Complete
-    │           └── After 4 cycles → B4 Complete
-    │               ├── Breathe again → B2 (same pattern)
-    │               └── Back to home → Home tab
+    │           ├── End Session → B1 (soft 400ms fade; blob eases to rest)
+    │           └── After all cycles → B1 (soft 400ms fade; blob eases to rest)
     └── Back to home → Home tab
 ```
 
@@ -36,7 +34,7 @@ Breath tab
 ## 2. Visual base (all Breath screens)
 
 - Background `#1A1A1A`, with a soft vignette (radial-gradient, darker at the edges).
-- **The blob:** a tall vertical capsule of blurred purple light, centred.
+- **The blob:** a tall vertical capsule of blurred purple light, centred horizontally and vertically in the phone screen (`position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) …`; `transform-origin: center`). Scale changes grow from the centre.
   - Rest size 240 x 440, `border-radius: 999px`, fill `radial-gradient(ellipse at center, #8A62B8 0%, #7B579D 45%, rgba(123,87,157,0) 75%)`, `filter: blur(40px)`.
   - A second inner layer (160 x 320, `#9C77CC`, blur 30px) adds a brighter core that responds more strongly to the breath.
 - Eyebrow: 10px, uppercase, letter-spacing 0.2em, white 50%, e.g. "RELIEF MODE · BOX BREATHING".
@@ -44,7 +42,7 @@ Breath tab
 - Instruction: 14px, white 55%.
 - Progress bar: 120 x 2px, track white 20%, fill white 90%, rounded.
 - Count: "4 COUNTS" 10px uppercase, letter-spacing 0.2em, white 45%.
-- Bottom pill button: white text 13px, 1px white 20% border, `rgba(255,255,255,0.06)` fill, 999px radius, 40px tall, 48px from the bottom.
+- Bottom buttons: white text 13px, 1px white 20% border, `rgba(255,255,255,0.06)` fill, **12px** radius, **44px** tall, 48px from the bottom.
 
 ---
 
@@ -53,8 +51,8 @@ Breath tab
 ### B1 Choose your breathing
 - Eyebrow "RELIEF MODE", title *Choose your breathing* (serif italic 28px).
 - Blob at rest behind the options, breathing very slowly on its own (a 10s idle cycle, small range) so the screen feels alive.
-- Three stacked pills (`rgba(255,255,255,0.18)`, 240 x 56, 12px gap): name 13px white, sub 11px white 60%.
-- Tap: the pill brightens to white 28% and scales 0.97, the other pills fade out, and it goes to B2.
+- Three stacked option cards (`rgba(255,255,255,0.18)`, **260 × 60**, **16px** radius, 12px gap): name 13px white, sub 11px white 60%.
+- Tap: the card brightens to white 28% and scales 0.97, the other cards fade out, and it goes to B2.
 - Bottom: [Back to home].
 
 ### B2 Countdown
@@ -76,21 +74,14 @@ Breath tab
 
 - Progress bar (matches Figma): **inhale and exhale fill** left to right; **hold drains** right to left.
 - Count: "4 COUNTS" → "3 COUNTS" → "2 COUNTS" → "1 COUNT", changing every second.
-- Bottom: [End Session] → B4.
+- Bottom: [End Session] → B1 (soft 400ms fade; blob eases back to rest).
+- After all cycles → B1 the same way.
 
 ### B3p Paused (tap anywhere on the blob area)
 - The blob freezes where it is and dims to 60%.
 - The big word becomes *paused*, and the instruction becomes "Tap to resume".
 - The progress bar and count freeze.
 - Tapping again resumes the exact same phase and progress, with no jump.
-
-### B4 Complete
-- Blob settles to rest, then a slow idle cycle.
-- *Well done.* (serif italic 40px).
-- "4 cycles · 1:04" (actual cycles and time) 14px white 55%.
-- "How do you feel now?" 15px white, then chips in the dark style (white 18% fill, selected white 35%): calmer, lighter, same, still anxious. These are optional and nothing is stored in Phase 3.
-- Two pill buttons: [Breathe again] (same pattern → B2) and [Back to home].
-- If ended early, it shows the real cycle count and time.
 
 ---
 
@@ -140,11 +131,11 @@ One value drives everything: **`breath`**, from 0 (empty lungs) to 1 (full lungs
 ## 6. Small touches
 
 - **Haptics:** `navigator.vibrate(15)` at each phase change, inside a try/catch. It works on Android and does nothing elsewhere.
-- **Keep the screen awake:** use the Screen Wake Lock API during B2 and B3 (try/catch), and release it on B4 or exit.
+- **Keep the screen awake:** use the Screen Wake Lock API during B2 and B3 (try/catch), and release it on return to B1 or exit.
 - **Keyboard:** Space = pause / resume, Esc = End Session.
 - **Accessibility:** the phase word and count are announced with `aria-live="polite"` (phase only, not every second). All buttons have aria-labels.
 - **Reduced motion:** no scale changes. The blob only changes opacity (0.5 ↔ 0.9) over each phase, no ripple, and words cross-fade.
-- **Tab switching:** leaving the Breath tab mid-session ends the session quietly (no Complete screen). Coming back shows B1.
+- **Tab switching:** leaving the Breath tab mid-session ends the session quietly. Coming back shows B1.
 
 **Optional (only if there's time):** a line under the eyebrow, "Your Stone is breathing with you", fades in once the session starts, to tie the physical Stone to the experience.
 
@@ -158,7 +149,7 @@ One value drives everything: **`breath`**, from 0 (empty lungs) to 1 (full lungs
 | P3-2 | B2 Countdown with blob bumps, Cancel | 3-2-1 each 1s; Cancel returns to B1; the blob ends at the smallest size |
 | P3-3 | `useBreathingCycle` + B3 session UI (word, instruction, progress fill / drain, counts) for all 3 patterns | Timings match section 4; hold drains, inhale / exhale fill; copy matches the table |
 | P3-4 | Blob driven by `breath` in real time + hold shimmer + phase ripple + tap to pause | Blob grows and brightens on inhale, stays still on hold, shrinks and dims on exhale; pause / resume is exact |
-| P3-5 | B4 Complete, Breathe again, End Session, haptics, wake lock, keyboard, reduced motion, a11y | A full session ends on Complete with the right cycles and time; no console errors |
+| P3-5 | End Session / full cycles → B1 with fade, haptics, wake lock, keyboard, reduced motion, a11y | Ending a session returns to Choose with a soft fade and resting blob; no console errors |
 
 ---
 
@@ -167,6 +158,6 @@ One value drives everything: **`breath`**, from 0 (empty lungs) to 1 (full lungs
 - Tab name stays "Breath"
 - The tab bar is hidden in Breath mode (immersive), matching the Figma frames
 - Belly breathing timing (4 in, 6 out, no holds) is suggested
-- Sessions end after 4 cycles (5 for Belly), plus a new Complete screen
+- Sessions end after 4 cycles (5 for Belly), then return to Choose (no Complete screen)
 - The exhale instruction is corrected from the Figma
-- The "How do you feel now?" chips are visual only in Phase 3
+- Option cards and bottom buttons use rounded rectangles (16px / 12px), not full pills

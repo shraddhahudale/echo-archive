@@ -1,29 +1,30 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { breathPatterns, type BreathingPattern } from "../../data/breathPatterns";
-import { BreathBlob, BreathVignette } from "./BreathBlob";
 import { DarkPill } from "./DarkPill";
 
 type ChooseProps = {
   onSelect: (pattern: BreathingPattern) => void;
   onBackHome: () => void;
+  onBreathChange: (value: number) => void;
 };
 
-export function Choose({ onSelect, onBackHome }: ChooseProps) {
+export function Choose({ onSelect, onBackHome, onBreathChange }: ChooseProps) {
   const reduce = useReducedMotion();
-  const [breath, setBreath] = useState(0.4);
   const [leavingId, setLeavingId] = useState<string | null>(null);
+  const onBreathRef = useRef(onBreathChange);
+  onBreathRef.current = onBreathChange;
 
   useEffect(() => {
     if (reduce) {
-      setBreath(0.4);
+      onBreathRef.current(0.4);
       return;
     }
     let raf = 0;
     const start = performance.now();
     const tick = (now: number) => {
       const t = ((now - start) % 10000) / 10000;
-      setBreath(0.35 + (Math.sin(t * Math.PI * 2) * 0.5 + 0.5) * 0.2);
+      onBreathRef.current(0.35 + (Math.sin(t * Math.PI * 2) * 0.5 + 0.5) * 0.2);
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -38,14 +39,11 @@ export function Choose({ onSelect, onBackHome }: ChooseProps) {
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col px-5">
-      <BreathBlob breath={breath} phase="idle" />
-      <BreathVignette breath={breath} />
-
       <div className="relative z-10 pt-2">
-        <p className="text-center text-[10px] leading-3 font-medium tracking-[0.2em] text-white/50 uppercase">
+        <p className="text-center font-sans text-[10px] leading-3 font-medium tracking-[0.2em] text-white/50 uppercase">
           Relief mode
         </p>
-        <h1 className="mt-3 text-center font-serif text-[28px] leading-8 font-normal text-white italic">
+        <h1 className="mt-3 text-center font-sans text-[24px] leading-7 font-semibold tracking-[-0.01em] text-white">
           Choose your breathing
         </h1>
       </div>
@@ -61,15 +59,15 @@ export function Choose({ onSelect, onBackHome }: ChooseProps) {
               aria-label={`${pattern.name}. ${pattern.subtitle}`}
               disabled={leavingId != null}
               onClick={() => pick(pattern)}
-              className="flex h-14 w-[240px] flex-col items-center justify-center rounded-full border-0 transition-[transform,opacity,background-color] duration-300"
+              className="flex h-[60px] w-[260px] flex-col items-center justify-center rounded-[20px] border-0 transition-[transform,opacity,background-color] duration-300"
               style={{
                 background: selected ? "rgba(255,255,255,0.28)" : "rgba(255,255,255,0.18)",
                 opacity: faded ? 0 : 1,
                 transform: selected && !reduce ? "scale(0.97)" : "scale(1)",
               }}
             >
-              <span className="text-[13px] leading-4 font-medium text-white">{pattern.name}</span>
-              <span className="mt-0.5 text-[11px] leading-3.5 text-white/60">{pattern.subtitle}</span>
+              <span className="font-sans text-[13px] leading-4 font-medium text-white">{pattern.name}</span>
+              <span className="mt-0.5 font-sans text-[11px] leading-3.5 text-white/60">{pattern.subtitle}</span>
             </button>
           );
         })}
@@ -87,11 +85,10 @@ export function Choose({ onSelect, onBackHome }: ChooseProps) {
 type CountdownProps = {
   onDone: () => void;
   onCancel: () => void;
-  breath: number;
   onBreathChange: (value: number) => void;
 };
 
-export function Countdown({ onDone, onCancel, breath, onBreathChange }: CountdownProps) {
+export function Countdown({ onDone, onCancel, onBreathChange }: CountdownProps) {
   const reduce = useReducedMotion();
   const [n, setN] = useState(3);
   const onDoneRef = useRef(onDone);
@@ -144,11 +141,8 @@ export function Countdown({ onDone, onCancel, breath, onBreathChange }: Countdow
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col px-5">
-      <BreathBlob breath={breath} phase="idle" />
-      <BreathVignette breath={breath} />
-
       <div className="relative z-10 pt-2">
-        <p className="text-center text-[10px] leading-3 font-medium tracking-[0.2em] text-white/50 uppercase">
+        <p className="text-center font-sans text-[10px] leading-3 font-medium tracking-[0.2em] text-white/50 uppercase">
           Relief mode · Starting
         </p>
       </div>

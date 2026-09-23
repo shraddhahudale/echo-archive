@@ -56,11 +56,13 @@ export function BreathBlob({ breath, phase = "idle", dimmed = false, className =
   if (reduce) {
     const opacity = lerp(0.5, 0.9, t) * dim;
     return (
-      <div className={`pointer-events-none absolute inset-0 flex items-center justify-center ${className}`} aria-hidden="true">
+      <div className={`pointer-events-none absolute inset-0 ${className}`} aria-hidden="true">
         <div
-          className="h-[440px] w-[240px] rounded-full"
+          className="absolute top-1/2 left-1/2 h-[440px] w-[240px] rounded-full"
           style={{
             opacity,
+            transformOrigin: "center center",
+            transform: "translate(-50%, -50%)",
             background:
               "radial-gradient(ellipse at center, #8A62B8 0%, #7B579D 45%, rgba(123,87,157,0) 75%)",
             filter: "blur(40px)",
@@ -79,31 +81,31 @@ export function BreathBlob({ breath, phase = "idle", dimmed = false, className =
   const coreColor = lerpColor("#7B579D", "#A983DA", t);
 
   return (
-    <div className={`pointer-events-none absolute inset-0 flex items-center justify-center ${className}`} aria-hidden="true">
-      <div className="relative h-[440px] w-[240px]">
-        <div
-          className="absolute top-1/2 left-1/2 h-[440px] w-[240px] -translate-x-1/2 -translate-y-1/2 rounded-full"
-          style={{
-            opacity: outerOpacity,
-            transform: `translate(-50%, -50%) scale(${outerScaleX}, ${outerScaleY})`,
-            background:
-              "radial-gradient(ellipse at center, #8A62B8 0%, #7B579D 45%, rgba(123,87,157,0) 75%)",
-            filter: `blur(${outerBlur}px)`,
-          }}
-        />
-        <div
-          className="absolute top-1/2 left-1/2 h-[320px] w-[160px] -translate-x-1/2 -translate-y-1/2 rounded-full"
-          style={{
-            opacity: Math.min(1, Math.max(0, innerOpacity)),
-            transform: `translate(-50%, -50%) scale(${innerScale})`,
-            background: `radial-gradient(ellipse at center, ${coreColor} 0%, rgba(123,87,157,0) 70%)`,
-            filter: "blur(30px)",
-          }}
-        />
-        {ripples.map((ripple) => (
-          <RippleRing key={ripple.id} born={ripple.born} />
-        ))}
-      </div>
+    <div className={`pointer-events-none absolute inset-0 ${className}`} aria-hidden="true">
+      <div
+        className="absolute top-1/2 left-1/2 h-[440px] w-[240px] rounded-full"
+        style={{
+          opacity: outerOpacity,
+          transformOrigin: "center center",
+          transform: `translate(-50%, -50%) scale(${outerScaleX}, ${outerScaleY})`,
+          background:
+            "radial-gradient(ellipse at center, #8A62B8 0%, #7B579D 45%, rgba(123,87,157,0) 75%)",
+          filter: `blur(${outerBlur}px)`,
+        }}
+      />
+      <div
+        className="absolute top-1/2 left-1/2 h-[320px] w-[160px] rounded-full"
+        style={{
+          opacity: Math.min(1, Math.max(0, innerOpacity)),
+          transformOrigin: "center center",
+          transform: `translate(-50%, -50%) scale(${innerScale})`,
+          background: `radial-gradient(ellipse at center, ${coreColor} 0%, rgba(123,87,157,0) 70%)`,
+          filter: "blur(30px)",
+        }}
+      />
+      {ripples.map((ripple) => (
+        <RippleRing key={ripple.id} born={ripple.born} />
+      ))}
     </div>
   );
 }
@@ -127,8 +129,9 @@ function RippleRing({ born }: { born: number }) {
 
   return (
     <div
-      className="absolute top-1/2 left-1/2 h-[440px] w-[240px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/30"
+      className="absolute top-1/2 left-1/2 h-[440px] w-[240px] rounded-full border border-white/30"
       style={{
+        transformOrigin: "center center",
         transform: `translate(-50%, -50%) scale(${frame.scale})`,
         opacity: frame.opacity,
       }}

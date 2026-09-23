@@ -1,35 +1,46 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { instructionFor, type BreathPhase, type BreathingPattern } from "../../data/breathPatterns";
+import {
+  instructionFor,
+  type BreathPhase,
+  type BreathingPattern,
+} from "../../data/breathPatterns";
 import { useBreathingCycle } from "../../hooks/useBreathingCycle";
-import { BreathBlob, BreathVignette } from "./BreathBlob";
 import { DarkPill } from "./DarkPill";
-
-export type SessionResult = {
-  cycles: number;
-  elapsed: number;
-  endedEarly: boolean;
-};
 
 type SessionProps = {
   pattern: BreathingPattern;
-  onComplete: (result: SessionResult) => void;
-  onEnd: (result: SessionResult) => void;
+  onExit: () => void;
+  onBreathChange: (value: number) => void;
+  onPhaseChange: (phase: BreathPhase | "paused") => void;
+  onDimmedChange: (dimmed: boolean) => void;
 };
 
-export function Session({ pattern, onComplete, onEnd }: SessionProps) {
+export function Session({
+  pattern,
+  onExit,
+  onBreathChange,
+  onPhaseChange,
+  onDimmedChange,
+}: SessionProps) {
   const reduce = useReducedMotion();
   const [active, setActive] = useState(true);
   const finished = useRef(false);
-  const cycle = useBreathingCycle(pattern, active, (result) => {
+  const cycle = useBreathingCycle(pattern, active, () => {
     if (finished.current) return;
     finished.current = true;
     setActive(false);
-    onComplete({ ...result, endedEarly: false });
+    onExit();
   });
 
   const cycleRef = useRef(cycle);
   cycleRef.current = cycle;
+  const onBreathRef = useRef(onBreathChange);
+  onBreathRef.current = onBreathChange;
+  const onPhaseRef = useRef(onPhaseChange);
+  onPhaseRef.current = onPhaseChange;
+  const onDimmedRef = useRef(onDimmedChange);
+  onDimmedRef.current = onDimmedChange;
 
   const displayPhase: BreathPhase | "paused" = cycle.paused ? "paused" : cycle.phase;
   const word = cycle.paused ? "paused" : cycle.phase;
@@ -38,14 +49,18 @@ export function Session({ pattern, onComplete, onEnd }: SessionProps) {
   const countLabel = cycle.countLeft === 1 ? "1 COUNT" : `${cycle.countLeft} COUNTS`;
   const wordY = reduce || cycle.paused ? 0 : cycle.phase === "inhale" ? -4 : 0;
 
+  useEffect(() => {
+    onBreathRef.current(cycle.breath);
+    onPhaseRef.current(displayPhase);
+    onDimmedRef.current(cycle.paused);
+  }, [cycle.breath, cycle.paused, displayPhase]);
+
   function endEarly() {
     if (finished.current) return;
     finished.current = true;
-    const snap = cycleRef.current;
-    snap.end();
+    cycleRef.current.end();
     setActive(false);
-    const completed = Math.max(0, snap.cycle - 1);
-    onEnd({ cycles: completed, elapsed: snap.elapsed, endedEarly: true });
+    onExit();
   }
 
   const endEarlyRef = useRef(endEarly);
@@ -80,15 +95,9 @@ export function Session({ pattern, onComplete, onEnd }: SessionProps) {
         onClick={togglePause}
         className="absolute inset-0 z-[5] cursor-pointer border-0 bg-transparent"
       />
-      <BreathBlob
-        breath={cycle.breath}
-        phase={displayPhase === "paused" ? "paused" : cycle.phase}
-        dimmed={cycle.paused}
-      />
-      <BreathVignette breath={cycle.breath} />
 
       <div className="pointer-events-none relative z-10 pt-2">
-        <p className="text-center text-[10px] leading-3 font-medium tracking-[0.2em] text-white/50 uppercase">
+        <p className="text-center font-sans text-[10px] leading-3 font-medium tracking-[0.2em] text-white/50 uppercase">
           Relief mode · {pattern.eyebrowName}
         </p>
       </div>
@@ -108,7 +117,7 @@ export function Session({ pattern, onComplete, onEnd }: SessionProps) {
               {word}
             </motion.p>
           </AnimatePresence>
-          <p className="mt-3 text-center text-[14px] leading-5 text-white/55">{instruction}</p>
+          <p className="mt-3 text-center font-sans text-[14px] leading-5 text-white/55">{instruction}</p>
         </div>
 
         <div className="mt-10 flex flex-col items-center gap-3">
@@ -125,7 +134,7 @@ export function Session({ pattern, onComplete, onEnd }: SessionProps) {
               style={{ width: `${Math.min(100, Math.max(0, progressFill * 100))}%` }}
             />
           </div>
-          <p className="text-[10px] leading-3 font-medium tracking-[0.2em] text-white/45 uppercase">
+          <p className="font-sans text-[10px] leading-3 font-medium tracking-[0.2em] text-white/45 uppercase">
             {cycle.paused ? "PAUSED" : countLabel}
           </p>
         </div>
