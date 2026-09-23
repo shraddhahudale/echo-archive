@@ -1,27 +1,43 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ChevronLeft, Link2, Mic, Plus, Search } from "lucide-react";
+import { Chip } from "../components/Chip";
 import { contacts } from "../data/mock";
 import type { Contact, Contributor } from "../data/types";
+import { SavedMoment } from "./SavedMoment";
 import { useArchiveStore } from "../store/useArchiveStore";
+
+const RELATIONSHIPS = ["partner", "mum", "dad", "sibling", "grandparent", "aunty / uncle", "friend"];
 
 type EchoHubSheetProps = {
   titleId: string;
 };
 
-type Phase = "hub" | "contacts" | "notes" | "invite";
+type Phase = "hub" | "contacts" | "notes" | "invite" | "sent";
 
 export function EchoHubSheet({ titleId }: EchoHubSheetProps) {
   const reduce = useReducedMotion();
+  const week = useArchiveStore((state) => state.user.week);
   const contributors = useArchiveStore((state) => state.contributors);
+  const inviteMember = useArchiveStore((state) => state.inviteMember);
   const [phase, setPhase] = useState<Phase>("hub");
   const [query, setQuery] = useState("");
   const [person, setPerson] = useState<Contributor | null>(null);
+  const [contact, setContact] = useState<Contact | null>(null);
+  const [relationship, setRelationship] = useState<string | null>(null);
+  const [message, setMessage] = useState("");
   const [returnTo, setReturnTo] = useState<"hub" | "contacts">("hub");
   const inputRef = useRef<HTMLInputElement>(null);
+  const sentOnce = useRef(false);
 
   useEffect(() => {
     if (phase === "contacts") inputRef.current?.focus();
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase !== "sent") return;
+    const id = window.setTimeout(() => setPhase("hub"), 2500);
+    return () => window.clearTimeout(id);
   }, [phase]);
 
   const trimmed = query.trim();
@@ -37,24 +53,33 @@ export function EchoHubSheet({ titleId }: EchoHubSheetProps) {
     setPhase("notes");
   }
 
-  function openInvite(contact: Contact) {
-    setPerson({
-      id: contact.id,
-      name: contact.name,
-      relationship: "",
-      status: "invited",
-      totalCount: 0,
-      notes: [],
-    });
+  function openInvite(next: Contact) {
+    const first = next.name.trim().split(/\s+/)[0];
+    sentOnce.current = false;
+    setContact(next);
+    setRelationship(null);
+    setMessage(`Hi ${first}, I'm keeping a sound diary for our baby. Would you leave a voice note for week ${week}?`);
     setPhase("invite");
   }
 
-  const showBack = phase !== "hub";
-  const title =
-    phase === "notes" && person ? `${person.name}'s voice notes` : phase === "invite" ? "Send an invite" : "Add an Echo";
+  function sendInvite() {
+    if (!contact || !relationship || sentOnce.current) return;
+    sentOnce.current = true;
+    inviteMember({
+      name: contact.name,
+      relationship,
+      contact: contact.phone ?? contact.email ?? "",
+    });
+    setPhase("sent");
+  }
+
+  const firstName = contact?.name.trim().split(/\s+/)[0] ?? "";
+  const showBack = phase === "contacts" || phase === "notes" || phase === "invite";
+  const title = phase === "notes" && person ? `${person.name}'s voice notes` : phase === "invite" ? "Send an invite" : "Add an Echo";
 
   return (
     <div className="px-5 pb-8">
+      {phase === "sent" ? null : (
       <div className="flex items-center gap-1">
         {showBack ? (
           <button
@@ -77,6 +102,7 @@ export function EchoHubSheet({ titleId }: EchoHubSheetProps) {
           {title}
         </h2>
       </div>
+      )}
       <AnimatePresence mode="popLayout" initial={false}>
         <motion.div
           key={phase}
@@ -177,6 +203,53 @@ export function EchoHubSheet({ titleId }: EchoHubSheetProps) {
               </button>
             </div>
           ) : null}
+          {phase === "invite" && contact ? (
+            <div className="pt-5">
+              <div className="flex items-center gap-3 rounded-[16px] bg-[var(--amber-50)] py-2 pr-4 pl-2">
+                <InitialAvatar name={contact.name} radius={8} />
+                <div className="min-w-0">
+                  <p className="truncate text-[17px] leading-[22px] font-semibold text-[#111111]">{contact.name}</p>
+                  <p className="truncate text-[14px] leading-[18px] text-[#8E8E93]">{contact.phone ?? contact.email}</p>
+                </div>
+              </div>
+              <p className="mt-5 text-[17px] leading-[22px] font-semibold text-[#111111]">Who are they to you?</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {RELATIONSHIPS.map((label) => (
+                  <Chip
+                    key={label}
+                    label={label}
+                    tone="echo"
+                    selected={relationship === label}
+                    onClick={() => setRelationship(label)}
+                  />
+                ))}
+              </div>
+              <textarea
+                value={message}
+                onChange={(event) => setMessage(event.target.value)}
+                className="echo-note mt-4 h-[110px] w-full resize-none rounded-[16px] bg-[var(--amber-50)] px-4 py-3 text-[15px] leading-5 text-[var(--text-900)]"
+              />
+              <button
+                type="button"
+                disabled={!relationship}
+                onClick={sendInvite}
+                className="mt-6 h-11 w-full rounded-full border border-[var(--line)] bg-white px-4 text-[13px] leading-4 font-medium text-[#D98A1F] disabled:opacity-40"
+              >
+                Send invite
+              </button>
+            </div>
+          ) : null}
+          {phase === "sent" ? (
+            <SavedMoment
+              titleId={titleId}
+              tone="echo"
+              heading="Sent."
+              body="When they leave a voice note, it'll show up in your recent contributors."
+              reduce={reduce}
+            >
+              Invite to {firstName}
+            </SavedMoment>
+          ) : null}
         </motion.div>
       </AnimatePresence>
     </div>
@@ -184,6 +257,7 @@ export function EchoHubSheet({ titleId }: EchoHubSheetProps) {
 }
 
 function CountLine({ contributor }: { contributor: Contributor }) {
+  if (contributor.status === "invited") return "Invite sent";
   const unseen = contributor.notes.filter((note) => !note.seen).length;
   const count = `${contributor.totalCount} voice note${contributor.totalCount === 1 ? "" : "s"}`;
   return (
@@ -231,9 +305,12 @@ function PersonRow({
   );
 }
 
-function InitialAvatar({ name }: { name: string }) {
+function InitialAvatar({ name, radius = 6 }: { name: string; radius?: number }) {
   return (
-    <span className="grid size-14 shrink-0 place-items-center rounded-[6px] bg-[var(--amber-50)] text-[20px] leading-none font-semibold text-[var(--amber-600)]">
+    <span
+      className="grid size-14 shrink-0 place-items-center bg-[var(--amber-50)] text-[20px] leading-none font-semibold text-[var(--amber-600)]"
+      style={{ borderRadius: radius }}
+    >
       {name.trim().charAt(0).toUpperCase()}
     </span>
   );

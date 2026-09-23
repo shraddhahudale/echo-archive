@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { contributors as seedContributors, playbackQueueIds, recentlyPlayedIds, songs as seedSongs, user as seedUser } from "../data/mock";
-import type { Contributor, Entry, Relationship, Song } from "../data/types";
+import type { Contributor, Entry, Song } from "../data/types";
 
 type VoiceNoteInput = {
   title?: string;
@@ -17,7 +17,7 @@ type SongInput = {
 
 type InviteInput = {
   name: string;
-  relationship: Relationship;
+  relationship: string;
   contact: string;
 };
 

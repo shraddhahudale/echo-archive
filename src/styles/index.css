@@ -84,6 +84,15 @@ body {
   outline: none;
 }
 
+.echo-note {
+  border: 1.5px solid transparent;
+}
+
+.echo-note:focus-visible {
+  outline: none;
+  border-color: #d98a1f;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

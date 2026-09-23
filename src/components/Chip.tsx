@@ -2,12 +2,13 @@ type ChipProps = {
   label: string;
   selected: boolean;
   onClick: () => void;
-  tone?: "voice" | "song";
+  tone?: "voice" | "song" | "echo";
 };
 
 const selectedTone = {
   voice: { background: "var(--purple-100)", borderColor: "var(--purple-300)", color: "var(--text-900)" },
   song: { background: "var(--pink-50)", borderColor: "#D6408A", color: "#D6408A" },
+  echo: { background: "var(--amber-50)", borderColor: "#D98A1F", color: "#D98A1F" },
 };
 
 export function Chip({ label, selected, onClick, tone = "voice" }: ChipProps) {

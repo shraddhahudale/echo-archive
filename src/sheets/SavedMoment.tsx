@@ -3,8 +3,10 @@ import { motion } from "framer-motion";
 
 type SavedMomentProps = {
   titleId: string;
-  tone: "voice" | "song";
-  week: number;
+  tone: "voice" | "song" | "echo";
+  week?: number;
+  heading?: string;
+  body?: string;
   reduce: boolean | null;
   children: ReactNode;
 };
@@ -12,9 +14,10 @@ type SavedMomentProps = {
 const tones = {
   voice: { tile: "var(--purple-100)", check: "var(--purple-500)" },
   song: { tile: "var(--pink-200)", check: "var(--pink-500)" },
+  echo: { tile: "var(--amber-100)", check: "var(--amber-500)" },
 };
 
-export function SavedMoment({ titleId, tone, week, reduce, children }: SavedMomentProps) {
+export function SavedMoment({ titleId, tone, week, heading = "Saved.", body, reduce, children }: SavedMomentProps) {
   const color = tones[tone];
 
   return (
@@ -35,11 +38,11 @@ export function SavedMoment({ titleId, tone, week, reduce, children }: SavedMome
         </svg>
       </span>
       <h2 id={titleId} className="mt-4 text-[22px] leading-7 font-semibold text-[var(--text-900)]">
-        Saved.
+        {heading}
       </h2>
       <p className="mt-2 text-[15px] leading-5 font-semibold text-[var(--text-900)]">{children}</p>
       <p className="mt-2 text-[15px] leading-5 text-[var(--text-400)]">
-        It's part of week {week} now. Echo will remember this one.
+        {body ?? `It's part of week ${week} now. Echo will remember this one.`}
       </p>
     </div>
   );
