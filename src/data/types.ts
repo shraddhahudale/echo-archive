@@ -13,6 +13,7 @@ export type Entry = {
   note?: string;
   durationSec?: number;
   contributorId?: string;
+  noteIds?: string[];
   createdAt: string;
   week: number;
 };

@@ -42,6 +42,7 @@ type ArchiveState = {
   saveSong: (input: SongInput) => void;
   inviteMember: (input: InviteInput) => void;
   addEchoesToArchive: (contributorId: string, echoIds: string[]) => void;
+  addEchoesToWeek: (contributorId: string, noteIds: string[], feelings: string[], note?: string) => void;
   renameEcho: (contributorId: string, echoId: string, title: string) => void;
   removeEcho: (contributorId: string, echoId: string) => void;
   markSeen: (contributorId: string) => void;
@@ -122,6 +123,40 @@ export const useArchiveStore = create<ArchiveState>((set, get) => ({
       notes: [],
     };
     set({ contributors: [contributor, ...get().contributors] });
+  },
+
+  addEchoesToWeek: (contributorId, noteIds, feelings, note) => {
+    const { contributors, entries, user } = get();
+    const contributor = contributors.find((item) => item.id === contributorId);
+    if (!contributor) return;
+    const chosen = new Set(noteIds);
+    const selected = contributor.notes.filter((item) => chosen.has(item.id) && !item.inArchive);
+    if (selected.length === 0) return;
+    const entry: Entry = {
+      id: crypto.randomUUID(),
+      kind: "echo",
+      title: `${contributor.name}'s voice notes`,
+      feelings,
+      note,
+      durationSec: selected.reduce((sum, item) => sum + item.durationSec, 0),
+      contributorId,
+      noteIds: selected.map((item) => item.id),
+      createdAt: new Date().toISOString(),
+      week: user.week,
+    };
+    set({
+      entries: [entry, ...entries],
+      contributors: contributors.map((item) =>
+        item.id === contributorId
+          ? {
+              ...item,
+              notes: item.notes.map((voiceNote) =>
+                chosen.has(voiceNote.id) ? { ...voiceNote, inArchive: true, seen: true } : voiceNote,
+              ),
+            }
+          : item,
+      ),
+    });
   },
 
   addEchoesToArchive: (contributorId, echoIds) => {

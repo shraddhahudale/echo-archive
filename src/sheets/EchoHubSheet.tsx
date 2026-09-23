@@ -1,20 +1,22 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ChevronLeft, Link2, Mic, Pencil, Plus, Search } from "lucide-react";
+import { ChevronLeft, Link2, Mic, Pencil, Plus, Search, SkipForward } from "lucide-react";
 import { Chip } from "../components/Chip";
 import { contacts } from "../data/mock";
-import type { Contact, Contributor } from "../data/types";
+import type { Contact, Contributor, ContributorNote } from "../data/types";
+import { AnythingToAdd } from "./AnythingToAdd";
 import { ContributorNotes } from "./ContributorNotes";
 import { SavedMoment } from "./SavedMoment";
 import { useArchiveStore } from "../store/useArchiveStore";
 
 const RELATIONSHIPS = ["partner", "mum", "dad", "sibling", "grandparent", "aunty / uncle", "friend"];
+const ECHO_FEELINGS = ["calm", "hopeful", "tearful", "connected", "loved", "don't know why"];
 
 type EchoHubSheetProps = {
   titleId: string;
 };
 
-type Phase = "hub" | "contacts" | "notes" | "invite" | "sent" | "add";
+type Phase = "hub" | "contacts" | "notes" | "invite" | "sent" | "add" | "saved";
 
 export function EchoHubSheet({ titleId }: EchoHubSheetProps) {
   const reduce = useReducedMotion();
@@ -22,6 +24,8 @@ export function EchoHubSheet({ titleId }: EchoHubSheetProps) {
   const contributors = useArchiveStore((state) => state.contributors);
   const inviteMember = useArchiveStore((state) => state.inviteMember);
   const markSeen = useArchiveStore((state) => state.markSeen);
+  const addEchoesToWeek = useArchiveStore((state) => state.addEchoesToWeek);
+  const closeSheet = useArchiveStore((state) => state.closeSheet);
   const [phase, setPhase] = useState<Phase>("hub");
   const [query, setQuery] = useState("");
   const [person, setPerson] = useState<Contributor | null>(null);
@@ -32,8 +36,17 @@ export function EchoHubSheet({ titleId }: EchoHubSheetProps) {
   const [editing, setEditing] = useState(false);
   const [unseenIds, setUnseenIds] = useState<string[]>([]);
   const [pickedIds, setPickedIds] = useState<string[]>([]);
+  const [echoFeelings, setEchoFeelings] = useState<string[]>([]);
+  const [echoNote, setEchoNote] = useState("");
+  const [playingPreview, setPlayingPreview] = useState(false);
+  const [playIndex, setPlayIndex] = useState(0);
+  const [savedCount, setSavedCount] = useState(0);
+  const [savedName, setSavedName] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const sentOnce = useRef(false);
+  const echoSaved = useRef(false);
+  const playRef = useRef({ index: 0, offset: 0 });
+  const queueRef = useRef<ContributorNote[]>([]);
 
   useEffect(() => {
     if (phase === "contacts") inputRef.current?.focus();
@@ -44,6 +57,40 @@ export function EchoHubSheet({ titleId }: EchoHubSheetProps) {
     const id = window.setTimeout(() => setPhase("hub"), 2500);
     return () => window.clearTimeout(id);
   }, [phase]);
+
+  useEffect(() => {
+    if (phase !== "saved") return;
+    const id = window.setTimeout(closeSheet, 2500);
+    return () => window.clearTimeout(id);
+  }, [phase, closeSheet]);
+
+  useEffect(() => {
+    if (!playingPreview || phase !== "add") return;
+    const id = window.setInterval(() => {
+      const queue = queueRef.current;
+      const { index, offset } = playRef.current;
+      const note = queue[index];
+      if (!note) {
+        playRef.current = { index: 0, offset: 0 };
+        setPlayIndex(0);
+        setPlayingPreview(false);
+        return;
+      }
+      if (offset + 1 >= note.durationSec) {
+        if (index + 1 >= queue.length) {
+          playRef.current = { index: 0, offset: 0 };
+          setPlayIndex(0);
+          setPlayingPreview(false);
+        } else {
+          playRef.current = { index: index + 1, offset: 0 };
+          setPlayIndex(index + 1);
+        }
+      } else {
+        playRef.current = { index, offset: offset + 1 };
+      }
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [playingPreview, phase]);
 
   const trimmed = query.trim();
   const contributorNames = new Set(contributors.map((item) => item.name.toLowerCase()));
@@ -84,6 +131,56 @@ export function EchoHubSheet({ titleId }: EchoHubSheetProps) {
 
   const firstName = contact?.name.trim().split(/\s+/)[0] ?? "";
   const active = contributors.find((item) => item.id === person?.id) ?? person;
+  const selectedNotes = active
+    ? active.notes.filter((note) => pickedIds.includes(note.id) && !note.inArchive)
+    : [];
+  queueRef.current = selectedNotes;
+  const currentNote = selectedNotes[playIndex] ?? selectedNotes[0];
+  const totalSec = selectedNotes.reduce((sum, note) => sum + note.durationSec, 0);
+
+  function openAdd() {
+    playRef.current = { index: 0, offset: 0 };
+    setPlayIndex(0);
+    setPlayingPreview(false);
+    setEchoFeelings([]);
+    setEchoNote("");
+    echoSaved.current = false;
+    setPhase("add");
+  }
+
+  function togglePreview() {
+    if (selectedNotes.length === 0) return;
+    setPlayingPreview((current) => !current);
+  }
+
+  function skipPreview() {
+    const queue = queueRef.current;
+    const index = playRef.current.index;
+    if (index + 1 >= queue.length) {
+      playRef.current = { index: 0, offset: 0 };
+      setPlayIndex(0);
+      setPlayingPreview(false);
+      return;
+    }
+    playRef.current = { index: index + 1, offset: 0 };
+    setPlayIndex(index + 1);
+  }
+
+  function saveEcho() {
+    if (!active || echoSaved.current || selectedNotes.length === 0) return;
+    echoSaved.current = true;
+    setPlayingPreview(false);
+    setSavedCount(selectedNotes.length);
+    setSavedName(active.name);
+    addEchoesToWeek(
+      active.id,
+      selectedNotes.map((note) => note.id),
+      echoFeelings,
+      echoNote.trim() || undefined,
+    );
+    setPhase("saved");
+  }
+
   const showBack = phase === "contacts" || phase === "notes" || phase === "invite" || phase === "add";
   const title =
     phase === "notes" && active
@@ -96,7 +193,7 @@ export function EchoHubSheet({ titleId }: EchoHubSheetProps) {
 
   return (
     <div className="px-5 pb-8">
-      {phase === "sent" ? null : (
+      {phase === "sent" || phase === "saved" ? null : (
       <div className="flex items-center gap-1">
         {showBack ? (
           <button
@@ -106,7 +203,10 @@ export function EchoHubSheet({ titleId }: EchoHubSheetProps) {
               if (phase === "notes") {
                 setEditing(false);
                 setPhase(returnTo);
-              } else if (phase === "add") setPhase("notes");
+              } else if (phase === "add") {
+                setPlayingPreview(false);
+                setPhase("notes");
+              }
               else if (phase === "invite") setPhase("contacts");
               else {
                 setQuery("");
@@ -251,7 +351,7 @@ export function EchoHubSheet({ titleId }: EchoHubSheetProps) {
               reduce={reduce}
               selectedIds={pickedIds}
               onSelectedIds={setPickedIds}
-              onAdd={() => setPhase("add")}
+              onAdd={openAdd}
             />
           ) : null}
           {phase === "invite" && contact ? (
@@ -290,6 +390,66 @@ export function EchoHubSheet({ titleId }: EchoHubSheetProps) {
               </button>
             </div>
           ) : null}
+          {phase === "add" && active ? (
+            <AnythingToAdd
+              tone="echo"
+              feelings={ECHO_FEELINGS}
+              selected={echoFeelings}
+              onToggle={(feeling) =>
+                setEchoFeelings((current) =>
+                  current.includes(feeling) ? current.filter((item) => item !== feeling) : [...current, feeling],
+                )
+              }
+              note={echoNote}
+              onNote={setEchoNote}
+              onSave={saveEcho}
+              card={
+                <div className="flex items-center gap-3 rounded-[16px] bg-[var(--amber-50)] py-2 pr-4 pl-2">
+                  <span className="grid size-14 shrink-0 place-items-center rounded-[8px] bg-white text-[20px] leading-none font-semibold text-[var(--amber-600)]">
+                    {active.name.trim().charAt(0).toUpperCase()}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[17px] leading-[22px] font-semibold text-[#111111]">
+                      {voiceNotesLine(selectedNotes.length, active.name)}
+                    </p>
+                    <p className="truncate text-[14px] leading-[18px] text-[#8E8E93]">{formatDuration(totalSec)}</p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-6 text-[#3F3A4A]">
+                    <button
+                      type="button"
+                      aria-label={playingPreview ? `Pause ${currentNote?.title ?? ""}`.trim() : `Play ${currentNote?.title ?? ""}`.trim()}
+                      onClick={togglePreview}
+                      className="grid h-11 w-[22px] place-items-center border-0 bg-transparent p-0 text-inherit"
+                    >
+                      {playingPreview ? <PauseBars /> : <PlayMark />}
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="Skip"
+                      onClick={skipPreview}
+                      className="grid h-11 w-[22px] place-items-center border-0 bg-transparent p-0 text-inherit"
+                    >
+                      <SkipForward size={22} strokeWidth={2} />
+                    </button>
+                  </div>
+                </div>
+              }
+            />
+          ) : null}
+          {phase === "saved" ? (
+            <SavedMoment
+              titleId={titleId}
+              tone="echo"
+              body={
+                savedCount === 1
+                  ? `It's part of week ${week} now. Echo will remember this one.`
+                  : `They're part of week ${week} now. Echo will remember these.`
+              }
+              reduce={reduce}
+            >
+              {voiceNotesLine(savedCount, savedName)}
+            </SavedMoment>
+          ) : null}
           {phase === "sent" ? (
             <SavedMoment
               titleId={titleId}
@@ -304,6 +464,33 @@ export function EchoHubSheet({ titleId }: EchoHubSheetProps) {
         </motion.div>
       </AnimatePresence>
     </div>
+  );
+}
+
+function voiceNotesLine(count: number, name: string) {
+  return `${count} voice note${count === 1 ? "" : "s"} from ${name}`;
+}
+
+function formatDuration(seconds: number) {
+  const minutes = Math.floor(seconds / 60);
+  const rest = Math.max(0, seconds % 60);
+  return `${minutes}:${rest.toString().padStart(2, "0")}`;
+}
+
+function PauseBars() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
+      <rect x="5" y="3" width="4" height="16" rx="1" fill="currentColor" />
+      <rect x="13" y="3" width="4" height="16" rx="1" fill="currentColor" />
+    </svg>
+  );
+}
+
+function PlayMark() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
+      <path d="M7 4.2v13.6l11.2-6.8L7 4.2Z" fill="currentColor" />
+    </svg>
   );
 }
 
