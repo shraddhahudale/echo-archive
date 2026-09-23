@@ -16,8 +16,11 @@ type Phase = "ready" | "recording" | "finished" | "edit" | "confirm" | "details"
 const FEELINGS = ["calm", "hopeful", "relentless", "anxious", "connected", "missing home", "don't know why"];
 const MAX_SECONDS = 180;
 
-function makeBars() {
-  return Array.from({ length: 40 }, () => 0.28 + Math.random() * 0.72);
+function nextLevel(previous: number) {
+  let next = previous + (Math.random() - 0.5) * 0.16;
+  if (next < 0.1) next = 0.2 - next;
+  if (next > 0.9) next = 1.8 - next;
+  return Math.min(0.9, Math.max(0.1, next));
 }
 
 function formatClock(seconds: number) {
@@ -40,12 +43,14 @@ export function VoiceNoteSheet({ titleId }: VoiceNoteSheetProps) {
   const [phase, setPhase] = useState<Phase>("ready");
   const [elapsed, setElapsed] = useState(0);
   const [paused, setPaused] = useState(false);
-  const [bars, setBars] = useState<number[]>(() => makeBars());
+  const [bars, setBars] = useState<number[]>([]);
+  const levelRef = useRef(0.4);
   const [feelings, setFeelings] = useState<string[]>([]);
   const [note, setNote] = useState("");
   const [previewing, setPreviewing] = useState(false);
   const [playSec, setPlaySec] = useState(0);
   const savedOnce = useRef(false);
+  const rootRef = useRef<HTMLDivElement>(null);
 
   const caption = name === defaultName ? `${defaultName} / W ${week}` : name;
   const progress = phase === "finished" || phase === "edit" || phase === "details" ? 1 : elapsed / MAX_SECONDS;
@@ -55,6 +60,16 @@ export function VoiceNoteSheet({ titleId }: VoiceNoteSheetProps) {
     const id = window.setInterval(() => {
       setElapsed((value) => Math.min(MAX_SECONDS, Math.round((value + 0.1) * 10) / 10));
     }, 100);
+    return () => window.clearInterval(id);
+  }, [phase, paused]);
+
+  useEffect(() => {
+    if (phase !== "recording" || paused) return;
+    const id = window.setInterval(() => {
+      const next = nextLevel(levelRef.current);
+      levelRef.current = next;
+      setBars((current) => [...current, next]);
+    }, 1000 / 6);
     return () => window.clearInterval(id);
   }, [phase, paused]);
 
@@ -78,22 +93,28 @@ export function VoiceNoteSheet({ titleId }: VoiceNoteSheetProps) {
   }, [phase, previewing, elapsed]);
 
   useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const active = document.activeElement;
+    if (active instanceof Node && root.contains(active)) return;
+    const back = root.querySelector<HTMLButtonElement>('button[aria-label="Back"]');
+    (back ?? root.querySelector<HTMLElement>("button, input, textarea"))?.focus();
+  }, [phase]);
+
+  useEffect(() => {
     if (phase !== "saved") return;
     const id = window.setTimeout(closeSheet, 2500);
     return () => window.clearTimeout(id);
   }, [phase, closeSheet]);
 
   function endRecording() {
-    setBars((current) => {
-      const count = Math.max(18, Math.min(current.length, Math.ceil((elapsed / MAX_SECONDS) * current.length)));
-      return current.slice(0, count);
-    });
     setPaused(false);
     setPhase("finished");
   }
 
   function start() {
-    setBars(makeBars());
+    levelRef.current = 0.28 + Math.random() * 0.24;
+    setBars([]);
     setElapsed(0);
     setPaused(false);
     setPhase("recording");
@@ -108,6 +129,7 @@ export function VoiceNoteSheet({ titleId }: VoiceNoteSheetProps) {
     setDraft(defaultName);
     setPreviewing(false);
     setPlaySec(0);
+    setBars([]);
     setPhase("ready");
   }
 
@@ -163,8 +185,8 @@ export function VoiceNoteSheet({ titleId }: VoiceNoteSheetProps) {
       return;
     }
     if (phase === "finished") {
-      setConfirmReturn("finished");
-      setPhase("confirm");
+      setPaused(true);
+      setPhase("recording");
       return;
     }
     if (phase === "edit") setPhase("finished");
@@ -173,7 +195,7 @@ export function VoiceNoteSheet({ titleId }: VoiceNoteSheetProps) {
   }
 
   return (
-    <div className="px-5 pb-8">
+    <div ref={rootRef} className="px-5 pb-8" data-flow="voice">
       {phase === "saved" ? null : (
         <div className="flex items-center gap-1">
           {showBack ? (
@@ -317,27 +339,29 @@ function EditBody({
 
   return (
     <div className="pt-6">
-      <input
-        ref={inputRef}
-        value={draft}
-        maxLength={40}
-        aria-label="Voice note name"
-        onChange={(event) => onDraft(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key !== "Enter") return;
-          event.preventDefault();
-          onDone();
-        }}
-        className="w-full border-0 bg-transparent text-center text-[15px] leading-5 font-medium text-[var(--text-900)]"
-        style={{ borderBottom: "1px solid var(--purple-500)" }}
-      />
+      <label className="relative -my-3 block h-11">
+        <input
+          ref={inputRef}
+          value={draft}
+          maxLength={40}
+          aria-label="Voice note name"
+          onChange={(event) => onDraft(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key !== "Enter") return;
+            event.preventDefault();
+            onDone();
+          }}
+          className="absolute inset-x-0 top-1/2 w-full -translate-y-1/2 border-0 bg-transparent text-center text-[15px] leading-5 font-medium text-[var(--text-900)]"
+          style={{ borderBottom: "1px solid var(--purple-500)" }}
+        />
+      </label>
       <div className="mt-4">
         <Waveform mode="finished" bars={bars} progress={1} />
       </div>
       <button
         type="button"
         onClick={onReRecord}
-        className="mx-auto mt-3 block border-0 bg-transparent px-3 py-2 text-[13px] leading-4"
+        className="mx-auto -my-1.5 mt-3 flex h-11 items-center justify-center border-0 bg-transparent px-3 text-[13px] leading-4"
         style={{ color: "#8E8E93" }}
       >
         Re-record
@@ -388,8 +412,9 @@ function RecordBody({
       {phase === "finished" ? (
         <button
           type="button"
+          aria-label={`Edit ${label}`}
           onClick={onEdit}
-          className="mx-auto flex items-center justify-center gap-1.5 border-0 bg-transparent p-0"
+          className="mx-auto -my-3 flex h-11 items-center justify-center gap-1.5 border-0 bg-transparent p-0"
         >
           <span className="text-[15px] leading-5 font-medium text-[var(--text-700)]">{label}</span>
           <Pencil size={14} strokeWidth={2} aria-hidden="true" style={{ color: "#8E8E93" }} />

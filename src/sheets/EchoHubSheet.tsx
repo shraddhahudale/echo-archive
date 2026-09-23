@@ -47,9 +47,19 @@ export function EchoHubSheet({ titleId }: EchoHubSheetProps) {
   const echoSaved = useRef(false);
   const playRef = useRef({ index: 0, offset: 0 });
   const queueRef = useRef<ContributorNote[]>([]);
+  const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (phase === "contacts") inputRef.current?.focus();
+  }, [phase]);
+
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root || phase === "contacts") return;
+    const active = document.activeElement;
+    if (active instanceof Node && root.contains(active)) return;
+    const back = root.querySelector<HTMLButtonElement>('button[aria-label="Back"]');
+    (back ?? root.querySelector<HTMLElement>("button, input, textarea"))?.focus();
   }, [phase]);
 
   useEffect(() => {
@@ -192,7 +202,7 @@ export function EchoHubSheet({ titleId }: EchoHubSheetProps) {
           : "Add an Echo";
 
   return (
-    <div className="px-5 pb-8">
+    <div ref={rootRef} className="px-5 pb-8" data-flow="echo">
       {phase === "sent" || phase === "saved" ? null : (
       <div className="flex items-center gap-1">
         {showBack ? (
@@ -290,14 +300,15 @@ export function EchoHubSheet({ titleId }: EchoHubSheetProps) {
           ) : null}
           {phase === "contacts" ? (
             <div className="pt-5">
-              <label className="echo-search flex h-11 items-center gap-2 rounded-full bg-[var(--chip-inactive)] px-3">
+              <label className="echo-search sheet-search flex h-11 items-center gap-2 rounded-full bg-[var(--chip-inactive)] px-3">
                 <Search size={18} strokeWidth={2} className="shrink-0 text-[var(--text-400)]" aria-hidden="true" />
                 <input
                   ref={inputRef}
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
+                  aria-label="Search from contacts"
                   placeholder="Search from contacts"
-                  className="min-w-0 flex-1 border-0 bg-transparent text-[15px] leading-5 text-[var(--text-900)] placeholder:text-[var(--text-400)]"
+                  className="h-full min-h-11 min-w-0 flex-1 border-0 bg-transparent text-[15px] leading-5 text-[var(--text-900)] placeholder:text-[var(--text-400)]"
                 />
                 <Mic size={18} strokeWidth={2} className="shrink-0 text-[var(--text-400)]" aria-hidden="true" />
               </label>
@@ -419,7 +430,7 @@ export function EchoHubSheet({ titleId }: EchoHubSheetProps) {
                       type="button"
                       aria-label={playingPreview ? `Pause ${currentNote?.title ?? ""}`.trim() : `Play ${currentNote?.title ?? ""}`.trim()}
                       onClick={togglePreview}
-                      className="grid h-11 w-[22px] place-items-center border-0 bg-transparent p-0 text-inherit"
+                      className="relative -mx-[11px] grid h-11 w-11 place-items-center border-0 bg-transparent p-0 text-inherit"
                     >
                       {playingPreview ? <PauseBars /> : <PlayMark />}
                     </button>
@@ -427,7 +438,7 @@ export function EchoHubSheet({ titleId }: EchoHubSheetProps) {
                       type="button"
                       aria-label="Skip"
                       onClick={skipPreview}
-                      className="grid h-11 w-[22px] place-items-center border-0 bg-transparent p-0 text-inherit"
+                      className="relative -mx-[11px] grid h-11 w-11 place-items-center border-0 bg-transparent p-0 text-inherit"
                     >
                       <SkipForward size={22} strokeWidth={2} />
                     </button>

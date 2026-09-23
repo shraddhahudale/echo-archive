@@ -35,6 +35,8 @@ type ArchiveState = {
   contributors: Contributor[];
   nextVoiceNoteNumber: number;
   songDraftId: string | null;
+  stoneConnected: boolean;
+  connectStone: () => void;
   togglePlay: () => void;
   skipTrack: () => void;
   selectTrack: (id: string) => void;
@@ -67,6 +69,9 @@ export const useArchiveStore = create<ArchiveState>((set, get) => ({
   contributors: seedContributors,
   nextVoiceNoteNumber: 8,
   songDraftId: null,
+  stoneConnected: false,
+
+  connectStone: () => set({ stoneConnected: true }),
 
   togglePlay: () => set({ playing: !get().playing }),
 
@@ -225,7 +230,7 @@ export const useArchiveStore = create<ArchiveState>((set, get) => ({
 
   openSheet: (sheet) => set({ sheet, songDraftId: null }),
   openSongDetails: (songId) => set({ sheet: "song", songDraftId: songId }),
-  closeSheet: () => set({ sheet: null }),
+  closeSheet: () => set({ sheet: null, songDraftId: null }),
 }));
 
 export function selectCurrentTrack(state: ArchiveState) {

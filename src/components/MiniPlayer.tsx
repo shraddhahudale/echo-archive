@@ -48,7 +48,7 @@ export function MiniPlayer({ track, playing, onTogglePlay, onSkip, onAdd }: Mini
           type="button"
           aria-label={playing ? "Pause" : "Play"}
           onClick={onTogglePlay}
-          className="grid h-11 w-[22px] cursor-pointer place-items-center border-0 bg-transparent p-0 text-inherit"
+          className="-mx-[11px] grid h-11 w-11 cursor-pointer place-items-center border-0 bg-transparent p-0 text-inherit"
         >
           {playing ? <PauseIcon /> : <PlayIcon />}
         </button>
@@ -56,7 +56,7 @@ export function MiniPlayer({ track, playing, onTogglePlay, onSkip, onAdd }: Mini
           type="button"
           aria-label="Skip"
           onClick={onSkip}
-          className="grid h-11 w-[22px] cursor-pointer place-items-center border-0 bg-transparent p-0 text-inherit"
+          className="-mx-[11px] grid h-11 w-11 cursor-pointer place-items-center border-0 bg-transparent p-0 text-inherit"
         >
           <SkipForward size={22} strokeWidth={2} />
         </button>
@@ -64,7 +64,7 @@ export function MiniPlayer({ track, playing, onTogglePlay, onSkip, onAdd }: Mini
           type="button"
           aria-label="Add song"
           onClick={onAdd}
-          className="grid h-11 w-[22px] cursor-pointer place-items-center border-0 bg-transparent p-0 text-inherit"
+          className="-mx-[11px] grid h-11 w-11 cursor-pointer place-items-center border-0 bg-transparent p-0 text-inherit"
         >
           <Plus size={22} strokeWidth={2} />
         </button>

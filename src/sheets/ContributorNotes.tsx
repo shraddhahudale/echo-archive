@@ -124,25 +124,28 @@ export function ContributorNotes({
               </button>
               <div className="min-w-0 flex-1">
                 {editing && renamingId === note.id ? (
-                  <input
-                    value={draft}
-                    autoFocus
-                    aria-label={`Rename ${note.title}`}
-                    onChange={(event) => setDraft(event.target.value)}
-                    onBlur={() => saveTitle(note)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") event.currentTarget.blur();
-                    }}
-                    className="w-full border-0 border-b border-[#D98A1F] bg-transparent text-[16px] leading-5 font-semibold text-[#111111] outline-none"
-                  />
+                  <label className="relative -my-3 block h-11 w-full">
+                    <input
+                      value={draft}
+                      autoFocus
+                      aria-label={`Rename ${note.title}`}
+                      onChange={(event) => setDraft(event.target.value)}
+                      onBlur={() => saveTitle(note)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") event.currentTarget.blur();
+                      }}
+                      className="absolute inset-x-0 top-1/2 w-full -translate-y-1/2 border-0 border-b border-[#D98A1F] bg-transparent text-[16px] leading-5 font-semibold text-[#111111]"
+                    />
+                  </label>
                 ) : editing ? (
                   <button
                     type="button"
+                    aria-label={`Rename ${note.title}`}
                     onClick={() => {
                       setDraft(note.title);
                       setRenamingId(note.id);
                     }}
-                    className="flex max-w-full items-center gap-1.5 border-0 bg-transparent p-0 text-left"
+                    className="flex h-11 max-w-full -my-3 items-center gap-1.5 border-0 bg-transparent p-0 text-left"
                   >
                     {unseenIds.includes(note.id) ? (
                       <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-[#F2A541]" />

@@ -31,6 +31,7 @@ export function AddSongSheet({ titleId }: AddSongSheetProps) {
   const [feelings, setFeelings] = useState<string[]>([]);
   const [note, setNote] = useState("");
   const savedOnce = useRef(false);
+  const rootRef = useRef<HTMLDivElement>(null);
 
   const current = songs.find((song) => song.id === currentId) ?? songs[0];
   const picked = songs.find((song) => song.id === songId) ?? null;
@@ -42,6 +43,15 @@ export function AddSongSheet({ titleId }: AddSongSheetProps) {
     const haystack = `${song.title} ${song.artist}`.toLowerCase();
     return haystack.includes(trimmed.toLowerCase());
   });
+
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const active = document.activeElement;
+    if (active instanceof Node && root.contains(active)) return;
+    const back = root.querySelector<HTMLButtonElement>('button[aria-label="Back"]');
+    (back ?? root.querySelector<HTMLElement>("button, input, textarea"))?.focus();
+  }, [phase]);
 
   useEffect(() => {
     if (phase !== "saved") return;
@@ -71,7 +81,7 @@ export function AddSongSheet({ titleId }: AddSongSheetProps) {
   const title = phase === "details" ? "Anything to add?" : "Add a song";
 
   return (
-    <div className="px-5 pb-8">
+    <div ref={rootRef} className="px-5 pb-8" data-flow="song">
       {phase === "saved" ? null : (
         <div className="flex items-center gap-1">
           {showBack ? (
@@ -100,13 +110,14 @@ export function AddSongSheet({ titleId }: AddSongSheetProps) {
         >
           {phase === "search" ? (
             <div className="pt-5">
-              <label className="flex h-11 items-center gap-2 rounded-full bg-[var(--chip-inactive)] px-3">
+              <label className="sheet-search flex h-11 items-center gap-2 rounded-full bg-[var(--chip-inactive)] px-3">
                 <Search size={18} strokeWidth={2} className="shrink-0 text-[var(--text-400)]" aria-hidden="true" />
                 <input
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
+                  aria-label="Search for a song"
                   placeholder="Search for a song..."
-                  className="min-w-0 flex-1 border-0 bg-transparent text-[15px] leading-5 text-[var(--text-900)] placeholder:text-[var(--text-400)]"
+                  className="h-full min-h-11 min-w-0 flex-1 border-0 bg-transparent text-[15px] leading-5 text-[var(--text-900)] placeholder:text-[var(--text-400)]"
                 />
                 <Mic size={18} strokeWidth={2} className="shrink-0 text-[var(--text-400)]" aria-hidden="true" />
               </label>
@@ -137,7 +148,7 @@ export function AddSongSheet({ titleId }: AddSongSheetProps) {
                           type="button"
                           aria-label={playing ? "Pause" : "Play"}
                           onClick={togglePlay}
-                          className="grid h-11 w-[22px] place-items-center border-0 bg-transparent p-0 text-inherit"
+                          className="relative -mx-[11px] grid h-11 w-11 place-items-center border-0 bg-transparent p-0 text-inherit"
                         >
                           {playing ? <PauseBars /> : <PlayMark />}
                         </button>
@@ -145,7 +156,7 @@ export function AddSongSheet({ titleId }: AddSongSheetProps) {
                           type="button"
                           aria-label="Skip"
                           onClick={skipTrack}
-                          className="grid h-11 w-[22px] place-items-center border-0 bg-transparent p-0 text-inherit"
+                          className="relative -mx-[11px] grid h-11 w-11 place-items-center border-0 bg-transparent p-0 text-inherit"
                         >
                           <SkipForward size={22} strokeWidth={2} />
                         </button>
@@ -153,7 +164,7 @@ export function AddSongSheet({ titleId }: AddSongSheetProps) {
                           type="button"
                           aria-label={`Add ${current.title}`}
                           onClick={() => choose(current.id)}
-                          className="grid h-11 w-[22px] place-items-center border-0 bg-transparent p-0 text-inherit"
+                          className="relative -mx-[11px] grid h-11 w-11 place-items-center border-0 bg-transparent p-0 text-inherit"
                         >
                           <Plus size={20} strokeWidth={2} />
                         </button>

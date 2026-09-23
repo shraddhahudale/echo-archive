@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { Heart, Mic, Moon, Music, Sun, type LucideIcon } from "lucide-react";
 import { AlbumTile } from "../components/AlbumTile";
 import { MiniPlayer } from "../components/MiniPlayer";
@@ -25,6 +26,16 @@ export function Home() {
   const openSheet = useArchiveStore((state) => state.openSheet);
   const openSongDetails = useArchiveStore((state) => state.openSongDetails);
   const entries = useArchiveStore((state) => state.entries);
+  const stoneConnected = useArchiveStore((state) => state.stoneConnected);
+  const reduce = useReducedMotion();
+  const fade = reduce ? 0.2 : 0.5;
+  const sawDisconnected = useRef(!stoneConnected);
+  const [dotPop, setDotPop] = useState(false);
+
+  useEffect(() => {
+    if (!stoneConnected || reduce || !sawDisconnected.current) return;
+    setDotPop(true);
+  }, [stoneConnected, reduce]);
   const playerRef = useRef<HTMLDivElement>(null);
   const [playerHeight, setPlayerHeight] = useState(0);
 
@@ -61,13 +72,37 @@ export function Home() {
           How are you feeling today ?
         </h2>
         <div className="mt-4 flex justify-center">
-          <Orb onClick={() => openSheet("choice")} />
+          <Orb connected={stoneConnected} onClick={() => openSheet("choice")} />
         </div>
         <div className="mt-4 flex flex-col items-center">
-          <p className="inline-flex items-center gap-2 rounded-[var(--radius-pill)] bg-[var(--green-100)] px-3.5 py-1.5 text-[12px] leading-4 font-medium text-[var(--green-600)]">
-            <span className="size-2 rounded-full bg-[var(--green-600)]" aria-hidden="true" />
-            Stone connected
-          </p>
+          <motion.p
+            initial={false}
+            animate={{
+              backgroundColor: stoneConnected ? "#d9eeb3" : "#F2F2F4",
+              color: stoneConnected ? "#5e9a2c" : "#8E8E93",
+              boxShadow: stoneConnected ? "inset 0 0 0 0px #D1D1D6" : "inset 0 0 0 1.5px #D1D1D6",
+            }}
+            transition={{ duration: fade, ease: "easeOut" }}
+            className="inline-flex items-center gap-2 rounded-[var(--radius-pill)] px-3.5 py-1.5 text-[12px] leading-4 font-medium"
+          >
+            <motion.span
+              aria-hidden="true"
+              initial={false}
+              animate={{
+                backgroundColor: stoneConnected ? "#5e9a2c" : "#AEAEB2",
+                scale: dotPop ? [1, 1.4, 1] : 1,
+              }}
+              transition={{
+                backgroundColor: { duration: fade, ease: "easeOut" },
+                scale: dotPop ? { duration: 0.5, ease: "easeOut", times: [0, 0.4, 1] } : { duration: fade },
+              }}
+              onAnimationComplete={() => {
+                if (dotPop) setDotPop(false);
+              }}
+              className="size-2 rounded-full"
+            />
+            {stoneConnected ? "Stone connected" : "Stone not connected"}
+          </motion.p>
           <button
             type="button"
             onClick={() => openSheet("choice")}
@@ -261,9 +296,24 @@ function WeekCard({ entry }: { entry: Entry }) {
   );
 }
 
+function SongWeekArt({ art }: { art: string }) {
+  const [failed, setFailed] = useState(false);
+
+  if (failed) {
+    return (
+      <span
+        className="size-11 shrink-0 rounded-[8px]"
+        style={{ background: "linear-gradient(145deg, var(--pink-200), var(--pink-500))" }}
+      />
+    );
+  }
+
+  return <img src={art} alt="" className="size-11 shrink-0 rounded-[8px] object-cover" onError={() => setFailed(true)} />;
+}
+
 function WeekMark({ entry }: { entry: Entry }) {
   if (entry.kind === "song" && entry.art) {
-    return <img src={entry.art} alt="" className="size-11 shrink-0 rounded-[8px] object-cover" />;
+    return <SongWeekArt art={entry.art} />;
   }
   if (entry.kind === "song") {
     return (

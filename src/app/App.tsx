@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PhoneFrame } from "../components/PhoneFrame";
 import { StatusBar } from "../components/StatusBar";
 import { TabBar, type TabId } from "../components/TabBar";
@@ -7,9 +7,21 @@ import { Breath } from "../screens/Breath";
 import { Home } from "../screens/Home";
 import { SheetHost } from "../sheets/SheetHost";
 import { Timeline } from "../screens/Timeline";
+import { useArchiveStore } from "../store/useArchiveStore";
+
+let stoneIntroStartedAt = 0;
 
 export function App() {
   const [tab, setTab] = useState<TabId>("home");
+  const connectStone = useArchiveStore((state) => state.connectStone);
+
+  useEffect(() => {
+    if (useArchiveStore.getState().stoneConnected) return;
+    if (!stoneIntroStartedAt) stoneIntroStartedAt = Date.now();
+    const remaining = Math.max(0, 2000 - (Date.now() - stoneIntroStartedAt));
+    const id = window.setTimeout(connectStone, remaining);
+    return () => window.clearTimeout(id);
+  }, [connectStone]);
 
   return (
     <PhoneFrame>

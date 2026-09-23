@@ -67,7 +67,7 @@ export function RecordChoiceSheet({ titleId, onVoice, onSong, onEcho }: RecordCh
       >
         <SoftMark icon={Users} soft="var(--amber-100)" core="var(--amber-500)" size={56} />
         <span className="min-w-0 flex-1">
-          <span className="block text-[15px] leading-5 font-semibold text-[var(--text-900)]">Add an echo</span>
+          <span className="block text-[13px] leading-5 font-medium whitespace-nowrap text-[#111111]">Tap to add an echo</span>
         </span>
         <ChevronRight size={20} strokeWidth={2} className="shrink-0 text-[var(--text-400)]" aria-hidden="true" />
       </motion.button>
@@ -103,10 +103,10 @@ function ChoiceCard({
       type="button"
       onClick={onClick}
       variants={rise(delay, reduce)}
-      className="flex min-h-[196px] flex-1 flex-col items-center justify-center gap-4 rounded-[28px] border border-[var(--line)] bg-[var(--bg)] px-3 py-5 shadow-[var(--shadow-card)]"
+      className="flex min-h-[196px] flex-1 flex-col items-center justify-center gap-4 rounded-[28px] border border-[var(--line)] bg-[var(--bg)] px-2 py-5 shadow-[var(--shadow-card)]"
     >
       <SoftMark icon={icon} soft={soft} core={core} size={96} />
-      <span className="text-center text-[13px] leading-5 font-medium text-[var(--text-900)]">{label}</span>
+      <span className="text-center text-[13px] leading-5 font-medium whitespace-nowrap text-[#111111]">{label}</span>
     </motion.button>
   );
 }

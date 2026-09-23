@@ -60,14 +60,38 @@ body {
   outline-offset: 2px;
 }
 
+[data-flow="voice"] {
+  --flow-accent: var(--purple-500);
+}
+
+[data-flow="song"] {
+  --flow-accent: #d6408a;
+}
+
+[data-flow="echo"] {
+  --flow-accent: #d98a1f;
+}
+
+[data-flow] :focus-visible {
+  outline: 2px solid var(--flow-accent);
+  outline-offset: 2px;
+}
+
 .song-note {
   border: 1.5px solid transparent;
 }
 
 .song-note:focus-visible {
-  outline: none;
   border-color: #d6408a;
-  box-shadow: 0 0 0 3px rgba(214, 64, 138, 0.15);
+}
+
+.sheet-search:focus-within {
+  outline: 2px solid var(--flow-accent, var(--purple-500));
+  outline-offset: 2px;
+}
+
+.sheet-search input:focus-visible {
+  outline: none;
 }
 
 .echo-search {
@@ -76,12 +100,7 @@ body {
 
 .echo-search:focus-visible,
 .echo-search:focus-within {
-  outline: none;
   border-color: #d98a1f;
-}
-
-.echo-search input:focus-visible {
-  outline: none;
 }
 
 .echo-note {
@@ -89,7 +108,6 @@ body {
 }
 
 .echo-note:focus-visible {
-  outline: none;
   border-color: #d98a1f;
 }
 
@@ -109,13 +127,8 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+  .echo-bar {
+    animation: none;
   }
 }
 

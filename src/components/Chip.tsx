@@ -17,10 +17,14 @@ export function Chip({ label, selected, onClick, tone = "voice" }: ChipProps) {
       type="button"
       aria-pressed={selected}
       onClick={onClick}
-      className="rounded-full border px-3.5 py-1.5 text-[12px] leading-4 text-[var(--text-900)]"
-      style={selected ? selectedTone[tone] : { background: "transparent", borderColor: "var(--line)", color: "var(--text-900)" }}
+      className="relative -my-[7px] inline-flex h-11 items-center border-0 bg-transparent p-0"
     >
-      {label}
+      <span
+        className="rounded-full border px-3.5 py-1.5 text-[12px] leading-4"
+        style={selected ? selectedTone[tone] : { background: "transparent", borderColor: "var(--line)", color: "var(--text-900)" }}
+      >
+        {label}
+      </span>
     </button>
   );
 }

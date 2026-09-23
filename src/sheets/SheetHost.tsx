@@ -22,7 +22,7 @@ export function SheetHost() {
   const previousSheet = useRef<SheetId | null>(sheet);
   if (sheet) last.current = sheet;
   if (sheet !== previousSheet.current) {
-    if (sheet === "song" || sheet === "echo") generation.current += 1;
+    if (sheet === "voice" || sheet === "song" || sheet === "echo") generation.current += 1;
     previousSheet.current = sheet;
   }
   const shown = sheet ?? last.current;
@@ -37,7 +37,7 @@ export function SheetHost() {
           onEcho={() => openSheet("echo")}
         />
       ) : null}
-      {shown === "voice" ? <VoiceNoteSheet titleId={titleIds.voice} /> : null}
+      {shown === "voice" ? <VoiceNoteSheet key={generation.current} titleId={titleIds.voice} /> : null}
       {shown === "song" ? <AddSongSheet key={generation.current} titleId={titleIds.song} /> : null}
       {shown === "echo" ? <EchoHubSheet key={generation.current} titleId={titleIds.echo} /> : null}
     </BottomSheet>

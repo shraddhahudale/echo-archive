@@ -58,6 +58,7 @@ export function BottomSheet({ open, onClose, labelledBy, children }: BottomSheet
             dragConstraints={{ top: 0 }}
             dragElastic={0}
             dragMomentum={false}
+            dragTransition={reduce ? { bounceStiffness: 0, bounceDamping: 100, timeConstant: 150 } : undefined}
             onDragEnd={onDragEnd}
             variants={
               reduce

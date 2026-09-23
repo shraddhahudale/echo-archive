@@ -1,13 +1,27 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
 type OrbProps = {
   onClick?: () => void;
+  connected?: boolean;
 };
 
-export function Orb({ onClick }: OrbProps) {
+export function Orb({ onClick, connected = false }: OrbProps) {
   const reduce = useReducedMotion();
   const [pressed, setPressed] = useState(false);
+  const [breathing, setBreathing] = useState(false);
+  const mountedConnected = useRef(connected);
+  const fade = reduce ? 0.2 : 0.5;
+
+  useEffect(() => {
+    if (!connected || reduce) {
+      setBreathing(false);
+      return;
+    }
+    const wait = mountedConnected.current ? 0 : 500;
+    const id = window.setTimeout(() => setBreathing(true), wait);
+    return () => window.clearTimeout(id);
+  }, [connected, reduce]);
 
   return (
     <button
@@ -30,21 +44,27 @@ export function Orb({ onClick }: OrbProps) {
     >
       <motion.span
         className="pointer-events-none absolute inset-0"
-        animate={reduce ? { scale: 1 } : { scale: [1, 1.06, 1] }}
+        initial={false}
+        animate={breathing ? { scale: [1, 1.06, 1] } : { scale: 1 }}
         transition={
-          reduce
-            ? { duration: 0 }
-            : { duration: 3, ease: "easeInOut", repeat: Infinity }
+          breathing
+            ? { duration: 3, ease: "easeInOut", repeat: Infinity }
+            : { duration: 0 }
         }
       >
         <motion.span
           aria-hidden="true"
           className="absolute top-1/2 left-1/2 size-[260px] -ml-[130px] -mt-[130px] rounded-full"
-          animate={reduce ? { opacity: 1 } : { opacity: [0.7, 1, 0.7] }}
+          initial={false}
+          animate={
+            breathing
+              ? { opacity: [1, 0.7, 1] }
+              : { opacity: connected ? 1 : 0.5 }
+          }
           transition={
-            reduce
-              ? { duration: 0 }
-              : { duration: 3, ease: "easeInOut", repeat: Infinity }
+            breathing
+              ? { duration: 3, ease: "easeInOut", repeat: Infinity }
+              : { duration: fade, ease: "easeOut" }
           }
           style={{
             background:
@@ -52,17 +72,23 @@ export function Orb({ onClick }: OrbProps) {
             filter: "blur(30px)",
           }}
         />
-        <span
+        <motion.span
           aria-hidden="true"
           className="absolute top-1/2 left-1/2 size-[150px] -translate-x-1/2 -translate-y-1/2 rounded-full"
+          initial={false}
+          animate={{ filter: connected ? "saturate(1)" : "saturate(0.7)" }}
+          transition={{ duration: fade, ease: "easeOut" }}
           style={{
             background: "rgba(178, 141, 236, 0.55)",
             border: "1.5px solid rgba(255, 255, 255, 0.7)",
           }}
         />
-        <span
+        <motion.span
           aria-hidden="true"
           className="absolute top-1/2 left-1/2 size-[112px] -translate-x-1/2 -translate-y-1/2 rounded-full"
+          initial={false}
+          animate={{ filter: connected ? "saturate(1)" : "saturate(0.7)" }}
+          transition={{ duration: fade, ease: "easeOut" }}
           style={{
             background: "rgba(178, 141, 236, 0.75)",
             border: "1.5px solid rgba(255, 255, 255, 0.7)",
