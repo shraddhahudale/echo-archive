@@ -93,6 +93,21 @@ body {
   border-color: #d98a1f;
 }
 
+.echo-bar {
+  transform-origin: bottom;
+  animation: echo-bar 0.8s ease-in-out infinite;
+}
+
+@keyframes echo-bar {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

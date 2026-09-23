@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ChevronLeft, Link2, Mic, Plus, Search } from "lucide-react";
+import { ChevronLeft, Link2, Mic, Pencil, Plus, Search } from "lucide-react";
 import { Chip } from "../components/Chip";
 import { contacts } from "../data/mock";
 import type { Contact, Contributor } from "../data/types";
+import { ContributorNotes } from "./ContributorNotes";
 import { SavedMoment } from "./SavedMoment";
 import { useArchiveStore } from "../store/useArchiveStore";
 
@@ -13,13 +14,14 @@ type EchoHubSheetProps = {
   titleId: string;
 };
 
-type Phase = "hub" | "contacts" | "notes" | "invite" | "sent";
+type Phase = "hub" | "contacts" | "notes" | "invite" | "sent" | "add";
 
 export function EchoHubSheet({ titleId }: EchoHubSheetProps) {
   const reduce = useReducedMotion();
   const week = useArchiveStore((state) => state.user.week);
   const contributors = useArchiveStore((state) => state.contributors);
   const inviteMember = useArchiveStore((state) => state.inviteMember);
+  const markSeen = useArchiveStore((state) => state.markSeen);
   const [phase, setPhase] = useState<Phase>("hub");
   const [query, setQuery] = useState("");
   const [person, setPerson] = useState<Contributor | null>(null);
@@ -27,6 +29,9 @@ export function EchoHubSheet({ titleId }: EchoHubSheetProps) {
   const [relationship, setRelationship] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [returnTo, setReturnTo] = useState<"hub" | "contacts">("hub");
+  const [editing, setEditing] = useState(false);
+  const [unseenIds, setUnseenIds] = useState<string[]>([]);
+  const [pickedIds, setPickedIds] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const sentOnce = useRef(false);
 
@@ -50,6 +55,10 @@ export function EchoHubSheet({ titleId }: EchoHubSheetProps) {
   function openNotes(contributor: Contributor, from: "hub" | "contacts") {
     setPerson(contributor);
     setReturnTo(from);
+    setEditing(false);
+    setPickedIds([]);
+    setUnseenIds(contributor.notes.filter((note) => !note.seen).map((note) => note.id));
+    markSeen(contributor.id);
     setPhase("notes");
   }
 
@@ -74,8 +83,16 @@ export function EchoHubSheet({ titleId }: EchoHubSheetProps) {
   }
 
   const firstName = contact?.name.trim().split(/\s+/)[0] ?? "";
-  const showBack = phase === "contacts" || phase === "notes" || phase === "invite";
-  const title = phase === "notes" && person ? `${person.name}'s voice notes` : phase === "invite" ? "Send an invite" : "Add an Echo";
+  const active = contributors.find((item) => item.id === person?.id) ?? person;
+  const showBack = phase === "contacts" || phase === "notes" || phase === "invite" || phase === "add";
+  const title =
+    phase === "notes" && active
+      ? active.name
+      : phase === "add"
+        ? "Anything to add?"
+        : phase === "invite"
+          ? "Send an invite"
+          : "Add an Echo";
 
   return (
     <div className="px-5 pb-8">
@@ -86,7 +103,10 @@ export function EchoHubSheet({ titleId }: EchoHubSheetProps) {
             type="button"
             aria-label="Back"
             onClick={() => {
-              if (phase === "notes") setPhase(returnTo);
+              if (phase === "notes") {
+                setEditing(false);
+                setPhase(returnTo);
+              } else if (phase === "add") setPhase("notes");
               else if (phase === "invite") setPhase("contacts");
               else {
                 setQuery("");
@@ -98,9 +118,29 @@ export function EchoHubSheet({ titleId }: EchoHubSheetProps) {
             <ChevronLeft size={22} strokeWidth={2} />
           </button>
         ) : null}
-        <h2 id={titleId} className="text-[17px] leading-[22px] font-semibold text-[var(--text-900)]">
+        <h2 id={titleId} className="min-w-0 flex-1 truncate text-[17px] leading-[22px] font-semibold text-[var(--text-900)]">
           {title}
         </h2>
+        {phase === "notes" && active && active.notes.length > 0 ? (
+          editing ? (
+            <button
+              type="button"
+              onClick={() => setEditing(false)}
+              className="h-11 shrink-0 border-0 bg-transparent px-2 text-[15px] leading-5 font-semibold text-[#D98A1F]"
+            >
+              Done
+            </button>
+          ) : (
+            <button
+              type="button"
+              aria-label="Edit"
+              onClick={() => setEditing(true)}
+              className="grid size-11 shrink-0 place-items-center border-0 bg-transparent p-0 text-[#3F3A4A]"
+            >
+              <Pencil size={20} strokeWidth={2} />
+            </button>
+          )
+        ) : null}
       </div>
       )}
       <AnimatePresence mode="popLayout" initial={false}>
@@ -202,6 +242,17 @@ export function EchoHubSheet({ titleId }: EchoHubSheetProps) {
                 <span className="text-[16px] leading-5 font-semibold text-[#111111]">Share an invite link instead</span>
               </button>
             </div>
+          ) : null}
+          {phase === "notes" && active ? (
+            <ContributorNotes
+              contributor={active}
+              unseenIds={unseenIds}
+              editing={editing}
+              reduce={reduce}
+              selectedIds={pickedIds}
+              onSelectedIds={setPickedIds}
+              onAdd={() => setPhase("add")}
+            />
           ) : null}
           {phase === "invite" && contact ? (
             <div className="pt-5">

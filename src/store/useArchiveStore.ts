@@ -166,11 +166,15 @@ export const useArchiveStore = create<ArchiveState>((set, get) => ({
 
   removeEcho: (contributorId, echoId) => {
     set({
-      contributors: get().contributors.map((item) =>
-        item.id === contributorId
-          ? { ...item, notes: item.notes.filter((note) => note.id !== echoId) }
-          : item,
-      ),
+      contributors: get().contributors.map((item) => {
+        if (item.id !== contributorId) return item;
+        const notes = item.notes.filter((note) => note.id !== echoId);
+        return {
+          ...item,
+          notes,
+          totalCount: Math.max(0, item.totalCount - (notes.length === item.notes.length ? 0 : 1)),
+        };
+      }),
     });
   },
 

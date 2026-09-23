@@ -96,12 +96,18 @@ export const sheetRecentlyPlayedIds = [
 
 export const playbackQueueIds = ["chandaniya", ...recentlyPlayedIds];
 
-function notes(person: string, items: Omit<ContributorNote, "id" | "seen" | "inArchive">[], unseen = 0): ContributorNote[] {
+function notes(
+  person: string,
+  items: (Omit<ContributorNote, "id" | "seen" | "inArchive"> & { inArchive?: boolean })[],
+  unseen = 0,
+): ContributorNote[] {
   return items.map((item, index) => ({
-    ...item,
+    title: item.title,
+    durationSec: item.durationSec,
+    week: item.week,
     id: `${person}-${index + 1}`,
-    seen: index >= unseen,
-    inArchive: false,
+    seen: index >= unseen || Boolean(item.inArchive),
+    inArchive: Boolean(item.inArchive),
   }));
 }
 
@@ -116,8 +122,9 @@ export const contributors: Contributor[] = [
     notes: notes("jake", [
       { title: "Kick count", durationSec: 38, week: 22 },
       { title: "On my way home", durationSec: 51, week: 21 },
-      { title: "Sunday morning", durationSec: 44, week: 20 },
-      { title: "For the drive", durationSec: 63, week: 19 },
+      { title: "The drive home", durationSec: 72, week: 20 },
+      { title: "Before you arrive", durationSec: 47, week: 19 },
+      { title: "A song for you", durationSec: 65, week: 18, inArchive: true },
     ], 2),
   },
   {
@@ -129,10 +136,11 @@ export const contributors: Contributor[] = [
     since: 14,
     notes: notes("seema", [
       { title: "A blessing", durationSec: 70, week: 22 },
-      { title: "Recipe for later", durationSec: 95, week: 20 },
-      { title: "Your name", durationSec: 40, week: 18 },
+      { title: "Your name", durationSec: 40, week: 20 },
+      { title: "Recipe for later", durationSec: 95, week: 18 },
       { title: "From the wedding", durationSec: 55, week: 16 },
-    ]),
+      { title: "Sleep, little one", durationSec: 62, week: 15, inArchive: true },
+    ], 1),
   },
   {
     id: "mom",
@@ -145,7 +153,7 @@ export const contributors: Contributor[] = [
       { title: "Good morning, little one", durationSec: 42, week: 22 },
       { title: "When you were born", durationSec: 135, week: 21 },
       { title: "Your nani's lullaby", durationSec: 68, week: 20 },
-      { title: "Sunday call", durationSec: 55, week: 19 },
+      { title: "Sunday call", durationSec: 55, week: 19, inArchive: true },
     ], 2),
   },
   {
@@ -157,10 +165,11 @@ export const contributors: Contributor[] = [
     since: 10,
     notes: notes("grandma", [
       { title: "A story from home", durationSec: 80, week: 21 },
-      { title: "Sleep now", durationSec: 48, week: 19 },
-      { title: "The old song", durationSec: 62, week: 17 },
+      { title: "The old song", durationSec: 62, week: 19 },
+      { title: "Sleep now", durationSec: 48, week: 17 },
       { title: "For your mother", durationSec: 36, week: 15 },
-    ]),
+      { title: "Hands like yours", durationSec: 74, week: 12, inArchive: true },
+    ], 1),
   },
 ];
 
