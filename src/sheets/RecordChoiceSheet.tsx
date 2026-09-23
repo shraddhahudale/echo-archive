@@ -39,38 +39,35 @@ export function RecordChoiceSheet({ titleId, onVoice, onSong, onEcho }: RecordCh
       <h2 id={titleId} className="text-center text-[17px] leading-[22px] font-semibold text-[var(--text-900)]">
         How would you like to record this moment?
       </h2>
-      <div className="mt-6 flex gap-3">
+      <div className="mt-6 flex flex-col gap-3">
         <ChoiceCard
-          label="Tap to record voice note"
+          label="Add a voice note"
           icon={Mic}
-          soft="var(--purple-300)"
-          core="var(--purple-500)"
+          accent="var(--purple-500)"
+          tint="active:bg-[var(--purple-50)]"
           onClick={onVoice}
           delay={0.08}
           reduce={reduce}
         />
         <ChoiceCard
-          label="Tap to archive a song"
+          label="Archive a song"
           icon={Music}
-          soft="var(--pink-200)"
-          core="var(--pink-500)"
+          accent="var(--pink-500)"
+          tint="active:bg-[var(--pink-50)]"
           onClick={onSong}
           delay={0.12}
           reduce={reduce}
         />
+        <ChoiceCard
+          label="Add an echo"
+          icon={Users}
+          accent="var(--amber-500)"
+          tint="active:bg-[var(--amber-50)]"
+          onClick={onEcho}
+          delay={0.16}
+          reduce={reduce}
+        />
       </div>
-      <motion.button
-        type="button"
-        onClick={onEcho}
-        variants={rise(0.16, reduce)}
-        className="mt-3 flex h-[88px] w-full items-center gap-3 rounded-[28px] border border-[var(--line)] bg-[var(--bg)] px-4 text-left shadow-[var(--shadow-card)]"
-      >
-        <SoftMark icon={Users} soft="var(--amber-100)" core="var(--amber-500)" size={56} />
-        <span className="min-w-0 flex-1">
-          <span className="block text-[13px] leading-5 font-medium whitespace-nowrap text-[#111111]">Tap to add an echo</span>
-        </span>
-        <ChevronRight size={20} strokeWidth={2} className="shrink-0 text-[var(--text-400)]" aria-hidden="true" />
-      </motion.button>
       <motion.p
         variants={rise(0.2, reduce)}
         className="mt-4 rounded-[16px] bg-[var(--purple-50)] px-4 py-3 text-center text-[13px] leading-5 text-[var(--text-400)]"
@@ -83,17 +80,17 @@ export function RecordChoiceSheet({ titleId, onVoice, onSong, onEcho }: RecordCh
 
 function ChoiceCard({
   label,
-  icon,
-  soft,
-  core,
+  icon: Icon,
+  accent,
+  tint,
   onClick,
   delay,
   reduce,
 }: {
   label: string;
   icon: LucideIcon;
-  soft: string;
-  core: string;
+  accent: string;
+  tint: string;
   onClick: () => void;
   delay: number;
   reduce: boolean | null;
@@ -103,43 +100,20 @@ function ChoiceCard({
       type="button"
       onClick={onClick}
       variants={rise(delay, reduce)}
-      className="flex min-h-[196px] flex-1 flex-col items-center justify-center gap-4 rounded-[28px] border border-[var(--line)] bg-[var(--bg)] px-2 py-5 shadow-[var(--shadow-card)]"
+      whileTap={reduce ? undefined : { scale: 0.98 }}
+      className={`flex h-[72px] w-full items-center rounded-[20px] border border-[#E6E6EA] bg-white pr-4 pl-4 text-left shadow-[var(--shadow-card)] ${tint}`}
     >
-      <SoftMark icon={icon} soft={soft} core={core} size={96} />
-      <span className="text-center text-[13px] leading-5 font-medium whitespace-nowrap text-[#111111]">{label}</span>
-    </motion.button>
-  );
-}
-
-function SoftMark({ icon: Icon, soft, core, size }: { icon: LucideIcon; soft: string; core: string; size: number }) {
-  const mid = Math.round(size * 0.7);
-  const coreSize = Math.round(size * 0.5);
-  const iconSize = size > 70 ? 22 : 18;
-
-  return (
-    <span className="relative grid shrink-0 place-items-center" style={{ width: size, height: size }}>
       <span
-        className="absolute rounded-full"
+        className="grid size-10 shrink-0 place-items-center rounded-full text-white"
         style={{
-          width: size,
-          height: size,
-          background: `color-mix(in srgb, ${soft} 45%, transparent)`,
+          background: accent,
+          boxShadow: `0 0 0 4px color-mix(in srgb, ${accent} 22%, transparent)`,
         }}
-      />
-      <span
-        className="absolute rounded-full"
-        style={{
-          width: mid,
-          height: mid,
-          background: `color-mix(in srgb, ${soft} 80%, transparent)`,
-        }}
-      />
-      <span
-        className="relative grid place-items-center rounded-full text-white"
-        style={{ width: coreSize, height: coreSize, background: core }}
       >
-        <Icon size={iconSize} strokeWidth={2} aria-hidden="true" />
+        <Icon size={18} strokeWidth={2} aria-hidden="true" />
       </span>
-    </span>
+      <span className="ml-3.5 text-[16px] leading-5 font-medium text-[#111111]">{label}</span>
+      <ChevronRight size={20} strokeWidth={2} className="ml-auto shrink-0 text-[#C7C7CC]" aria-hidden="true" />
+    </motion.button>
   );
 }
