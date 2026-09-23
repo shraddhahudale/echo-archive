@@ -1,9 +1,11 @@
 import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { Heart, Moon, Sun, type LucideIcon } from "lucide-react";
 import { AlbumTile } from "../components/AlbumTile";
-import { MiniPlayer, type Track } from "../components/MiniPlayer";
+import { MiniPlayer } from "../components/MiniPlayer";
 import { Orb } from "../components/Orb";
 import { tabBarHeight } from "../components/TabBar";
+import { useShallow } from "zustand/react/shallow";
+import { selectCurrentTrack, selectRecentlyPlayed, trimesterName, useArchiveStore } from "../store/useArchiveStore";
 
 const feelings: { label: string; icon: LucideIcon; color: string; iconColor: string }[] = [
   { label: "Calm nights", icon: Moon, color: "#C9B8FF", iconColor: "#9B7BF0" },
@@ -11,57 +13,15 @@ const feelings: { label: string; icon: LucideIcon; color: string; iconColor: str
   { label: "Bright days", icon: Sun, color: "#FFD39A", iconColor: "#E89A5C" },
 ];
 
-const chandaniya: Track = {
-  id: "chandaniya",
-  title: "Chandaniya",
-  artist: "Sajid Wajid",
-  art: "/img/chandaniya.jpg",
-  gradient: "linear-gradient(145deg, var(--pink-200), var(--pink-500))",
-};
-
-const recentlyPlayed: (Track & { bordered?: boolean })[] = [
-  {
-    id: "breathe",
-    title: "Breathe",
-    artist: "Anna Nalick",
-    art: "/img/breathe.jpg",
-    gradient: "linear-gradient(145deg, var(--feel-lavender), var(--purple-500))",
-  },
-  {
-    id: "yellow",
-    title: "Yellow",
-    artist: "Coldplay",
-    art: "/img/yellow.jpg",
-    gradient: "linear-gradient(145deg, var(--feel-peach), var(--wrap-times-from))",
-    bordered: true,
-  },
-  {
-    id: "she-will-be-loved",
-    title: "She Will Be Loved",
-    artist: "Maroon 5",
-    art: "/img/she-will-be-loved.jpg",
-    gradient: "linear-gradient(145deg, var(--pink-200), var(--pink-500))",
-  },
-  {
-    id: "hotel-california",
-    title: "Hotel California",
-    artist: "Eagles",
-    art: "/img/hotel-california.jpg",
-    gradient: "linear-gradient(145deg, var(--wrap-times-from), var(--feel-peach))",
-  },
-  {
-    id: "holocene",
-    title: "Holocene",
-    artist: "Bon Iver",
-    art: "/img/holocene.jpg",
-    gradient: "linear-gradient(145deg, var(--wrap-holocene-from), var(--wrap-holocene-to))",
-  },
-];
-
-const queue: Track[] = [chandaniya, ...recentlyPlayed];
-
 export function Home() {
-  const [current, setCurrent] = useState<Track>(chandaniya);
+  const user = useArchiveStore((state) => state.user);
+  const current = useArchiveStore(selectCurrentTrack);
+  const recentlyPlayed = useArchiveStore(useShallow(selectRecentlyPlayed));
+  const playing = useArchiveStore((state) => state.playing);
+  const togglePlay = useArchiveStore((state) => state.togglePlay);
+  const skipTrack = useArchiveStore((state) => state.skipTrack);
+  const selectTrack = useArchiveStore((state) => state.selectTrack);
+  const openSheet = useArchiveStore((state) => state.openSheet);
   const playerRef = useRef<HTMLDivElement>(null);
   const [playerHeight, setPlayerHeight] = useState(0);
 
@@ -75,11 +35,6 @@ export function Home() {
     return () => observer.disconnect();
   }, []);
 
-  function skip() {
-    const index = queue.findIndex((track) => track.id === current.id);
-    setCurrent(queue[(index + 1) % queue.length]);
-  }
-
   return (
     <div className="relative h-full">
     <section
@@ -90,26 +45,34 @@ export function Home() {
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[15px] leading-5 font-normal text-[var(--text-400)]">Good evening,</p>
-          <h1 className="mt-2 text-[34px] leading-10 font-bold text-[var(--text-900)]">Sarah</h1>
+          <h1 className="mt-2 text-[34px] leading-10 font-bold text-[var(--text-900)]">{user.name}</h1>
         </div>
         <Avatar />
       </div>
       <p className="mt-2 text-[16px] leading-[22px] font-medium text-[var(--text-400)]">
-        Week 22 · Second Trimester
+        Week {user.week} · {trimesterName(user.trimester)} Trimester
       </p>
 
       <article className="mt-6 rounded-[var(--radius-card)] border border-[var(--line)] bg-[var(--bg)] px-5 pt-6 pb-5 text-center shadow-[var(--shadow-card)]">
         <h2 className="text-[15px] leading-5 font-semibold text-[var(--text-900)]">
           How are you feeling today ?
         </h2>
-        <div className="mt-4 mb-3 flex justify-center">
-          <Orb />
+        <div className="mt-4 flex justify-center">
+          <Orb onClick={() => openSheet("choice")} />
         </div>
-        <p className="inline-flex items-center gap-2 rounded-[var(--radius-pill)] bg-[var(--green-100)] px-3.5 py-1.5 text-[12px] leading-4 font-medium text-[var(--green-600)]">
-          <span className="size-2 rounded-full bg-[var(--green-600)]" aria-hidden="true" />
-          Stone connected
-        </p>
-        <p className="mt-3 text-[13px] leading-5 font-normal text-[var(--text-400)]">Tap to record a moment</p>
+        <div className="mt-4 flex flex-col items-center">
+          <p className="inline-flex items-center gap-2 rounded-[var(--radius-pill)] bg-[var(--green-100)] px-3.5 py-1.5 text-[12px] leading-4 font-medium text-[var(--green-600)]">
+            <span className="size-2 rounded-full bg-[var(--green-600)]" aria-hidden="true" />
+            Stone connected
+          </p>
+          <button
+            type="button"
+            onClick={() => openSheet("choice")}
+            className="mt-3 border-0 bg-transparent p-0 text-[13px] leading-5 font-normal text-[#A1A5B0]"
+          >
+            Tap to record a moment
+          </button>
+        </div>
       </article>
 
       <section className="mt-8" aria-labelledby="browse-feeling">
@@ -138,7 +101,7 @@ export function Home() {
                 art={track.art}
                 gradient={track.gradient}
                 bordered={track.bordered}
-                onSelect={() => setCurrent(track)}
+                onSelect={() => selectTrack(track.id)}
               />
             </li>
           ))}
@@ -146,7 +109,7 @@ export function Home() {
       </section>
     </section>
     <div ref={playerRef} className="absolute inset-x-5 z-10" style={{ bottom: tabBarHeight + 8 }}>
-      <MiniPlayer track={current} onSkip={skip} />
+      <MiniPlayer track={current} playing={playing} onTogglePlay={togglePlay} onSkip={skipTrack} />
     </div>
     </div>
   );

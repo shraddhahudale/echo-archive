@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
 type OrbProps = {
@@ -6,13 +7,26 @@ type OrbProps = {
 
 export function Orb({ onClick }: OrbProps) {
   const reduce = useReducedMotion();
+  const [pressed, setPressed] = useState(false);
 
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label="Tap to record a moment"
+      onPointerDown={() => setPressed(true)}
+      onPointerUp={() => setPressed(false)}
+      onPointerCancel={() => setPressed(false)}
+      onPointerLeave={() => setPressed(false)}
       className="relative grid size-[148px] cursor-pointer place-items-center border-0 bg-transparent p-0"
+      style={
+        reduce
+          ? undefined
+          : {
+              transform: pressed ? "scale(0.96)" : undefined,
+              transition: "transform 100ms ease-out",
+            }
+      }
     >
       <motion.span
         className="pointer-events-none absolute inset-0"

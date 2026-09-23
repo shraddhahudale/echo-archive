@@ -2,7 +2,7 @@ import { BatteryFull, Signal, Wifi } from "lucide-react";
 
 export function StatusBar() {
   return (
-    <header className="flex h-[47px] shrink-0 items-center justify-between px-5 text-[var(--text-900)]">
+    <header className="relative z-30 flex h-[47px] shrink-0 items-center justify-between px-5 text-[var(--text-900)]">
       <time className="text-[15px] leading-5 font-semibold" dateTime="09:41">
         9:41
       </time>

@@ -5,6 +5,7 @@ import { TabBar, type TabId } from "../components/TabBar";
 import { Archive } from "../screens/Archive";
 import { Breath } from "../screens/Breath";
 import { Home } from "../screens/Home";
+import { SheetHost } from "../sheets/SheetHost";
 import { Timeline } from "../screens/Timeline";
 
 export function App() {
@@ -23,6 +24,7 @@ export function App() {
         <div className="absolute inset-x-0 bottom-0 z-10">
           <TabBar active={tab} onChange={setTab} />
         </div>
+        <SheetHost />
       </div>
     </PhoneFrame>
   );

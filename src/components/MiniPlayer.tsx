@@ -5,17 +5,18 @@ export type Track = {
   id: string;
   title: string;
   artist: string;
-  art: string;
+  art?: string;
   gradient: string;
 };
 
 type MiniPlayerProps = {
   track: Track;
+  playing: boolean;
+  onTogglePlay: () => void;
   onSkip: () => void;
 };
 
-export function MiniPlayer({ track, onSkip }: MiniPlayerProps) {
-  const [playing, setPlaying] = useState(true);
+export function MiniPlayer({ track, playing, onTogglePlay, onSkip }: MiniPlayerProps) {
   const [failedId, setFailedId] = useState<string | null>(null);
   const artFailed = failedId === track.id;
 
@@ -24,11 +25,11 @@ export function MiniPlayer({ track, onSkip }: MiniPlayerProps) {
       <span
         className="block size-11 shrink-0 overflow-hidden rounded-[8px] bg-cover bg-center"
         style={{
-          backgroundImage: artFailed ? track.gradient : undefined,
+          backgroundImage: artFailed || !track.art ? track.gradient : undefined,
           backgroundColor: "var(--pink-50)",
         }}
       >
-        {artFailed ? null : (
+        {artFailed || !track.art ? null : (
           <img
             src={track.art}
             alt=""
@@ -45,7 +46,7 @@ export function MiniPlayer({ track, onSkip }: MiniPlayerProps) {
         <button
           type="button"
           aria-label={playing ? "Pause" : "Play"}
-          onClick={() => setPlaying((value) => !value)}
+          onClick={onTogglePlay}
           className="grid h-11 w-[22px] cursor-pointer place-items-center border-0 bg-transparent p-0 text-inherit"
         >
           {playing ? <PauseIcon /> : <PlayIcon />}
