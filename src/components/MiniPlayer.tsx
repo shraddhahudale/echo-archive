@@ -1,5 +1,15 @@
 import { Plus, SkipForward } from "lucide-react";
 import { useState } from "react";
+import { tabBarHeight } from "./TabBar";
+
+/** Outer height of the mini player card (art 44 + vertical padding). */
+export const miniPlayerHeight = 60;
+
+/** Space above the tab bar where the floating player sits. */
+export const miniPlayerBottomGap = 8;
+
+/** Scroll padding so the last row clears the mini player + tab bar. */
+export const chromeBottomPad = miniPlayerHeight + tabBarHeight + 16;
 
 export type Track = {
   id: string;

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, useCallback, type ReactNode } fro
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ChevronDown, ChevronLeft, Search } from "lucide-react";
 import { MomentRow, TypeDots, TypeFilterChips } from "../components/MomentRow";
-import { tabBarHeight } from "../components/TabBar";
+import { chromeBottomPad } from "../components/MiniPlayer";
 import {
   ALL_FEELINGS,
   ARCHIVE_CURRENT_WEEK,
@@ -100,7 +100,7 @@ function ArchiveHome() {
   return (
     <section
       className="scroll-row h-full overflow-x-hidden overflow-y-auto px-5 pt-2"
-      style={{ paddingBottom: tabBarHeight + 16 }}
+      style={{ paddingBottom: chromeBottomPad }}
     >
       <p className="text-[15px] leading-5 text-[var(--text-400)]">Your archive,</p>
       <h1 className="mt-1 font-[family-name:var(--font-serif)] text-[36px] leading-10 font-bold text-[var(--text-900)]">
@@ -582,7 +582,7 @@ function WeekDetail({ week }: { week: number }) {
   }
 
   return (
-    <section className="scroll-row h-full overflow-y-auto" style={{ paddingBottom: tabBarHeight + 16 }}>
+    <section className="scroll-row h-full overflow-y-auto" style={{ paddingBottom: chromeBottomPad }}>
       <BackHeader
         onBack={popArchive}
         eyebrow={formatWeekRange(week)}
@@ -676,7 +676,7 @@ function FeelingResults({ feelings, title }: { feelings: string[]; title?: strin
   const playing = useArchiveStore((state) => state.playing);
 
   return (
-    <section className="scroll-row h-full overflow-y-auto" style={{ paddingBottom: tabBarHeight + 16 }}>
+    <section className="scroll-row h-full overflow-y-auto" style={{ paddingBottom: chromeBottomPad }}>
       <BackHeader
         onBack={popArchive}
         title={
@@ -745,7 +745,7 @@ function PersonDetail({ contributorId }: { contributorId: string }) {
   }
 
   return (
-    <section className="scroll-row h-full overflow-y-auto" style={{ paddingBottom: tabBarHeight + 16 }}>
+    <section className="scroll-row h-full overflow-y-auto" style={{ paddingBottom: chromeBottomPad }}>
       <BackHeader
         onBack={popArchive}
         title={
@@ -829,7 +829,7 @@ function PlaylistDetail({ playlistId }: { playlistId: PlaylistId }) {
   const songCount = songs.length;
 
   return (
-    <section className="scroll-row h-full overflow-y-auto" style={{ paddingBottom: tabBarHeight + 16 }}>
+    <section className="scroll-row h-full overflow-y-auto" style={{ paddingBottom: chromeBottomPad }}>
       <BackHeader
         onBack={popArchive}
         title={
@@ -927,7 +927,7 @@ function SearchResults() {
   }
 
   return (
-    <section className="scroll-row h-full overflow-y-auto" style={{ paddingBottom: tabBarHeight + 16 }}>
+    <section className="scroll-row h-full overflow-y-auto" style={{ paddingBottom: chromeBottomPad }}>
       <div className="flex items-center gap-2 px-5 pt-2">
         <label className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full bg-[var(--chip-inactive)] px-3">
           <Search size={18} className="shrink-0 text-[var(--text-400)]" aria-hidden="true" />

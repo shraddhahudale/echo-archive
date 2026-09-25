@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode }
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, ChevronLeft, ChevronRight, Mic, Music, Users, type LucideIcon } from "lucide-react";
 import { AlbumTile } from "../components/AlbumTile";
-import { tabBarHeight } from "../components/TabBar";
+import { chromeBottomPad } from "../components/MiniPlayer";
 import { timelineFirstMonth, timelineLastMonth, timelineToday } from "../data/timeline";
 import type { TimelineEntry } from "../data/types";
 import { entriesByDate, heavyRotations, monthDots, useArchiveStore } from "../store/useArchiveStore";
@@ -65,10 +65,15 @@ export function Timeline() {
     <section
       aria-label="Timeline"
       className="scroll-row h-full overflow-x-hidden overflow-y-auto px-5 pt-2"
-      style={{ paddingBottom: tabBarHeight + 16 }}
+      style={{ paddingBottom: chromeBottomPad }}
     >
       <p className="text-[15px] leading-5 font-normal text-[var(--text-400)]">Good evening,</p>
-      <h1 className="mt-1 text-[34px] leading-10 font-bold text-[var(--text-900)]">{user.name}</h1>
+      <h1
+        className="mt-1 font-[family-name:var(--font-serif)] text-[34px] leading-10 font-bold italic text-[#111111]"
+        style={{ letterSpacing: "-0.01em" }}
+      >
+        {user.name}
+      </h1>
       <p className="mt-1 text-[15px] leading-5 font-normal text-[var(--text-400)]">Your pregnancy journey</p>
       <p className="mt-6 text-center text-[17px] leading-[22px]">
         <span className="font-bold text-[var(--text-900)]">Trimester {trimester}</span>

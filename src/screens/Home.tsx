@@ -1,13 +1,12 @@
-import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Heart, Mic, Moon, Music, Sun, type LucideIcon } from "lucide-react";
 import { AlbumTile } from "../components/AlbumTile";
-import { MiniPlayer } from "../components/MiniPlayer";
+import { chromeBottomPad } from "../components/MiniPlayer";
 import { Orb } from "../components/Orb";
-import { tabBarHeight } from "../components/TabBar";
 import type { Entry } from "../data/types";
 import { useShallow } from "zustand/react/shallow";
-import { selectCurrentTrack, selectRecentlyPlayed, trimesterName, useArchiveStore } from "../store/useArchiveStore";
+import { selectRecentlyPlayed, trimesterName, useArchiveStore } from "../store/useArchiveStore";
 
 const feelings: { label: string; icon: LucideIcon; color: string; iconColor: string; archiveFeelings: string[]; title?: string }[] = [
   { label: "Calm nights", icon: Moon, color: "#C9B8FF", iconColor: "#9B7BF0", archiveFeelings: ["calm"] },
@@ -17,14 +16,9 @@ const feelings: { label: string; icon: LucideIcon; color: string; iconColor: str
 
 export function Home() {
   const user = useArchiveStore((state) => state.user);
-  const current = useArchiveStore(selectCurrentTrack);
   const recentlyPlayed = useArchiveStore(useShallow(selectRecentlyPlayed));
-  const playing = useArchiveStore((state) => state.playing);
-  const togglePlay = useArchiveStore((state) => state.togglePlay);
-  const skipTrack = useArchiveStore((state) => state.skipTrack);
   const selectTrack = useArchiveStore((state) => state.selectTrack);
   const openSheet = useArchiveStore((state) => state.openSheet);
-  const openSongDetails = useArchiveStore((state) => state.openSongDetails);
   const entries = useArchiveStore((state) => state.entries);
   const openArchiveFeeling = useArchiveStore((state) => state.openArchiveFeeling);
   const stoneConnected = useArchiveStore((state) => state.stoneConnected);
@@ -37,30 +31,22 @@ export function Home() {
     if (!stoneConnected || reduce || !sawDisconnected.current) return;
     setDotPop(true);
   }, [stoneConnected, reduce]);
-  const playerRef = useRef<HTMLDivElement>(null);
-  const [playerHeight, setPlayerHeight] = useState(0);
-
-  useLayoutEffect(() => {
-    const node = playerRef.current;
-    if (!node) return;
-    const update = () => setPlayerHeight(node.offsetHeight);
-    update();
-    const observer = new ResizeObserver(update);
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, []);
 
   return (
-    <div className="relative h-full">
     <section
       aria-label="Home"
       className="scroll-row h-full overflow-x-hidden overflow-y-auto px-5 pt-2"
-      style={{ paddingBottom: playerHeight + tabBarHeight + 16 }}
+      style={{ paddingBottom: chromeBottomPad }}
     >
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[15px] leading-5 font-normal text-[var(--text-400)]">Good evening,</p>
-          <h1 className="mt-2 text-[34px] leading-10 font-bold text-[var(--text-900)]">{user.name}</h1>
+          <h1
+            className="mt-2 font-[family-name:var(--font-serif)] text-[34px] leading-10 font-bold italic text-[#111111]"
+            style={{ letterSpacing: "-0.01em" }}
+          >
+            {user.name}
+          </h1>
         </div>
         <Avatar />
       </div>
@@ -176,16 +162,6 @@ export function Home() {
         )}
       </section>
     </section>
-    <div ref={playerRef} className="absolute inset-x-5 z-10" style={{ bottom: tabBarHeight + 8 }}>
-      <MiniPlayer
-        track={current}
-        playing={playing}
-        onTogglePlay={togglePlay}
-        onSkip={skipTrack}
-        onAdd={() => openSongDetails(current.id)}
-      />
-    </div>
-    </div>
   );
 }
 
