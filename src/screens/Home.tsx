@@ -28,7 +28,17 @@ const pushMotion = {
   exit: { opacity: 0, x: -12 },
 };
 
-export function Home() {
+export function Home({
+  guideOrb = false,
+  onGuideDismiss,
+  onReplayWalkthrough,
+  entranceFade = false,
+}: {
+  guideOrb?: boolean;
+  onGuideDismiss?: () => void;
+  onReplayWalkthrough?: () => void;
+  entranceFade?: boolean;
+}) {
   const homeScreen = useArchiveStore((state) => state.homeScreen);
   const reduce = useReducedMotion();
   const transition = reduce
@@ -42,7 +52,13 @@ export function Home() {
   const motionProps = reduce ? fadeOnly : pushMotion;
 
   return (
-    <div className="relative h-full overflow-hidden" aria-label="Home">
+    <motion.div
+      className="relative h-full overflow-hidden"
+      aria-label="Home"
+      initial={entranceFade ? { opacity: 0 } : false}
+      animate={{ opacity: 1 }}
+      transition={{ duration: reduce ? 0.15 : entranceFade ? 0.4 : 0 }}
+    >
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={homeScreen.name === "home" ? "home" : `mood-${homeScreen.playlistId}`}
@@ -52,17 +68,31 @@ export function Home() {
           exit={motionProps.exit}
           transition={transition}
         >
-          {homeScreen.name === "home" ? <HomeRoot /> : null}
+          {homeScreen.name === "home" ? (
+            <HomeRoot
+              guideOrb={guideOrb}
+              onGuideDismiss={onGuideDismiss}
+              onReplayWalkthrough={onReplayWalkthrough}
+            />
+          ) : null}
           {homeScreen.name === "moodPlaylist" ? (
             <MoodPlaylistPage playlistId={homeScreen.playlistId as MoodPlaylistId} />
           ) : null}
         </motion.div>
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 }
 
-function HomeRoot() {
+function HomeRoot({
+  guideOrb = false,
+  onGuideDismiss,
+  onReplayWalkthrough,
+}: {
+  guideOrb?: boolean;
+  onGuideDismiss?: () => void;
+  onReplayWalkthrough?: () => void;
+}) {
   const user = useArchiveStore((state) => state.user);
   const recentlyPlayedIds = useArchiveStore((state) => state.recentlyPlayedIds);
   const songs = useArchiveStore((state) => state.songs);
@@ -98,17 +128,22 @@ function HomeRoot() {
     setDotPop(true);
   }, [stoneConnected, reduce]);
 
+  function dismissGuide() {
+    if (guideOrb) onGuideDismiss?.();
+  }
+
   return (
     <section
       aria-label="Home feed"
       className="scroll-row h-full overflow-x-hidden overflow-y-auto px-5"
       style={{ paddingBottom: chromeBottomPad }}
+      onPointerDownCapture={() => dismissGuide()}
     >
       <PageHeader
         eyebrow="Good evening,"
         title={user.name}
         subtitle={`Week ${user.week} · ${trimesterName(user.trimester)} Trimester`}
-        right={<Avatar />}
+        right={<Avatar onReplayWalkthrough={onReplayWalkthrough} />}
       />
 
       <article className="rounded-[var(--radius-card)] border border-[var(--line)] bg-[var(--bg)] px-5 pt-6 pb-5 text-center shadow-[var(--shadow-card)]">
@@ -116,7 +151,14 @@ function HomeRoot() {
           How are you feeling today?
         </h2>
         <div className="mt-4 flex justify-center">
-          <Orb connected={stoneConnected} onClick={() => openSheet("choice")} />
+          <Orb
+            connected={stoneConnected}
+            guide={guideOrb}
+            onClick={() => {
+              dismissGuide();
+              openSheet("choice");
+            }}
+          />
         </div>
         <div className="mt-4 flex flex-col items-center">
           <motion.p
@@ -387,27 +429,73 @@ function WeekMark({ entry }: { entry: WeekMoment }) {
   );
 }
 
-function Avatar() {
+function Avatar({ onReplayWalkthrough }: { onReplayWalkthrough?: () => void }) {
   const [failed, setFailed] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
 
-  if (failed) {
-    return (
-      <div
-        className="size-14 shrink-0 rounded-full"
-        style={{ background: "linear-gradient(135deg, var(--purple-100), var(--purple-300))" }}
-        role="img"
-        aria-label="Sarah"
-      />
-    );
-  }
+  useEffect(() => {
+    if (!menuOpen) return;
+    function onDoc(event: MouseEvent) {
+      if (!rootRef.current?.contains(event.target as Node)) setMenuOpen(false);
+    }
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") setMenuOpen(false);
+    }
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [menuOpen]);
 
-  return (
+  const face = failed ? (
+    <span
+      className="block size-14 rounded-full"
+      style={{ background: "linear-gradient(135deg, var(--purple-100), var(--purple-300))" }}
+      aria-hidden="true"
+    />
+  ) : (
     <img
       src="/img/sarah.png"
-      alt="Sarah"
-      className="size-14 shrink-0 rounded-full object-cover object-top"
+      alt=""
+      className="size-14 rounded-full object-cover object-top"
       onError={() => setFailed(true)}
     />
+  );
+
+  return (
+    <div ref={rootRef} className="relative shrink-0">
+      <button
+        type="button"
+        aria-label="Sarah"
+        aria-haspopup="menu"
+        aria-expanded={menuOpen}
+        onClick={() => setMenuOpen((open) => !open)}
+        className="block size-14 rounded-full border-0 bg-transparent p-0"
+      >
+        {face}
+      </button>
+      {menuOpen ? (
+        <div
+          role="menu"
+          className="absolute top-[calc(100%+8px)] right-0 z-30 min-w-[180px] rounded-[16px] border border-[var(--line)] bg-white py-1 shadow-[var(--shadow-card)]"
+        >
+          <button
+            type="button"
+            role="menuitem"
+            className="flex min-h-11 w-full items-center px-4 text-left text-[14px] leading-5 font-medium text-[var(--text-900)] hover:bg-[var(--purple-50)]"
+            onClick={() => {
+              setMenuOpen(false);
+              onReplayWalkthrough?.();
+            }}
+          >
+            Replay walkthrough
+          </button>
+        </div>
+      ) : null}
+    </div>
   );
 }
 

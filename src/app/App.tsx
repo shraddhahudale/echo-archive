@@ -8,6 +8,7 @@ import { TabBar, tabBarHeight, type TabId } from "../components/TabBar";
 import { Archive } from "../screens/Archive";
 import { Breath } from "../screens/Breath/index";
 import { Home } from "../screens/Home";
+import { Onboarding, type OnboardingResult } from "../screens/Onboarding";
 import { Timeline } from "../screens/Timeline";
 import { Wrapped } from "../screens/Wrapped";
 import { SheetHost } from "../sheets/SheetHost";
@@ -17,6 +18,11 @@ let stoneIntroStartedAt = 0;
 
 export function App() {
   const [tab, setTab] = useState<TabId>("home");
+  const [onboarding, setOnboarding] = useState(true);
+  const [onboardingKey, setOnboardingKey] = useState(0);
+  const [revealHome, setRevealHome] = useState(false);
+  const [guideOrb, setGuideOrb] = useState(false);
+  const [homeEntrance, setHomeEntrance] = useState(false);
   const connectStone = useArchiveStore((state) => state.connectStone);
   const wrappedOpen = useArchiveStore((state) => state.wrappedOpen);
   const requestTab = useArchiveStore((state) => state.requestTab);
@@ -29,7 +35,9 @@ export function App() {
   const skipTrack = useArchiveStore((state) => state.skipTrack);
   const openSongDetails = useArchiveStore((state) => state.openSongDetails);
   const isBreath = tab === "breath";
-  const showMiniPlayer = !isBreath && !wrappedOpen;
+  const showMain = !isBreath && revealHome;
+  const showChrome = showMain && !wrappedOpen;
+  const showMiniPlayer = showChrome;
 
   const [progress, setProgress] = useState(0);
   const elapsedRef = useRef(0);
@@ -41,13 +49,15 @@ export function App() {
     setProgress(0);
   }, [playingId]);
 
+  // Stone 2s intro — only after onboarding, and only if still disconnected
   useEffect(() => {
+    if (onboarding) return;
     if (useArchiveStore.getState().stoneConnected) return;
     if (!stoneIntroStartedAt) stoneIntroStartedAt = Date.now();
     const remaining = Math.max(0, 2000 - (Date.now() - stoneIntroStartedAt));
     const id = window.setTimeout(connectStone, remaining);
     return () => window.clearTimeout(id);
-  }, [connectStone]);
+  }, [connectStone, onboarding]);
 
   useEffect(() => {
     if (!requestTab) return;
@@ -91,17 +101,53 @@ export function App() {
     setTab(next);
   }
 
+  function handleOnboardingComplete(result: OnboardingResult) {
+    if (result.stoneConnected) {
+      connectStone();
+    } else {
+      stoneIntroStartedAt = 0;
+      useArchiveStore.setState({ stoneConnected: false });
+    }
+    setGuideOrb(true);
+    setHomeEntrance(true);
+    setTab("home");
+    resetHomeScreen();
+    setRevealHome(true);
+    const ms = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 150 : 400;
+    window.setTimeout(() => {
+      setOnboarding(false);
+      setHomeEntrance(false);
+    }, ms);
+  }
+
+  function replayWalkthrough() {
+    useArchiveStore.setState({ stoneConnected: false });
+    stoneIntroStartedAt = 0;
+    setGuideOrb(false);
+    setHomeEntrance(false);
+    setRevealHome(false);
+    setOnboardingKey((n) => n + 1);
+    setOnboarding(true);
+  }
+
   const songId = nowPlaying.songId;
 
   return (
     <AppErrorBoundary>
       <PhoneFrame>
         <div className="relative flex h-full flex-col">
-          <StatusBar tone={isBreath ? "light" : "dark"} />
-          {!isBreath && (
+          <StatusBar tone={isBreath || onboarding ? "light" : "dark"} />
+          {showMain && (
             <>
               <main className="min-h-0 flex-1 overflow-hidden" data-screen={tab}>
-                {tab === "home" && <Home />}
+                {tab === "home" && (
+                  <Home
+                    guideOrb={guideOrb}
+                    onGuideDismiss={() => setGuideOrb(false)}
+                    onReplayWalkthrough={replayWalkthrough}
+                    entranceFade={homeEntrance}
+                  />
+                )}
                 {tab === "timeline" && <Timeline />}
                 {tab === "archive" && (
                   <ArchiveErrorBoundary
@@ -126,14 +172,19 @@ export function App() {
                   />
                 </div>
               ) : null}
-              <div className="absolute inset-x-0 bottom-0 z-10">
-                <TabBar active={tab} onChange={changeTab} />
-              </div>
+              {showChrome ? (
+                <div className="absolute inset-x-0 bottom-0 z-10">
+                  <TabBar active={tab} onChange={changeTab} />
+                </div>
+              ) : null}
             </>
           )}
           {isBreath && <Breath onBackHome={() => changeTab("home")} />}
           <SheetHost />
           {wrappedOpen ? <Wrapped /> : null}
+          {onboarding ? (
+            <Onboarding key={onboardingKey} onComplete={handleOnboardingComplete} />
+          ) : null}
         </div>
       </PhoneFrame>
     </AppErrorBoundary>

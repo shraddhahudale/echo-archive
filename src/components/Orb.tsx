@@ -1,15 +1,18 @@
 import { useEffect, useRef, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 type OrbProps = {
   onClick?: () => void;
   connected?: boolean;
+  /** First-arrival guide from onboarding: brighter halo, ripple, tooltip. */
+  guide?: boolean;
 };
 
-export function Orb({ onClick, connected = false }: OrbProps) {
+export function Orb({ onClick, connected = false, guide = false }: OrbProps) {
   const reduce = useReducedMotion();
   const [pressed, setPressed] = useState(false);
   const [breathing, setBreathing] = useState(false);
+  const [showTip, setShowTip] = useState(false);
   const mountedConnected = useRef(connected);
   const fade = reduce ? 0.2 : 0.5;
 
@@ -23,11 +26,21 @@ export function Orb({ onClick, connected = false }: OrbProps) {
     return () => window.clearTimeout(id);
   }, [connected, reduce]);
 
+  useEffect(() => {
+    if (!guide) {
+      setShowTip(false);
+      return;
+    }
+    const id = window.setTimeout(() => setShowTip(true), reduce ? 0 : 600);
+    return () => window.clearTimeout(id);
+  }, [guide, reduce]);
+
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label="Tap to record a moment"
+      aria-describedby={guide && showTip ? "orb-guide-tip" : undefined}
       onPointerDown={() => setPressed(true)}
       onPointerUp={() => setPressed(false)}
       onPointerCancel={() => setPressed(false)}
@@ -42,6 +55,27 @@ export function Orb({ onClick, connected = false }: OrbProps) {
             }
       }
     >
+      <AnimatePresence>
+        {guide && showTip ? (
+          <motion.span
+            id="orb-guide-tip"
+            role="tooltip"
+            initial={reduce ? { opacity: 1 } : { opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 4 }}
+            transition={{ duration: reduce ? 0.15 : 0.25 }}
+            className="pointer-events-none absolute bottom-[calc(100%+10px)] left-1/2 z-10 w-max max-w-[220px] -translate-x-1/2 rounded-[12px] bg-white px-3 py-2 text-[13px] leading-4 font-medium text-[var(--text-900)] shadow-[0_8px_24px_rgba(143,89,226,0.16)]"
+          >
+            Tap the orb to keep your first moment
+            <span
+              aria-hidden="true"
+              className="absolute top-full left-1/2 -mt-px -translate-x-1/2 border-6 border-transparent border-t-white"
+              style={{ borderWidth: 6 }}
+            />
+          </motion.span>
+        ) : null}
+      </AnimatePresence>
+
       <motion.span
         className="pointer-events-none absolute inset-0"
         initial={false}
@@ -57,14 +91,20 @@ export function Orb({ onClick, connected = false }: OrbProps) {
           className="absolute top-1/2 left-1/2 size-[260px] -ml-[130px] -mt-[130px] rounded-full"
           initial={false}
           animate={
-            breathing
-              ? { opacity: [1, 0.7, 1] }
-              : { opacity: connected ? 1 : 0.5 }
+            guide && !reduce
+              ? { opacity: [0.7, 1, 0.7], scale: [1, 1.15, 1] }
+              : guide && reduce
+                ? { opacity: 0.95, scale: 1 }
+                : breathing
+                  ? { opacity: [1, 0.7, 1] }
+                  : { opacity: connected ? 1 : 0.5 }
           }
           transition={
-            breathing
-              ? { duration: 3, ease: "easeInOut", repeat: Infinity }
-              : { duration: fade, ease: "easeOut" }
+            guide && !reduce
+              ? { duration: 2.4, ease: "easeInOut", repeat: Infinity }
+              : breathing
+                ? { duration: 3, ease: "easeInOut", repeat: Infinity }
+                : { duration: fade, ease: "easeOut" }
           }
           style={{
             background:
@@ -104,6 +144,17 @@ export function Orb({ onClick, connected = false }: OrbProps) {
           }}
         />
       </motion.span>
+
+      {guide && !reduce ? (
+        <motion.span
+          aria-hidden="true"
+          className="pointer-events-none absolute top-1/2 left-1/2 size-[148px] -ml-[74px] -mt-[74px] rounded-full"
+          style={{ border: "1.5px solid var(--purple-300)" }}
+          initial={{ scale: 1, opacity: 0.55 }}
+          animate={{ scale: 1.4, opacity: 0 }}
+          transition={{ duration: 1.6, ease: "easeOut", repeat: Infinity }}
+        />
+      ) : null}
     </button>
   );
 }
