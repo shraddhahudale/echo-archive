@@ -1,7 +1,23 @@
 import { create } from "zustand";
+import {
+  ARCHIVE_CURRENT_WEEK,
+  enrichTimeline,
+  weekFromDate,
+  weekStartDate,
+  type PlaylistId,
+} from "../data/archiveHelpers";
 import { contributors as seedContributors, playbackQueueIds, recentlyPlayedIds, songs as seedSongs, user as seedUser } from "../data/mock";
 import { timelineEntries as seedTimeline, timelineToday } from "../data/timeline";
-import type { Contributor, Entry, Song, TimelineEntry } from "../data/types";
+import type {
+  ArchiveScreen,
+  ArchiveSegment,
+  Contributor,
+  EchoLaunch,
+  Entry,
+  Song,
+  TimelineEntry,
+} from "../data/types";
+import type { TabId } from "../components/TabBar";
 
 type VoiceNoteInput = {
   title?: string;
@@ -42,6 +58,11 @@ type ArchiveState = {
   visibleMonth: string;
   wrappedOpen: boolean;
   wrappedIndex: number;
+  archiveSegment: ArchiveSegment;
+  archiveScreen: ArchiveScreen;
+  archivePlayingId: string | null;
+  echoLaunch: EchoLaunch;
+  requestTab: TabId | null;
   connectStone: () => void;
   selectDate: (date: string) => void;
   setVisibleMonth: (month: string) => void;
@@ -51,6 +72,7 @@ type ArchiveState = {
   togglePlay: () => void;
   skipTrack: () => void;
   selectTrack: (id: string) => void;
+  setPlaybackQueue: (ids: string[], startId?: string) => void;
   saveVoiceNote: (input: VoiceNoteInput) => void;
   saveSong: (input: SongInput) => void;
   inviteMember: (input: InviteInput) => void;
@@ -59,6 +81,20 @@ type ArchiveState = {
   renameEcho: (contributorId: string, echoId: string, title: string) => void;
   removeEcho: (contributorId: string, echoId: string) => void;
   markSeen: (contributorId: string) => void;
+  renameMoment: (id: string, title: string) => void;
+  editMomentFeelings: (id: string, feelings: string[]) => void;
+  deleteMoment: (id: string) => void;
+  setArchiveSegment: (segment: ArchiveSegment) => void;
+  pushArchive: (screen: ArchiveScreen) => void;
+  popArchive: () => void;
+  resetArchiveScreen: () => void;
+  openArchiveFeeling: (feelings: string[], title?: string) => void;
+  openTimelineWeek: (week: number) => void;
+  setArchivePlaying: (id: string | null) => void;
+  openEchoInvite: () => void;
+  openEchoAddNote: (contributorId: string, noteId: string) => void;
+  clearEchoLaunch: () => void;
+  clearRequestTab: () => void;
   openSheet: (sheet: SheetId) => void;
   openSongDetails: (songId: string) => void;
   closeSheet: () => void;
@@ -78,11 +114,17 @@ function pushTimeline(entries: TimelineEntry[], next: TimelineEntry | TimelineEn
   return [...added, ...entries];
 }
 
+function patchMoment(entries: TimelineEntry[], id: string, patch: Partial<TimelineEntry>) {
+  return entries.map((entry) => (entry.id === id ? { ...entry, ...patch } : entry));
+}
+
 const heavyPlays = [
   { id: "breathe-deeper", plays: 44 },
   { id: "holocene", plays: 41 },
   { id: "breathe", plays: 36 },
 ] as const;
+
+const seededTimeline = enrichTimeline(seedTimeline, seedContributors);
 
 export const useArchiveStore = create<ArchiveState>((set, get) => ({
   user: seedUser,
@@ -97,11 +139,16 @@ export const useArchiveStore = create<ArchiveState>((set, get) => ({
   nextVoiceNoteNumber: 8,
   songDraftId: null,
   stoneConnected: false,
-  timelineEntries: seedTimeline,
+  timelineEntries: seededTimeline,
   selectedDate: timelineToday,
   visibleMonth: "2026-05",
   wrappedOpen: false,
   wrappedIndex: 0,
+  archiveSegment: "weeks",
+  archiveScreen: { name: "home" },
+  archivePlayingId: null,
+  echoLaunch: null,
+  requestTab: null,
 
   connectStone: () => set({ stoneConnected: true }),
 
@@ -122,17 +169,28 @@ export const useArchiveStore = create<ArchiveState>((set, get) => ({
     const { playbackQueueIds: queue, currentTrackId } = get();
     const index = queue.indexOf(currentTrackId);
     const next = queue[(index + 1) % queue.length];
-    set({ currentTrackId: next });
+    set({ currentTrackId: next, archivePlayingId: null });
   },
 
-  selectTrack: (id) => set({ currentTrackId: id, playing: true }),
+  selectTrack: (id) => set({ currentTrackId: id, playing: true, archivePlayingId: null }),
+
+  setPlaybackQueue: (ids, startId) => {
+    if (ids.length === 0) return;
+    set({
+      playbackQueueIds: ids,
+      currentTrackId: startId ?? ids[0],
+      playing: true,
+      archivePlayingId: null,
+    });
+  },
 
   saveVoiceNote: ({ title, feelings, note, durationSec }) => {
     const { nextVoiceNoteNumber, user, entries, timelineEntries } = get();
     const fallback = `Voice note #${String(nextVoiceNoteNumber).padStart(2, "0")}`;
     const resolved = title?.trim() || fallback;
+    const id = crypto.randomUUID();
     const entry: Entry = {
-      id: crypto.randomUUID(),
+      id,
       kind: "voice",
       title: resolved,
       number: nextVoiceNoteNumber,
@@ -143,11 +201,15 @@ export const useArchiveStore = create<ArchiveState>((set, get) => ({
       week: user.week,
     };
     const timeline: TimelineEntry = {
-      id: entry.id,
+      id,
       date: timelineToday,
       time: clockNow(),
       kind: "voice",
       title: resolved,
+      feelings,
+      note,
+      durationSec,
+      week: user.week,
     };
     set({
       entries: [entry, ...entries],
@@ -161,8 +223,9 @@ export const useArchiveStore = create<ArchiveState>((set, get) => ({
   saveSong: ({ songId, feelings, note }) => {
     const song = songById(get().songs, songId);
     if (!song) return;
+    const id = crypto.randomUUID();
     const entry: Entry = {
-      id: crypto.randomUUID(),
+      id,
       kind: "song",
       title: song.title,
       artist: song.artist,
@@ -173,7 +236,7 @@ export const useArchiveStore = create<ArchiveState>((set, get) => ({
       week: get().user.week,
     };
     const timeline: TimelineEntry = {
-      id: entry.id,
+      id,
       date: timelineToday,
       time: clockNow(),
       kind: "song",
@@ -181,10 +244,14 @@ export const useArchiveStore = create<ArchiveState>((set, get) => ({
       artist: song.artist,
       art: song.art,
       songId,
+      feelings,
+      note,
+      durationSec: songId === "breathe" ? 246 : undefined,
+      week: get().user.week,
     };
     set({
       entries: [entry, ...get().entries],
-      timelineEntries: pushTimeline(get().timelineEntries, timeline),
+      timelineEntries: pushTimeline(get().timelineEntries, enrichTimeline([timeline], get().contributors)[0]),
       selectedDate: timelineToday,
       visibleMonth: "2026-05",
     });
@@ -229,6 +296,10 @@ export const useArchiveStore = create<ArchiveState>((set, get) => ({
       kind: "echo" as const,
       title: item.title,
       contributorId,
+      feelings,
+      note,
+      durationSec: item.durationSec,
+      week: user.week,
     }));
     set({
       entries: [entry, ...entries],
@@ -272,6 +343,9 @@ export const useArchiveStore = create<ArchiveState>((set, get) => ({
       kind: "echo" as const,
       title: note.title,
       contributorId,
+      feelings: ["loved"],
+      durationSec: note.durationSec,
+      week: user.week,
     }));
     set({
       entries: [...added, ...entries],
@@ -290,12 +364,21 @@ export const useArchiveStore = create<ArchiveState>((set, get) => ({
   },
 
   renameEcho: (contributorId, echoId, title) => {
+    const person = get().contributors.find((item) => item.id === contributorId);
+    const previous = person?.notes.find((note) => note.id === echoId)?.title;
+    const next = title.trim() || previous || "Voice note";
     set({
       contributors: get().contributors.map((item) =>
         item.id === contributorId
-          ? { ...item, notes: item.notes.map((note) => (note.id === echoId ? { ...note, title } : note)) }
+          ? { ...item, notes: item.notes.map((note) => (note.id === echoId ? { ...note, title: next } : note)) }
           : item,
       ),
+      timelineEntries: get().timelineEntries.map((entry) => {
+        if (entry.kind !== "echo" || entry.contributorId !== contributorId) return entry;
+        if (previous && entry.title === previous) return { ...entry, title: next };
+        if (entry.id.endsWith(`-${echoId}`)) return { ...entry, title: next };
+        return entry;
+      }),
     });
   },
 
@@ -323,9 +406,70 @@ export const useArchiveStore = create<ArchiveState>((set, get) => ({
     });
   },
 
-  openSheet: (sheet) => set({ sheet, songDraftId: null }),
-  openSongDetails: (songId) => set({ sheet: "song", songDraftId: songId }),
-  closeSheet: () => set({ sheet: null, songDraftId: null }),
+  renameMoment: (id, title) => {
+    const next = title.trim();
+    if (!next) return;
+    set({
+      timelineEntries: patchMoment(get().timelineEntries, id, { title: next }),
+      entries: get().entries.map((entry) => (entry.id === id ? { ...entry, title: next } : entry)),
+    });
+  },
+
+  editMomentFeelings: (id, feelings) => {
+    set({
+      timelineEntries: patchMoment(get().timelineEntries, id, { feelings }),
+      entries: get().entries.map((entry) => (entry.id === id ? { ...entry, feelings } : entry)),
+    });
+  },
+
+  deleteMoment: (id) => {
+    const { timelineEntries, entries, archivePlayingId } = get();
+    set({
+      timelineEntries: timelineEntries.filter((entry) => entry.id !== id && !entry.id.startsWith(`${id}-`)),
+      entries: entries.filter((entry) => entry.id !== id),
+      archivePlayingId: archivePlayingId === id ? null : archivePlayingId,
+    });
+  },
+
+  setArchiveSegment: (segment) => set({ archiveSegment: segment }),
+
+  pushArchive: (screen) => set({ archiveScreen: screen }),
+
+  popArchive: () => set({ archiveScreen: { name: "home" } }),
+
+  resetArchiveScreen: () => set({ archiveScreen: { name: "home" }, archivePlayingId: null }),
+
+  openArchiveFeeling: (feelings, title) =>
+    set({
+      requestTab: "archive",
+      archiveScreen: { name: "feeling", feelings, title },
+      archiveSegment: "feelings",
+    }),
+
+  openTimelineWeek: (week) => {
+    const start = weekStartDate(week);
+    set({
+      requestTab: "timeline",
+      selectedDate: start > timelineToday ? timelineToday : start,
+      visibleMonth: start.slice(0, 7),
+      archiveScreen: { name: "home" },
+    });
+  },
+
+  setArchivePlaying: (id) => set({ archivePlayingId: id, playing: id ? false : get().playing }),
+
+  openEchoInvite: () => set({ echoLaunch: { mode: "invite" }, sheet: "echo", songDraftId: null }),
+
+  openEchoAddNote: (contributorId, noteId) =>
+    set({ echoLaunch: { mode: "addNote", contributorId, noteId }, sheet: "echo", songDraftId: null }),
+
+  clearEchoLaunch: () => set({ echoLaunch: null }),
+
+  clearRequestTab: () => set({ requestTab: null }),
+
+  openSheet: (sheet) => set({ sheet, songDraftId: null, echoLaunch: null }),
+  openSongDetails: (songId) => set({ sheet: "song", songDraftId: songId, echoLaunch: null }),
+  closeSheet: () => set({ sheet: null, songDraftId: null, echoLaunch: null }),
 }));
 
 export function selectCurrentTrack(state: ArchiveState) {
@@ -406,3 +550,13 @@ const trimesterNames = ["First", "Second", "Third"];
 export function trimesterName(trimester: number) {
   return trimesterNames[trimester - 1] ?? "Second";
 }
+
+export function currentArchiveWeek() {
+  return ARCHIVE_CURRENT_WEEK;
+}
+
+export function playlistIdIsValid(id: string): id is PlaylistId {
+  return id === "second-trimester" || id === "first-trimester" || id === "3am" || id === "bonding";
+}
+
+export { weekFromDate };

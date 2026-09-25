@@ -26,16 +26,27 @@ export function EchoHubSheet({ titleId }: EchoHubSheetProps) {
   const markSeen = useArchiveStore((state) => state.markSeen);
   const addEchoesToWeek = useArchiveStore((state) => state.addEchoesToWeek);
   const closeSheet = useArchiveStore((state) => state.closeSheet);
-  const [phase, setPhase] = useState<Phase>("hub");
+  const echoLaunch = useArchiveStore((state) => state.echoLaunch);
+  const clearEchoLaunch = useArchiveStore((state) => state.clearEchoLaunch);
+  const [phase, setPhase] = useState<Phase>(() => {
+    if (echoLaunch?.mode === "invite") return "contacts";
+    if (echoLaunch?.mode === "addNote") return "add";
+    return "hub";
+  });
   const [query, setQuery] = useState("");
-  const [person, setPerson] = useState<Contributor | null>(null);
+  const [person, setPerson] = useState<Contributor | null>(() => {
+    if (echoLaunch?.mode !== "addNote") return null;
+    return contributors.find((item) => item.id === echoLaunch.contributorId) ?? null;
+  });
   const [contact, setContact] = useState<Contact | null>(null);
   const [relationship, setRelationship] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [returnTo, setReturnTo] = useState<"hub" | "contacts">("hub");
   const [editing, setEditing] = useState(false);
   const [unseenIds, setUnseenIds] = useState<string[]>([]);
-  const [pickedIds, setPickedIds] = useState<string[]>([]);
+  const [pickedIds, setPickedIds] = useState<string[]>(() =>
+    echoLaunch?.mode === "addNote" ? [echoLaunch.noteId] : [],
+  );
   const [echoFeelings, setEchoFeelings] = useState<string[]>([]);
   const [echoNote, setEchoNote] = useState("");
   const [playingPreview, setPlayingPreview] = useState(false);
@@ -48,6 +59,13 @@ export function EchoHubSheet({ titleId }: EchoHubSheetProps) {
   const playRef = useRef({ index: 0, offset: 0 });
   const queueRef = useRef<ContributorNote[]>([]);
   const rootRef = useRef<HTMLDivElement>(null);
+  const launchHandled = useRef(false);
+
+  useEffect(() => {
+    if (launchHandled.current) return;
+    launchHandled.current = true;
+    if (echoLaunch) clearEchoLaunch();
+  }, [echoLaunch, clearEchoLaunch]);
 
   useEffect(() => {
     if (phase === "contacts") inputRef.current?.focus();

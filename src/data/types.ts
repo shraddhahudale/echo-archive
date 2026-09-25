@@ -71,4 +71,23 @@ export type TimelineEntry = {
   art?: string;
   songId?: string;
   contributorId?: string;
+  feelings?: string[];
+  durationSec?: number;
+  note?: string;
+  week?: number;
 };
+
+export type ArchiveSegment = "weeks" | "feelings" | "people";
+
+export type ArchiveScreen =
+  | { name: "home" }
+  | { name: "week"; week: number }
+  | { name: "feeling"; feelings: string[]; title?: string }
+  | { name: "person"; contributorId: string }
+  | { name: "playlist"; playlistId: string }
+  | { name: "search" };
+
+export type EchoLaunch =
+  | { mode: "invite" }
+  | { mode: "addNote"; contributorId: string; noteId: string }
+  | null;

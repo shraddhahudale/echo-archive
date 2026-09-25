@@ -9,10 +9,10 @@ import type { Entry } from "../data/types";
 import { useShallow } from "zustand/react/shallow";
 import { selectCurrentTrack, selectRecentlyPlayed, trimesterName, useArchiveStore } from "../store/useArchiveStore";
 
-const feelings: { label: string; icon: LucideIcon; color: string; iconColor: string }[] = [
-  { label: "Calm nights", icon: Moon, color: "#C9B8FF", iconColor: "#9B7BF0" },
-  { label: "Tender", icon: Heart, color: "#F7A8D0", iconColor: "#E86FAE" },
-  { label: "Bright days", icon: Sun, color: "#FFD39A", iconColor: "#E89A5C" },
+const feelings: { label: string; icon: LucideIcon; color: string; iconColor: string; archiveFeelings: string[]; title?: string }[] = [
+  { label: "Calm nights", icon: Moon, color: "#C9B8FF", iconColor: "#9B7BF0", archiveFeelings: ["calm"] },
+  { label: "Tender", icon: Heart, color: "#F7A8D0", iconColor: "#E86FAE", archiveFeelings: ["connected", "loved"], title: "Tender" },
+  { label: "Bright days", icon: Sun, color: "#FFD39A", iconColor: "#E89A5C", archiveFeelings: ["hopeful"] },
 ];
 
 export function Home() {
@@ -26,6 +26,7 @@ export function Home() {
   const openSheet = useArchiveStore((state) => state.openSheet);
   const openSongDetails = useArchiveStore((state) => state.openSongDetails);
   const entries = useArchiveStore((state) => state.entries);
+  const openArchiveFeeling = useArchiveStore((state) => state.openArchiveFeeling);
   const stoneConnected = useArchiveStore((state) => state.stoneConnected);
   const reduce = useReducedMotion();
   const fade = reduce ? 0.2 : 0.5;
@@ -120,7 +121,15 @@ export function Home() {
         <DragRow>
           {feelings.map((feeling) => (
             <li key={feeling.label} className="shrink-0 snap-start">
-              <FeelingTile {...feeling} />
+              <FeelingTile
+                {...feeling}
+                onOpen={() =>
+                  openArchiveFeeling(
+                    feeling.archiveFeelings,
+                    feeling.title,
+                  )
+                }
+              />
             </li>
           ))}
         </DragRow>
@@ -366,18 +375,21 @@ function FeelingTile({
   icon: Icon,
   color,
   iconColor,
+  onOpen,
 }: {
   label: string;
   icon: LucideIcon;
   color: string;
   iconColor: string;
+  onOpen: () => void;
 }) {
   return (
-    <div
-      className="relative size-[120px] rounded-[20px]"
+    <button
+      type="button"
+      onClick={onOpen}
+      className="relative size-[120px] rounded-[20px] border border-white/60 p-0 text-left"
       style={{
         background: `linear-gradient(135deg, #FFFFFF 0%, ${color} 75%)`,
-        border: "1px solid rgba(255, 255, 255, 0.6)",
       }}
     >
       <Icon
@@ -390,6 +402,6 @@ function FeelingTile({
       <span className="absolute bottom-3 left-[14px] text-[15px] leading-5 font-semibold text-[var(--text-900)]">
         {label}
       </span>
-    </div>
+    </button>
   );
 }

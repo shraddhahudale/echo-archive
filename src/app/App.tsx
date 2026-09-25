@@ -16,6 +16,9 @@ export function App() {
   const [tab, setTab] = useState<TabId>("home");
   const connectStone = useArchiveStore((state) => state.connectStone);
   const wrappedOpen = useArchiveStore((state) => state.wrappedOpen);
+  const requestTab = useArchiveStore((state) => state.requestTab);
+  const clearRequestTab = useArchiveStore((state) => state.clearRequestTab);
+  const resetArchiveScreen = useArchiveStore((state) => state.resetArchiveScreen);
   const isBreath = tab === "breath";
 
   useEffect(() => {
@@ -25,6 +28,17 @@ export function App() {
     const id = window.setTimeout(connectStone, remaining);
     return () => window.clearTimeout(id);
   }, [connectStone]);
+
+  useEffect(() => {
+    if (!requestTab) return;
+    setTab(requestTab);
+    clearRequestTab();
+  }, [requestTab, clearRequestTab]);
+
+  function changeTab(next: TabId) {
+    if (tab === "archive" && next !== "archive") resetArchiveScreen();
+    setTab(next);
+  }
 
   return (
     <PhoneFrame>
@@ -38,11 +52,11 @@ export function App() {
               {tab === "archive" && <Archive />}
             </main>
             <div className="absolute inset-x-0 bottom-0 z-10">
-              <TabBar active={tab} onChange={setTab} />
+              <TabBar active={tab} onChange={changeTab} />
             </div>
           </>
         )}
-        {isBreath && <Breath onBackHome={() => setTab("home")} />}
+        {isBreath && <Breath onBackHome={() => changeTab("home")} />}
         <SheetHost />
         {wrappedOpen ? <Wrapped /> : null}
       </div>
