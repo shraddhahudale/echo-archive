@@ -93,6 +93,7 @@ All three flows share one pattern: **pick → anything to add? → saved.** Keep
 - Typing in search filters a mock list of 10 to 12 songs live. No match: "No songs match "{query}". Try a different title or artist."
 - Recently played list: Songs About Jane / Maroon 5, Hotel California / Eagles, Bohemian Rhapsody / Queen, She Will Be Loved / Maroon 5 (drop the duplicate row from Figma).
 - Mini player + on Home opens B2 directly with the current track.
+- Default current track in the mini player: **Let It Happen** by Tame Impala.
 
 ---
 

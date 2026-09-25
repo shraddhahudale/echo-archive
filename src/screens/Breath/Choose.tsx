@@ -43,7 +43,7 @@ export function Choose({ onSelect, onBackHome, onBreathChange }: ChooseProps) {
         <p className="text-center font-sans text-[10px] leading-3 font-medium tracking-[0.2em] text-white/50 uppercase">
           Relief mode
         </p>
-        <h1 className="mt-3 text-center font-sans text-[24px] leading-7 font-semibold tracking-[-0.01em] text-white">
+        <h1 className="mt-3 text-center font-[family-name:var(--font-serif)] text-[28px] leading-8 font-normal text-white italic">
           Choose your breathing
         </h1>
       </div>
@@ -59,7 +59,7 @@ export function Choose({ onSelect, onBackHome, onBreathChange }: ChooseProps) {
               aria-label={`${pattern.name}. ${pattern.subtitle}`}
               disabled={leavingId != null}
               onClick={() => pick(pattern)}
-              className="flex h-[60px] w-[260px] flex-col items-center justify-center rounded-[20px] border-0 transition-[transform,opacity,background-color] duration-300"
+              className="flex h-[60px] w-[260px] flex-col items-center justify-center rounded-[16px] border-0 transition-[transform,opacity,background-color] duration-300"
               style={{
                 background: selected ? "rgba(255,255,255,0.28)" : "rgba(255,255,255,0.18)",
                 opacity: faded ? 0 : 1,

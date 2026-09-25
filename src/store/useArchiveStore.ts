@@ -7,6 +7,12 @@ import {
   type PlaylistId,
 } from "../data/archiveHelpers";
 import { contributors as seedContributors, playbackQueueIds, recentlyPlayedIds, songs as seedSongs, user as seedUser } from "../data/mock";
+import {
+  fromSong,
+  fromTimelineEntry,
+  isSameNowPlaying,
+  type NowPlayingItem,
+} from "../data/playback";
 import { timelineEntries as seedTimeline, timelineToday } from "../data/timeline";
 import type {
   ArchiveScreen,
@@ -46,8 +52,10 @@ type ArchiveState = {
   songs: Song[];
   recentlyPlayedIds: string[];
   playbackQueueIds: string[];
-  currentTrackId: string;
+  nowPlaying: NowPlayingItem;
+  playQueue: NowPlayingItem[];
   playing: boolean;
+  elapsedSec: number;
   entries: Entry[];
   contributors: Contributor[];
   nextVoiceNoteNumber: number;
@@ -60,7 +68,6 @@ type ArchiveState = {
   wrappedIndex: number;
   archiveSegment: ArchiveSegment;
   archiveScreen: ArchiveScreen;
-  archivePlayingId: string | null;
   echoLaunch: EchoLaunch;
   requestTab: TabId | null;
   connectStone: () => void;
@@ -71,8 +78,12 @@ type ArchiveState = {
   setWrappedIndex: (index: number) => void;
   togglePlay: () => void;
   skipTrack: () => void;
-  selectTrack: (id: string) => void;
-  setPlaybackQueue: (ids: string[], startId?: string) => void;
+  playNow: (item: NowPlayingItem, queue?: NowPlayingItem[]) => void;
+  selectTrack: (songId: string, queueSongIds?: string[]) => void;
+  playEntry: (entry: TimelineEntry, queue?: TimelineEntry[]) => void;
+  setPlaybackQueue: (songIds: string[], startId?: string) => void;
+  setPlayQueue: (items: NowPlayingItem[], startId?: string) => void;
+  tickPlayback: (dtSec: number) => void;
   saveVoiceNote: (input: VoiceNoteInput) => void;
   saveSong: (input: SongInput) => void;
   inviteMember: (input: InviteInput) => void;
@@ -90,7 +101,6 @@ type ArchiveState = {
   resetArchiveScreen: () => void;
   openArchiveFeeling: (feelings: string[], title?: string) => void;
   openTimelineWeek: (week: number) => void;
-  setArchivePlaying: (id: string | null) => void;
   openEchoInvite: () => void;
   openEchoAddNote: (contributorId: string, noteId: string) => void;
   clearEchoLaunch: () => void;
@@ -125,14 +135,29 @@ const heavyPlays = [
 ] as const;
 
 const seededTimeline = enrichTimeline(seedTimeline, seedContributors);
+const defaultSong = songById(seedSongs, "let-it-happen") ?? seedSongs[0];
+const defaultNowPlaying = fromSong(defaultSong);
+const defaultPlayQueue = playbackQueueIds
+  .map((id) => songById(seedSongs, id))
+  .filter((song): song is Song => Boolean(song))
+  .map(fromSong);
+
+function songQueueItems(songs: Song[], ids: string[]) {
+  return ids
+    .map((id) => songById(songs, id))
+    .filter((song): song is Song => Boolean(song))
+    .map(fromSong);
+}
 
 export const useArchiveStore = create<ArchiveState>((set, get) => ({
   user: seedUser,
   songs: seedSongs,
   recentlyPlayedIds,
   playbackQueueIds,
-  currentTrackId: "let-it-happen",
+  nowPlaying: defaultNowPlaying,
+  playQueue: defaultPlayQueue.length > 0 ? defaultPlayQueue : [defaultNowPlaying],
   playing: true,
+  elapsedSec: 0,
   sheet: null,
   entries: [],
   contributors: seedContributors,
@@ -146,7 +171,6 @@ export const useArchiveStore = create<ArchiveState>((set, get) => ({
   wrappedIndex: 0,
   archiveSegment: "weeks",
   archiveScreen: { name: "home" },
-  archivePlayingId: null,
   echoLaunch: null,
   requestTab: null,
 
@@ -165,23 +189,93 @@ export const useArchiveStore = create<ArchiveState>((set, get) => ({
 
   togglePlay: () => set({ playing: !get().playing }),
 
-  skipTrack: () => {
-    const { playbackQueueIds: queue, currentTrackId } = get();
-    const index = queue.indexOf(currentTrackId);
-    const next = queue[(index + 1) % queue.length];
-    set({ currentTrackId: next, archivePlayingId: null });
+  playNow: (item, queue) => {
+    const { nowPlaying, playing } = get();
+    if (isSameNowPlaying(nowPlaying, item) && playing) {
+      set({ playing: false });
+      return;
+    }
+    if (isSameNowPlaying(nowPlaying, item) && !playing) {
+      set({ playing: true });
+      return;
+    }
+    set({
+      nowPlaying: item,
+      playQueue: queue && queue.length > 0 ? queue : [item],
+      playing: true,
+      elapsedSec: 0,
+      playbackQueueIds:
+        item.kind === "song" && item.songId
+          ? queue?.every((q) => q.kind === "song")
+            ? (queue.map((q) => q.songId!).filter(Boolean) as string[])
+            : get().playbackQueueIds
+          : get().playbackQueueIds,
+    });
   },
 
-  selectTrack: (id) => set({ currentTrackId: id, playing: true, archivePlayingId: null }),
+  selectTrack: (songId, queueSongIds) => {
+    const song = songById(get().songs, songId);
+    if (!song) return;
+    const ids = queueSongIds ?? get().playbackQueueIds;
+    const queue = songQueueItems(get().songs, ids.includes(songId) ? ids : [songId, ...ids]);
+    get().playNow(fromSong(song), queue);
+  },
+
+  playEntry: (entry, queue) => {
+    const { songs, contributors } = get();
+    const item = fromTimelineEntry(entry, songs, contributors);
+    const items = (queue ?? [entry]).map((row) => fromTimelineEntry(row, songs, contributors));
+    get().playNow(item, items);
+  },
+
+  skipTrack: () => {
+    const { playQueue, nowPlaying, songs, playbackQueueIds } = get();
+    const queue =
+      playQueue.length > 0
+        ? playQueue
+        : songQueueItems(songs, playbackQueueIds);
+    if (queue.length === 0) return;
+    const index = queue.findIndex((item) => isSameNowPlaying(nowPlaying, item));
+    const next = queue[(index + 1 + queue.length) % queue.length] ?? queue[0];
+    set({ nowPlaying: next, playing: true, elapsedSec: 0 });
+  },
 
   setPlaybackQueue: (ids, startId) => {
     if (ids.length === 0) return;
+    const queue = songQueueItems(get().songs, ids);
+    const start = queue.find((item) => item.songId === (startId ?? ids[0])) ?? queue[0];
     set({
       playbackQueueIds: ids,
-      currentTrackId: startId ?? ids[0],
+      playQueue: queue,
+      nowPlaying: start,
       playing: true,
-      archivePlayingId: null,
+      elapsedSec: 0,
     });
+  },
+
+  setPlayQueue: (items, startId) => {
+    if (items.length === 0) return;
+    const start = items.find((item) => item.id === startId) ?? items[0];
+    set({
+      playQueue: items,
+      nowPlaying: start,
+      playing: true,
+      elapsedSec: 0,
+      playbackQueueIds: items.every((item) => item.kind === "song")
+        ? items.map((item) => item.songId!).filter(Boolean)
+        : get().playbackQueueIds,
+    });
+  },
+
+  tickPlayback: (dtSec) => {
+    const { playing, nowPlaying, elapsedSec } = get();
+    if (!playing || !nowPlaying) return;
+    const next = elapsedSec + dtSec;
+    if (next >= nowPlaying.durationSec) {
+      get().skipTrack();
+      return;
+    }
+    set({ elapsedSec: next });
   },
 
   saveVoiceNote: ({ title, feelings, note, durationSec }) => {
@@ -423,11 +517,13 @@ export const useArchiveStore = create<ArchiveState>((set, get) => ({
   },
 
   deleteMoment: (id) => {
-    const { timelineEntries, entries, archivePlayingId } = get();
+    const { timelineEntries, entries, nowPlaying } = get();
     set({
       timelineEntries: timelineEntries.filter((entry) => entry.id !== id && !entry.id.startsWith(`${id}-`)),
       entries: entries.filter((entry) => entry.id !== id),
-      archivePlayingId: archivePlayingId === id ? null : archivePlayingId,
+      ...(nowPlaying.id === id
+        ? { playing: false, elapsedSec: 0 }
+        : {}),
     });
   },
 
@@ -437,7 +533,7 @@ export const useArchiveStore = create<ArchiveState>((set, get) => ({
 
   popArchive: () => set({ archiveScreen: { name: "home" } }),
 
-  resetArchiveScreen: () => set({ archiveScreen: { name: "home" }, archivePlayingId: null }),
+  resetArchiveScreen: () => set({ archiveScreen: { name: "home" } }),
 
   openArchiveFeeling: (feelings, title) =>
     set({
@@ -456,8 +552,6 @@ export const useArchiveStore = create<ArchiveState>((set, get) => ({
     });
   },
 
-  setArchivePlaying: (id) => set({ archivePlayingId: id, playing: id ? false : get().playing }),
-
   openEchoInvite: () => set({ echoLaunch: { mode: "invite" }, sheet: "echo", songDraftId: null }),
 
   openEchoAddNote: (contributorId, noteId) =>
@@ -472,10 +566,24 @@ export const useArchiveStore = create<ArchiveState>((set, get) => ({
   closeSheet: () => set({ sheet: null, songDraftId: null, echoLaunch: null }),
 }));
 
-export function selectCurrentTrack(state: ArchiveState) {
-  return songById(state.songs, state.currentTrackId) ?? state.songs[0];
+export function selectNowPlaying(state: ArchiveState) {
+  return state.nowPlaying;
 }
 
+export function selectCurrentTrack(state: ArchiveState) {
+  const songId = state.nowPlaying.songId;
+  if (songId) return songById(state.songs, songId) ?? state.songs[0];
+  return songById(state.songs, "let-it-happen") ?? state.songs[0];
+}
+
+export function selectIsPlayingId(
+  state: ArchiveState,
+  target: { id?: string; songId?: string; kind?: NowPlayingItem["kind"] },
+) {
+  return state.playing && isSameNowPlaying(state.nowPlaying, target);
+}
+
+/** Stable song refs only — derive display titles in the component with useMemo. */
 export function selectRecentlyPlayed(state: ArchiveState) {
   return state.recentlyPlayedIds
     .map((id) => songById(state.songs, id))

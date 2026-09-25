@@ -65,11 +65,11 @@ body {
 }
 
 [data-flow="song"] {
-  --flow-accent: #d6408a;
+  --flow-accent: var(--pink-border);
 }
 
 [data-flow="echo"] {
-  --flow-accent: #d98a1f;
+  --flow-accent: var(--amber-600);
 }
 
 [data-flow] :focus-visible {
@@ -82,7 +82,7 @@ body {
 }
 
 .song-note:focus-visible {
-  border-color: #d6408a;
+  border-color: var(--pink-border);
 }
 
 .sheet-search:focus-within {
@@ -100,7 +100,7 @@ body {
 
 .echo-search:focus-visible,
 .echo-search:focus-within {
-  border-color: #d98a1f;
+  border-color: var(--amber-600);
 }
 
 .echo-note {
@@ -108,7 +108,7 @@ body {
 }
 
 .echo-note:focus-visible {
-  border-color: #d98a1f;
+  border-color: var(--amber-600);
 }
 
 .echo-bar {

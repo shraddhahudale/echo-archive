@@ -127,9 +127,7 @@ export function Wrapped() {
         body: (
           <>
             <p className="font-serif text-[44px] leading-[48px] font-bold text-white italic">
-              {stats.journeyFrom} →
-              <br />
-              {stats.journeyTo}
+              {stats.journeyFrom} → {stats.journeyTo}
             </p>
             <p className="mt-3 text-[16px] leading-5 text-white/90">the shift Echo noticed</p>
           </>

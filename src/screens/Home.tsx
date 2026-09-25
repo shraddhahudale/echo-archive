@@ -1,12 +1,11 @@
-import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Heart, Mic, Moon, Music, Sun, type LucideIcon } from "lucide-react";
 import { AlbumTile } from "../components/AlbumTile";
 import { chromeBottomPad } from "../components/MiniPlayer";
 import { Orb } from "../components/Orb";
-import type { Entry } from "../data/types";
-import { useShallow } from "zustand/react/shallow";
-import { selectRecentlyPlayed, trimesterName, useArchiveStore } from "../store/useArchiveStore";
+import type { Entry, Song } from "../data/types";
+import { trimesterName, useArchiveStore } from "../store/useArchiveStore";
 
 const feelings: { label: string; icon: LucideIcon; color: string; iconColor: string; archiveFeelings: string[]; title?: string }[] = [
   { label: "Calm nights", icon: Moon, color: "#C9B8FF", iconColor: "#9B7BF0", archiveFeelings: ["calm"] },
@@ -16,7 +15,8 @@ const feelings: { label: string; icon: LucideIcon; color: string; iconColor: str
 
 export function Home() {
   const user = useArchiveStore((state) => state.user);
-  const recentlyPlayed = useArchiveStore(useShallow(selectRecentlyPlayed));
+  const recentlyPlayedIds = useArchiveStore((state) => state.recentlyPlayedIds);
+  const songs = useArchiveStore((state) => state.songs);
   const selectTrack = useArchiveStore((state) => state.selectTrack);
   const openSheet = useArchiveStore((state) => state.openSheet);
   const entries = useArchiveStore((state) => state.entries);
@@ -26,6 +26,19 @@ export function Home() {
   const fade = reduce ? 0.2 : 0.5;
   const sawDisconnected = useRef(!stoneConnected);
   const [dotPop, setDotPop] = useState(false);
+
+  const recentlyPlayed = useMemo(
+    () =>
+      recentlyPlayedIds
+        .map((id) => songs.find((song) => song.id === id))
+        .filter((song): song is Song => Boolean(song)),
+    [recentlyPlayedIds, songs],
+  );
+
+  const thisWeek = useMemo(
+    () => entries.filter((entry) => entry.week === user.week),
+    [entries, user.week],
+  );
 
   useEffect(() => {
     if (!stoneConnected || reduce || !sawDisconnected.current) return;
@@ -56,7 +69,7 @@ export function Home() {
 
       <article className="mt-6 rounded-[var(--radius-card)] border border-[var(--line)] bg-[var(--bg)] px-5 pt-6 pb-5 text-center shadow-[var(--shadow-card)]">
         <h2 className="text-[15px] leading-5 font-semibold text-[var(--text-900)]">
-          How are you feeling today ?
+          How are you feeling today?
         </h2>
         <div className="mt-4 flex justify-center">
           <Orb connected={stoneConnected} onClick={() => openSheet("choice")} />
@@ -65,8 +78,8 @@ export function Home() {
           <motion.p
             initial={false}
             animate={{
-              backgroundColor: stoneConnected ? "#d9eeb3" : "#F2F2F4",
-              color: stoneConnected ? "#5e9a2c" : "#8E8E93",
+              backgroundColor: stoneConnected ? "var(--green-100)" : "var(--surface)",
+              color: stoneConnected ? "var(--green-600)" : "var(--text-secondary)",
               boxShadow: stoneConnected ? "inset 0 0 0 0px #D1D1D6" : "inset 0 0 0 1.5px #D1D1D6",
             }}
             transition={{ duration: fade, ease: "easeOut" }}
@@ -76,7 +89,7 @@ export function Home() {
               aria-hidden="true"
               initial={false}
               animate={{
-                backgroundColor: stoneConnected ? "#5e9a2c" : "#AEAEB2",
+                backgroundColor: stoneConnected ? "var(--green-600)" : "#AEAEB2",
                 scale: dotPop ? [1, 1.4, 1] : 1,
               }}
               transition={{
@@ -93,7 +106,7 @@ export function Home() {
           <button
             type="button"
             onClick={() => openSheet("choice")}
-            className="mt-3 border-0 bg-transparent p-0 text-[13px] leading-5 font-normal text-[#A1A5B0]"
+            className="mt-3 border-0 bg-transparent p-0 text-[13px] leading-5 font-normal text-[var(--text-400)]"
           >
             Tap to record a moment
           </button>
@@ -145,19 +158,17 @@ export function Home() {
         <h2 id="this-week" className="text-[15px] leading-5 font-normal text-[var(--text-400)]">
           This week
         </h2>
-        {entries.filter((entry) => entry.week === user.week).length === 0 ? (
+        {thisWeek.length === 0 ? (
           <p className="mt-3 text-[13px] leading-5 text-[var(--text-400)]">
             Nothing saved this week yet. Tap the orb to start.
           </p>
         ) : (
           <DragRow className="pb-4">
-            {entries
-              .filter((entry) => entry.week === user.week)
-              .map((entry) => (
-                <li key={entry.id} className="shrink-0 snap-start">
-                  <WeekCard entry={entry} />
-                </li>
-              ))}
+            {thisWeek.map((entry) => (
+              <li key={entry.id} className="shrink-0 snap-start">
+                <WeekCard entry={entry} />
+              </li>
+            ))}
           </DragRow>
         )}
       </section>

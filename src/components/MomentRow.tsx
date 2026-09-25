@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { MoreHorizontal, Pause, Play, Users } from "lucide-react";
 import { Chip } from "./Chip";
+import { PlayingBars } from "./MiniPlayer";
 import {
   EDIT_FEELINGS,
   contributorInitial,
@@ -97,7 +98,7 @@ export function MomentRow({ entry, contributor, playing, onPlay, titleOverride }
                 {titleOverride ?? title}
               </p>
             )}
-            <p className="truncate text-[13px] leading-4 text-[#8E8E93]">
+            <p className="truncate text-[13px] leading-4 text-[var(--text-secondary)]">
               {entry.kind === "song" && entry.artist
                 ? `${entry.artist}${feeling ? ` · ${feeling}` : ""}`
                 : subtitleParts.join(" · ")}
@@ -108,7 +109,7 @@ export function MomentRow({ entry, contributor, playing, onPlay, titleOverride }
           type="button"
           aria-label={playing ? `Pause ${title}` : `Play ${title}`}
           onClick={onPlay}
-          className="grid size-11 shrink-0 place-items-center border-0 bg-transparent p-0 text-[#3F3A4A]"
+          className="grid size-11 shrink-0 place-items-center border-0 bg-transparent p-0 text-[var(--icon-control)]"
         >
           {playing ? <Pause size={22} strokeWidth={2} /> : <Play size={22} strokeWidth={2} />}
         </button>
@@ -116,7 +117,7 @@ export function MomentRow({ entry, contributor, playing, onPlay, titleOverride }
           type="button"
           aria-label={`More options for ${title}`}
           onClick={() => setMenuOpen(true)}
-          className="grid size-11 shrink-0 place-items-center border-0 bg-transparent p-0 text-[#8E8E93]"
+          className="grid size-11 shrink-0 place-items-center border-0 bg-transparent p-0 text-[var(--text-secondary)]"
         >
           <MoreHorizontal size={22} strokeWidth={2} />
         </button>
@@ -165,7 +166,7 @@ export function MomentRow({ entry, contributor, playing, onPlay, titleOverride }
 
       <ActionSheet open={feelingsOpen} onClose={() => setFeelingsOpen(false)} reduce={reduce} tall>
         <p className="mb-3 text-[17px] leading-[22px] font-semibold text-[var(--text-900)]">Edit feelings</p>
-        <p className="mb-4 text-[15px] leading-5 text-[#8E8E93]">How are you feeling right now?</p>
+        <p className="mb-4 text-[15px] leading-5 text-[var(--text-secondary)]">How are you feeling right now?</p>
         <div className="flex flex-wrap gap-2">
           {EDIT_FEELINGS.map((feelingLabel) => (
             <Chip
@@ -218,7 +219,7 @@ function Thumbnail({
         ) : (
           <span className="block size-full" style={{ background: "linear-gradient(145deg, var(--pink-200), var(--pink-500))" }} />
         )}
-        {playing ? <PlayingBars /> : null}
+        {playing ? <PlayingBars overlay /> : null}
       </span>
     );
   }
@@ -237,7 +238,7 @@ function Thumbnail({
         <span className="absolute -right-0.5 -bottom-0.5 grid size-3.5 place-items-center rounded-full bg-[var(--amber-500)] text-white">
           <Users size={8} strokeWidth={2.5} aria-hidden="true" />
         </span>
-        {playing ? <PlayingBars /> : null}
+        {playing ? <PlayingBars overlay /> : null}
       </span>
     );
   }
@@ -248,7 +249,7 @@ function Thumbnail({
       style={{ background: accent.tint50 }}
     >
       {playing ? (
-        <PlayingBars overlay={false} />
+        <PlayingBars color="var(--purple-500)" />
       ) : (
         <span className="flex h-6 items-end gap-[3px]" aria-hidden="true">
           {[10, 18, 8, 16, 12].map((height, index) => (
@@ -261,27 +262,6 @@ function Thumbnail({
         </span>
       )}
     </span>
-  );
-}
-
-function PlayingBars({ overlay = true }: { overlay?: boolean }) {
-  const reduce = useReducedMotion();
-  const bars = (
-    <span className="flex h-5 items-end gap-[3px]" aria-hidden="true">
-      {[0, 1, 2, 3].map((index) => (
-        <motion.span
-          key={index}
-          className="w-[3px] rounded-full bg-white"
-          animate={reduce ? { height: 10 } : { height: [6, 18, 8, 16, 6] }}
-          transition={reduce ? undefined : { duration: 0.9, repeat: Infinity, delay: index * 0.12, ease: "easeInOut" }}
-          style={{ height: 10 }}
-        />
-      ))}
-    </span>
-  );
-  if (!overlay) return bars;
-  return (
-    <span className="absolute inset-0 grid place-items-center rounded-[10px] bg-black/35">{bars}</span>
   );
 }
 
@@ -322,7 +302,7 @@ function ActionSheet({
             exit={reduce ? { opacity: 0 } : { y: "100%" }}
             transition={reduce ? { duration: 0.15 } : { type: "spring", damping: 30, stiffness: 300 }}
           >
-            <div className="mx-auto mb-4 h-1 w-9 rounded-full bg-[#D9D9D9]" />
+            <div className="mx-auto mb-4 h-1 w-9 rounded-full bg-[var(--handle)]" />
             {children}
           </motion.div>
         </motion.div>
@@ -385,7 +365,7 @@ export function TypeFilterChips({
   const selectedStyle = {
     all: { background: "var(--text-900)", color: "white", borderColor: "var(--text-900)" },
     voice: { background: "var(--purple-100)", color: "var(--purple-500)", borderColor: "var(--purple-300)" },
-    song: { background: "var(--pink-50)", color: "var(--pink-500)", borderColor: "#D6408A" },
+    song: { background: "var(--pink-50)", color: "var(--pink-500)", borderColor: "var(--pink-border)" },
     echo: { background: "var(--amber-50)", color: "var(--amber-600)", borderColor: "var(--amber-500)" },
   } as const;
 

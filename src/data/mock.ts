@@ -31,7 +31,7 @@ export const songs: Song[] = [
   },
   {
     id: "breathe",
-    title: "Breathe",
+    title: "Breathe (2 AM)",
     artist: "Anna Nalick",
     art: "/img/breathe.jpg",
     gradient: "linear-gradient(145deg, var(--feel-lavender), var(--purple-500))",

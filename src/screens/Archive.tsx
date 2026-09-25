@@ -28,6 +28,7 @@ import {
   type PlaylistId,
 } from "../data/archiveHelpers";
 import type { ArchiveSegment, Contributor, TimelineEntry } from "../data/types";
+import { fromTimelineEntry } from "../data/playback";
 import { useArchiveStore } from "../store/useArchiveStore";
 
 const pushMotion = {
@@ -160,7 +161,7 @@ function ArchiveHome() {
         ) : null}
       </div>
 
-      <p className="mt-6 text-[11px] leading-4 font-medium tracking-[0.06em] text-[#8E8E93] uppercase">
+      <p className="mt-6 text-[11px] leading-4 font-medium tracking-[0.06em] text-[var(--text-secondary)] uppercase">
         Recently saved
       </p>
       <ul className="scroll-row -mx-5 mt-3 flex gap-3 overflow-x-auto px-5 pb-1">
@@ -295,7 +296,7 @@ function TrimesterGroup({
       >
         <span className="text-[15px] leading-5 font-semibold text-[var(--text-900)]">{title}</span>
         <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: reduce ? 0 : 0.2 }}>
-          <ChevronDown size={18} strokeWidth={2} className="text-[#8E8E93]" />
+          <ChevronDown size={18} strokeWidth={2} className="text-[var(--text-secondary)]" />
         </motion.span>
       </button>
       <AnimatePresence initial={false}>
@@ -337,7 +338,7 @@ function WeekRow({
             </span>
           ) : null}
         </div>
-        <p className="mt-0.5 text-[13px] leading-4 text-[#8E8E93]">
+        <p className="mt-0.5 text-[13px] leading-4 text-[var(--text-secondary)]">
           {formatWeekRange(week.week)} · {week.count} {week.count === 1 ? "moment" : "moments"}
         </p>
       </div>
@@ -363,7 +364,7 @@ function FeelingsSegment({
         >
           <div>
             <p className="text-[15px] leading-5 font-semibold capitalize text-[var(--text-900)]">{card.feeling}</p>
-            <p className="mt-1 text-[13px] leading-4 text-[#8E8E93]">
+            <p className="mt-1 text-[13px] leading-4 text-[var(--text-secondary)]">
               {card.count} {card.count === 1 ? "moment" : "moments"}
             </p>
           </div>
@@ -399,7 +400,7 @@ function PeopleSegment({ filter }: { filter: ArchiveFilter }) {
             <PersonAvatar name={person.name} size={48} />
             <div className="min-w-0 flex-1">
               <p className="truncate text-[15px] leading-5 font-semibold text-[var(--text-900)]">{person.name}</p>
-              <p className="truncate text-[13px] leading-4 text-[#8E8E93]">
+              <p className="truncate text-[13px] leading-4 text-[var(--text-secondary)]">
                 {person.status === "invited" ? (
                   "Invite sent"
                 ) : (
@@ -459,7 +460,7 @@ function PlaylistsRow({ entries }: { entries: TimelineEntry[] }) {
                 </span>
                 <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-white via-white/90 to-transparent px-3 pt-6 pb-2">
                   <span className="block truncate text-[13px] font-semibold text-[var(--text-900)]">{playlist.name}</span>
-                  <span className="block text-[12px] text-[#8E8E93]">
+                  <span className="block text-[12px] text-[var(--text-secondary)]">
                     {songCount} {songCount === 1 ? "song" : "songs"}
                   </span>
                 </span>
@@ -475,19 +476,13 @@ function PlaylistsRow({ entries }: { entries: TimelineEntry[] }) {
 function RecentTile({ entry }: { entry: TimelineEntry }) {
   const contributors = useArchiveStore((state) => state.contributors);
   const playMoment = usePlayMoment();
-  const playingId = useArchiveStore((state) => state.archivePlayingId);
-  const currentTrackId = useArchiveStore((state) => state.currentTrackId);
-  const playing = useArchiveStore((state) => state.playing);
+  const isPlaying = useIsPlaying();
   const contributor = contributors.find((item) => item.id === entry.contributorId);
-  const isPlaying =
-    entry.kind === "song"
-      ? playing && entry.songId === currentTrackId
-      : playingId === entry.id;
 
   return (
     <button type="button" onClick={() => playMoment(entry)} className="w-full border-0 bg-transparent p-0 text-left">
       <span className="block size-[72px] overflow-hidden rounded-[12px]">
-        <RecentThumb entry={entry} contributor={contributor} playing={isPlaying} />
+        <RecentThumb entry={entry} contributor={contributor} playing={isPlaying(entry)} />
       </span>
       <span className="mt-1 block truncate text-[12px] leading-4 text-[var(--text-900)]">{entry.title}</span>
     </button>
@@ -533,7 +528,7 @@ function BackHeader({ title, eyebrow, onBack }: { title: React.ReactNode; eyebro
         <ChevronLeft size={22} strokeWidth={2} />
         Archive
       </button>
-      {eyebrow ? <p className="mt-1 text-[13px] leading-4 text-[#8E8E93]">{eyebrow}</p> : null}
+      {eyebrow ? <p className="mt-1 text-[13px] leading-4 text-[var(--text-secondary)]">{eyebrow}</p> : null}
       <div className="mt-1">{title}</div>
     </div>
   );
@@ -543,6 +538,12 @@ function WeekDetail({ week }: { week: number }) {
   const entries = useArchiveStore((state) => state.timelineEntries);
   const popArchive = useArchiveStore((state) => state.popArchive);
   const openTimelineWeek = useArchiveStore((state) => state.openTimelineWeek);
+  const setPlayQueue = useArchiveStore((state) => state.setPlayQueue);
+  const togglePlay = useArchiveStore((state) => state.togglePlay);
+  const playing = useArchiveStore((state) => state.playing);
+  const nowPlaying = useArchiveStore((state) => state.nowPlaying);
+  const songs = useArchiveStore((state) => state.songs);
+  const contributors = useArchiveStore((state) => state.contributors);
   const [type, setType] = useState<"all" | TimelineEntry["kind"]>("all");
   const moments = useMemo(() => {
     const list = entriesByWeek(entries, week);
@@ -553,32 +554,20 @@ function WeekDetail({ week }: { week: number }) {
   const feeling = dominantFeeling(all);
   const isCurrent = week === ARCHIVE_CURRENT_WEEK;
   const playMoment = usePlayMoment();
-  const [playWeekIndex, setPlayWeekIndex] = useState<number | null>(null);
-  const queueRef = useRef(all);
-  queueRef.current = all;
-
-  useEffect(() => {
-    if (playWeekIndex == null) return;
-    const item = queueRef.current[playWeekIndex];
-    if (!item) {
-      setPlayWeekIndex(null);
-      return;
-    }
-    playMoment(item);
-    const duration = Math.min((item.durationSec ?? 30) * 40, 2500);
-    const id = window.setTimeout(() => setPlayWeekIndex((current) => (current == null ? null : current + 1)), duration);
-    return () => window.clearTimeout(id);
-  }, [playWeekIndex, playMoment]);
+  const isPlaying = useIsPlaying();
+  const weekIds = useMemo(() => new Set(all.map((item) => item.id)), [all]);
+  const weekPlaying = playing && (weekIds.has(nowPlaying.id) || all.some((item) => item.songId && item.songId === nowPlaying.songId));
 
   const grouped = groupByDay(moments);
-  const playingId = useArchiveStore((state) => state.archivePlayingId);
-  const currentTrackId = useArchiveStore((state) => state.currentTrackId);
-  const playing = useArchiveStore((state) => state.playing);
-  const contributors = useArchiveStore((state) => state.contributors);
 
-  function isPlaying(entry: TimelineEntry) {
-    if (entry.kind === "song") return playing && entry.songId === currentTrackId;
-    return playingId === entry.id;
+  function playWeek() {
+    if (weekPlaying) {
+      togglePlay();
+      return;
+    }
+    if (all.length === 0) return;
+    const items = all.map((entry) => fromTimelineEntry(entry, songs, contributors));
+    setPlayQueue(items);
   }
 
   return (
@@ -601,16 +590,16 @@ function WeekDetail({ week }: { week: number }) {
             <p className="text-[15px] leading-5 font-semibold text-[var(--text-900)]">
               {all.length} moments · mostly {feeling}
             </p>
-            <p className="mt-1 text-[13px] leading-4 text-[#8E8E93]">
+            <p className="mt-1 text-[13px] leading-4 text-[var(--text-secondary)]">
               {counts.voice} voice notes · {counts.song} songs · {counts.echo} echoes
             </p>
           </div>
           <button
             type="button"
-            onClick={() => setPlayWeekIndex((current) => (current == null ? 0 : null))}
+            onClick={playWeek}
             className="h-11 shrink-0 rounded-full border border-[var(--line)] bg-white px-4 text-[13px] font-medium text-[var(--purple-500)]"
           >
-            {playWeekIndex == null ? "Play week" : "Stop"}
+            {weekPlaying ? "Stop" : "Play week"}
           </button>
         </div>
         <div className="mt-4">
@@ -619,7 +608,7 @@ function WeekDetail({ week }: { week: number }) {
         <div className="mt-4 flex flex-col gap-3">
           {grouped.map((group) => (
             <div key={group.date}>
-              <p className="mb-2 text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] uppercase">
+              <p className="mb-2 text-[12px] font-medium tracking-[0.04em] text-[var(--text-secondary)] uppercase">
                 {formatDayLabel(group.date)}
               </p>
               <div className="flex flex-col gap-3">
@@ -628,11 +617,8 @@ function WeekDetail({ week }: { week: number }) {
                     key={entry.id}
                     entry={entry}
                     contributor={contributors.find((item) => item.id === entry.contributorId)}
-                    playing={isPlaying(entry) || (playWeekIndex != null && all[playWeekIndex]?.id === entry.id)}
-                    onPlay={() => {
-                      setPlayWeekIndex(null);
-                      playMoment(entry);
-                    }}
+                    playing={isPlaying(entry)}
+                    onPlay={() => playMoment(entry, moments)}
                   />
                 ))}
               </div>
@@ -671,9 +657,7 @@ function FeelingResults({ feelings, title }: { feelings: string[]; title?: strin
   }, [entries, feelings, type, anyMode]);
 
   const byWeek = groupByWeek(matched);
-  const playingId = useArchiveStore((state) => state.archivePlayingId);
-  const currentTrackId = useArchiveStore((state) => state.currentTrackId);
-  const playing = useArchiveStore((state) => state.playing);
+  const isPlaying = useIsPlaying();
 
   return (
     <section className="scroll-row h-full overflow-y-auto" style={{ paddingBottom: chromeBottomPad }}>
@@ -686,7 +670,7 @@ function FeelingResults({ feelings, title }: { feelings: string[]; title?: strin
         }
       />
       <div className="px-5">
-        <p className="mt-1 text-[15px] leading-5 text-[#8E8E93]">
+        <p className="mt-1 text-[15px] leading-5 text-[var(--text-secondary)]">
           {matched.length} {matched.length === 1 ? "moment" : "moments"}
         </p>
         <div className="mt-4">
@@ -702,12 +686,8 @@ function FeelingResults({ feelings, title }: { feelings: string[]; title?: strin
                     key={entry.id}
                     entry={entry}
                     contributor={contributors.find((item) => item.id === entry.contributorId)}
-                    playing={
-                      entry.kind === "song"
-                        ? playing && entry.songId === currentTrackId
-                        : playingId === entry.id
-                    }
-                    onPlay={() => playMoment(entry)}
+                    playing={isPlaying(entry)}
+                    onPlay={() => playMoment(entry, matched)}
                   />
                 ))}
               </div>
@@ -733,7 +713,7 @@ function PersonDetail({ contributorId }: { contributorId: string }) {
         <button type="button" onClick={popArchive} className="h-11 border-0 bg-transparent">
           Back
         </button>
-        <p className="mt-6 text-[15px] text-[#8E8E93]">This person is no longer in your archive.</p>
+        <p className="mt-6 text-[15px] text-[var(--text-secondary)]">This person is no longer in your archive.</p>
       </section>
     );
   }
@@ -753,7 +733,7 @@ function PersonDetail({ contributorId }: { contributorId: string }) {
             <PersonAvatar name={person.name} size={64} />
             <div>
               <h1 className="text-[22px] leading-7 font-semibold text-[var(--text-900)]">{person.name}</h1>
-              <p className="mt-1 text-[13px] leading-4 text-[#8E8E93]">
+              <p className="mt-1 text-[13px] leading-4 text-[var(--text-secondary)]">
                 {capitalize(person.relationship)} · {person.totalCount} voice notes
                 {person.since != null ? ` · since week ${person.since}` : ""}
               </p>
@@ -764,7 +744,7 @@ function PersonDetail({ contributorId }: { contributorId: string }) {
       <div className="mt-6 px-5">
         {person.notes.length === 0 ? (
           <div className="pt-8 text-center">
-            <p className="text-[15px] leading-5 text-[#8E8E93]">{person.name} hasn't left a voice note yet.</p>
+            <p className="text-[15px] leading-5 text-[var(--text-secondary)]">{person.name} hasn't left a voice note yet.</p>
             <button
               type="button"
               onClick={remind}
@@ -790,10 +770,10 @@ function PersonDetail({ contributorId }: { contributorId: string }) {
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[15px] font-semibold text-[var(--text-900)]">{note.title}</p>
-                  <p className="text-[13px] text-[#8E8E93]">{formatDuration(note.durationSec)}</p>
+                  <p className="text-[13px] text-[var(--text-secondary)]">{formatDuration(note.durationSec)}</p>
                 </div>
                 {note.inArchive ? (
-                  <span className="rounded-full bg-[var(--amber-50)] px-2 py-1 text-[12px] text-[#8E8E93]">In archive</span>
+                  <span className="rounded-full bg-[var(--amber-50)] px-2 py-1 text-[12px] text-[var(--text-secondary)]">In archive</span>
                 ) : (
                   <button
                     type="button"
@@ -815,16 +795,15 @@ function PersonDetail({ contributorId }: { contributorId: string }) {
 function PlaylistDetail({ playlistId }: { playlistId: PlaylistId }) {
   const entries = useArchiveStore((state) => state.timelineEntries);
   const popArchive = useArchiveStore((state) => state.popArchive);
-  const setPlaybackQueue = useArchiveStore((state) => state.setPlaybackQueue);
+  const setPlayQueue = useArchiveStore((state) => state.setPlayQueue);
+  const songsCatalogue = useArchiveStore((state) => state.songs);
   const playMoment = usePlayMoment();
+  const isPlaying = useIsPlaying();
   const playlist = PLAYLISTS.find((item) => item.id === playlistId);
   const tracks = useMemo(() => playlistTracks(entries, playlistId), [entries, playlistId]);
   const songs = tracks.filter((item) => item.kind === "song" && item.songId);
   const arts = playlistArts(tracks);
   const total = tracks.reduce((sum, item) => sum + (item.durationSec ?? 0), 0);
-  const playingId = useArchiveStore((state) => state.archivePlayingId);
-  const currentTrackId = useArchiveStore((state) => state.currentTrackId);
-  const playing = useArchiveStore((state) => state.playing);
   const contributors = useArchiveStore((state) => state.contributors);
   const songCount = songs.length;
 
@@ -844,17 +823,17 @@ function PlaylistDetail({ playlistId }: { playlistId: PlaylistId }) {
                 <img src={arts[1]} alt="" className="absolute right-0 bottom-0 size-[88px] rounded-[12px] object-cover" />
               ) : null}
             </div>
-            <h1 className="mt-4 font-[family-name:var(--font-serif)] text-[28px] leading-8 font-bold text-[var(--text-900)]">
+            <h1 className="mt-4 font-[family-name:var(--font-serif)] text-[36px] leading-10 font-bold text-[var(--text-900)]">
               {playlist?.name ?? "Playlist"}
             </h1>
-            <p className="mt-1 text-[13px] text-[#8E8E93]">
+            <p className="mt-1 text-[13px] text-[var(--text-secondary)]">
               {songCount} {songCount === 1 ? "song" : "songs"} · {formatTotalLength(total)}
             </p>
             <button
               type="button"
               onClick={() => {
-                const ids = songs.map((item) => item.songId!).filter(Boolean);
-                setPlaybackQueue(ids);
+                const items = tracks.map((entry) => fromTimelineEntry(entry, songsCatalogue, contributors));
+                setPlayQueue(items);
               }}
               className="mt-4 h-11 rounded-full border border-[var(--line)] bg-white px-5 text-[13px] font-medium text-[var(--pink-500)]"
             >
@@ -869,12 +848,8 @@ function PlaylistDetail({ playlistId }: { playlistId: PlaylistId }) {
             key={entry.id}
             entry={entry}
             contributor={contributors.find((item) => item.id === entry.contributorId)}
-            playing={
-              entry.kind === "song"
-                ? playing && entry.songId === currentTrackId
-                : playingId === entry.id
-            }
-            onPlay={() => playMoment(entry)}
+            playing={isPlaying(entry)}
+            onPlay={() => playMoment(entry, tracks)}
           />
         ))}
       </div>
@@ -888,12 +863,10 @@ function SearchResults() {
   const popArchive = useArchiveStore((state) => state.popArchive);
   const pushArchive = useArchiveStore((state) => state.pushArchive);
   const playMoment = usePlayMoment();
+  const isPlaying = useIsPlaying();
   const [query, setQuery] = useState("");
   const [debounced, setDebounced] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
-  const playingId = useArchiveStore((state) => state.archivePlayingId);
-  const currentTrackId = useArchiveStore((state) => state.currentTrackId);
-  const playing = useArchiveStore((state) => state.playing);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -950,7 +923,7 @@ function SearchResults() {
 
       {!debounced.trim() ? (
         <div className="mt-6 px-5">
-          <p className="text-[15px] text-[#8E8E93]">Try a search</p>
+          <p className="text-[15px] text-[var(--text-secondary)]">Try a search</p>
           <div className="mt-3 flex flex-wrap gap-2">
             {suggestions.map((chip) => (
               <button
@@ -965,7 +938,7 @@ function SearchResults() {
           </div>
         </div>
       ) : total === 0 ? (
-        <p className="mt-8 px-5 text-center text-[15px] leading-5 text-[#8E8E93]">
+        <p className="mt-8 px-5 text-center text-[15px] leading-5 text-[var(--text-secondary)]">
           Nothing matches "{debounced.trim()}". Try a song, a person or a feeling.
         </p>
       ) : (
@@ -977,7 +950,7 @@ function SearchResults() {
               <MomentRow
                 key={entry.id}
                 entry={entry}
-                playing={playingId === entry.id}
+                playing={isPlaying(entry)}
                 onPlay={() => playMoment(entry)}
                 titleOverride={highlight(entry.title)}
               />
@@ -990,7 +963,7 @@ function SearchResults() {
               <MomentRow
                 key={entry.id}
                 entry={entry}
-                playing={playing && entry.songId === currentTrackId}
+                playing={isPlaying(entry)}
                 onPlay={() => playMoment(entry)}
                 titleOverride={highlight(entry.title)}
               />
@@ -1007,7 +980,7 @@ function SearchResults() {
                   key={entry.id}
                   entry={entry}
                   contributor={person}
-                  playing={playingId === entry.id}
+                  playing={isPlaying(entry)}
                   onPlay={() => playMoment(entry)}
                   titleOverride={highlight(full)}
                 />
@@ -1028,7 +1001,7 @@ function SearchResults() {
                     <PersonAvatar name={person.name} size={48} />
                     <div>
                       <p className="text-[15px] font-semibold">{highlight(person.name)}</p>
-                      <p className="text-[13px] text-[#8E8E93]">{person.totalCount} voice notes</p>
+                      <p className="text-[13px] text-[var(--text-secondary)]">{person.totalCount} voice notes</p>
                     </div>
                   </button>
                 ))}
@@ -1078,14 +1051,24 @@ function PersonAvatar({ name, size }: { name?: string; size: number }) {
 }
 
 function usePlayMoment() {
-  return useCallback((entry: TimelineEntry) => {
-    const state = useArchiveStore.getState();
-    if (entry.kind === "song" && entry.songId) {
-      state.selectTrack(entry.songId);
-      return;
-    }
-    state.setArchivePlaying(state.archivePlayingId === entry.id ? null : entry.id);
+  return useCallback((entry: TimelineEntry, queue?: TimelineEntry[]) => {
+    useArchiveStore.getState().playEntry(entry, queue);
   }, []);
+}
+
+function useIsPlaying() {
+  const nowPlaying = useArchiveStore((state) => state.nowPlaying);
+  const playing = useArchiveStore((state) => state.playing);
+  return useCallback(
+    (entry: TimelineEntry) => {
+      if (!playing) return false;
+      if (entry.kind === "song") {
+        return nowPlaying.kind === "song" && nowPlaying.songId === entry.songId;
+      }
+      return nowPlaying.id === entry.id;
+    },
+    [nowPlaying, playing],
+  );
 }
 
 function groupByDay(moments: TimelineEntry[]) {

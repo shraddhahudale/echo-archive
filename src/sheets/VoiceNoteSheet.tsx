@@ -284,7 +284,7 @@ export function VoiceNoteSheet({ titleId }: VoiceNoteSheetProps) {
                         if (playSec >= elapsed) setPlaySec(0);
                         setPreviewing((value) => !value);
                       }}
-                      className="grid size-11 place-items-center border-0 bg-transparent p-0 text-[var(--purple-500)]"
+                      className="grid size-11 place-items-center border-0 bg-transparent p-0 text-[var(--icon-control)]"
                     >
                       {previewing ? <Pause size={20} strokeWidth={2} /> : <Play size={20} strokeWidth={2} />}
                     </button>
@@ -295,7 +295,7 @@ export function VoiceNoteSheet({ titleId }: VoiceNoteSheetProps) {
                         setPlaySec(elapsed);
                         setPreviewing(false);
                       }}
-                      className="grid size-11 place-items-center border-0 bg-transparent p-0 text-[var(--purple-500)]"
+                      className="grid size-11 place-items-center border-0 bg-transparent p-0 text-[var(--icon-control)]"
                     >
                       <SkipForward size={20} strokeWidth={2} />
                     </button>

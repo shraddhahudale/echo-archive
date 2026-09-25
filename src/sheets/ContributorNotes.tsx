@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Check, Minus, Play } from "lucide-react";
+import { PlayingBars } from "../components/MiniPlayer";
+import { fromContributorNote } from "../data/playback";
 import type { Contributor, ContributorNote } from "../data/types";
 import { useArchiveStore } from "../store/useArchiveStore";
 
@@ -7,7 +9,7 @@ type ContributorNotesProps = {
   contributor: Contributor;
   unseenIds: string[];
   editing: boolean;
-  reduce: boolean | null;
+  reduce?: boolean | null;
   selectedIds: string[];
   onSelectedIds: (ids: string[]) => void;
   onAdd: () => void;
@@ -17,14 +19,15 @@ export function ContributorNotes({
   contributor,
   unseenIds,
   editing,
-  reduce,
   selectedIds,
   onSelectedIds,
   onAdd,
 }: ContributorNotesProps) {
   const renameEcho = useArchiveStore((state) => state.renameEcho);
   const removeEcho = useArchiveStore((state) => state.removeEcho);
-  const [playingId, setPlayingId] = useState<string | null>(null);
+  const playNow = useArchiveStore((state) => state.playNow);
+  const nowPlaying = useArchiveStore((state) => state.nowPlaying);
+  const playing = useArchiveStore((state) => state.playing);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -47,8 +50,10 @@ export function ContributorNotes({
     };
   }, []);
 
-  function togglePlay(id: string) {
-    setPlayingId((current) => (current === id ? null : id));
+  function togglePlay(note: ContributorNote) {
+    const item = fromContributorNote(contributor, note);
+    const queue = contributor.notes.map((n) => fromContributorNote(contributor, n));
+    playNow(item, queue);
   }
 
   function toggleSelected(id: string) {
@@ -76,7 +81,7 @@ export function ContributorNotes({
         <button
           type="button"
           onClick={remind}
-          className="mx-auto mt-6 flex h-11 items-center rounded-full border border-[var(--line)] bg-white px-4 text-[13px] leading-4 font-medium text-[#D98A1F]"
+          className="mx-auto mt-6 flex h-11 items-center rounded-full border border-[var(--line)] bg-white px-4 text-[13px] leading-4 font-medium text-[var(--amber-600)]"
         >
           Send a reminder
         </button>
@@ -106,20 +111,20 @@ export function ContributorNotes({
       <p className="mt-5 text-[11px] leading-4 font-medium tracking-[0.06em] text-[#8E8E93] uppercase">Voice notes</p>
       <div className="mt-2 max-h-[420px] overflow-y-auto">
         {contributor.notes.map((note, index) => {
-          const playing = playingId === note.id;
+          const isActive = playing && nowPlaying.id === note.id;
           return (
             <div
               key={note.id}
-              className={`flex h-[72px] items-center gap-3 py-3 ${index < contributor.notes.length - 1 ? "border-b border-[#E6E6EA]" : ""} ${playing ? "bg-[var(--amber-50)]" : ""}`}
+              className={`flex h-[72px] items-center gap-3 py-3 ${index < contributor.notes.length - 1 ? "border-b border-[var(--line)]" : ""} ${isActive ? "bg-[var(--amber-50)]" : ""}`}
             >
               <button
                 type="button"
-                aria-label={playing ? `Pause ${note.title}` : `Play ${note.title}`}
-                onClick={() => togglePlay(note.id)}
+                aria-label={isActive ? `Pause ${note.title}` : `Play ${note.title}`}
+                onClick={() => togglePlay(note)}
                 className="grid size-11 shrink-0 place-items-center border-0 bg-transparent p-0"
               >
-                <span className="grid size-10 place-items-center rounded-full bg-[var(--amber-50)] text-[#D98A1F]">
-                  {playing ? <PlayingBars reduce={reduce} /> : <Play size={16} strokeWidth={2} fill="currentColor" />}
+                <span className="grid size-10 place-items-center rounded-full bg-[var(--amber-50)] text-[var(--amber-600)]">
+                  {isActive ? <PlayingBars color="var(--amber-600)" count={3} /> : <Play size={16} strokeWidth={2} fill="currentColor" />}
                 </span>
               </button>
               <div className="min-w-0 flex-1">
@@ -134,7 +139,7 @@ export function ContributorNotes({
                       onKeyDown={(event) => {
                         if (event.key === "Enter") event.currentTarget.blur();
                       }}
-                      className="absolute inset-x-0 top-1/2 w-full -translate-y-1/2 border-0 border-b border-[#D98A1F] bg-transparent text-[16px] leading-5 font-semibold text-[#111111]"
+                      className="absolute inset-x-0 top-1/2 w-full -translate-y-1/2 border-0 border-b border-[var(--amber-600)] bg-transparent text-[16px] leading-5 font-semibold text-[var(--text-900)]"
                     />
                   </label>
                 ) : editing ? (
@@ -212,10 +217,9 @@ export function ContributorNotes({
               onClick={() => {
                 removeEcho(contributor.id, pendingId);
                 onSelectedIds(selectedIds.filter((id) => id !== pendingId));
-                if (playingId === pendingId) setPlayingId(null);
                 setPendingId(null);
               }}
-              className="h-11 flex-1 rounded-full border border-[var(--line)] bg-white text-[13px] leading-4 font-medium text-[#E5484D]"
+              className="h-11 flex-1 rounded-full border border-[var(--line)] bg-white text-[13px] leading-4 font-medium text-[var(--rec-red)]"
             >
               Remove
             </button>
@@ -234,27 +238,13 @@ export function ContributorNotes({
             type="button"
             disabled={selectedCount === 0}
             onClick={onAdd}
-            className="h-11 w-full rounded-full border border-[var(--line)] bg-white text-[13px] leading-4 font-medium text-[#D98A1F] disabled:opacity-40"
+            className="h-11 w-full rounded-full border border-[var(--line)] bg-white text-[13px] leading-4 font-medium text-[var(--amber-600)] disabled:opacity-40"
           >
             {selectedCount === 0 ? "Select voice notes to add" : `Add ${selectedCount} to this week`}
           </button>
         </div>
       )}
     </div>
-  );
-}
-
-function PlayingBars({ reduce }: { reduce: boolean | null }) {
-  return (
-    <span className="flex h-4 items-end gap-[3px]" aria-hidden="true">
-      {[0, 1, 2].map((index) => (
-        <span
-          key={index}
-          className={`w-[3px] rounded-full bg-[#D98A1F] ${reduce ? "" : "echo-bar"}`}
-          style={{ height: reduce ? [8, 14, 10][index] : 16, animationDelay: `${index * 0.15}s` }}
-        />
-      ))}
-    </span>
   );
 }
 

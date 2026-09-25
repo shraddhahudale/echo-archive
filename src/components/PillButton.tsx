@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 const tones = {
   purple: "var(--purple-500)",
   pink: "var(--pink-500)",
-  amber: "var(--amber-500)",
+  amber: "var(--amber-600)",
 } as const;
 
 type PillButtonProps = {

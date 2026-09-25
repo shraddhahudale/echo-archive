@@ -53,6 +53,10 @@ const songDuration: Record<string, number> = {
   chandaniya: 280,
 };
 
+export function songDurationSec(songId: string) {
+  return songDuration[songId] ?? 180;
+}
+
 const earlyFeelings = ["anxious", "relentless", "tearful", "missing home", "don't know why"] as const;
 const lateFeelings = ["calm", "hopeful", "connected", "loved"] as const;
 const echoFeelings = ["loved", "connected", "hopeful", "calm"] as const;

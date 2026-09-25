@@ -16,8 +16,8 @@ type AnythingToAddProps = {
 export function AnythingToAdd({ tone, feelings, selected, onToggle, note, onNote, onSave, card }: AnythingToAddProps) {
   return (
     <div className="pt-2">
-      <p className="text-[15px] leading-5 text-[var(--text-400)]">How are you feeling right now?</p>
-      <div className="mt-4">{card}</div>
+      <div>{card}</div>
+      <p className="mt-4 text-[15px] leading-5 text-[var(--text-400)]">How are you feeling right now?</p>
       <div className="mt-4 flex flex-wrap gap-2">
         {feelings.map((feeling) => (
           <Chip
@@ -41,19 +41,9 @@ export function AnythingToAdd({ tone, feelings, selected, onToggle, note, onNote
               : "mt-4 h-[110px] w-full resize-none rounded-[16px] border-0 bg-[var(--purple-100)] px-4 py-3 text-[15px] leading-5 text-[var(--text-900)] placeholder:text-[var(--text-400)]"
         }
       />
-      {tone === "echo" ? (
-        <button
-          type="button"
-          onClick={onSave}
-          className="mt-6 h-11 w-full rounded-full border border-[var(--line)] bg-white px-4 text-[13px] leading-4 font-medium text-[#D98A1F]"
-        >
-          Save to this week
-        </button>
-      ) : (
-        <PillButton className="mt-6 w-full" tone={tone === "song" ? "pink" : "purple"} onClick={onSave}>
-          Save to this week
-        </PillButton>
-      )}
+      <PillButton className="mt-6 w-full" tone={tone === "song" ? "pink" : tone === "echo" ? "amber" : "purple"} onClick={onSave}>
+        Save to this week
+      </PillButton>
     </div>
   );
 }

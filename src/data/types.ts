@@ -1,7 +1,5 @@
 export type Kind = "voice" | "song" | "echo";
 
-export type Relationship = "Partner" | "Mum" | "Dad" | "Sibling" | "Friend" | "Other";
-
 export type Entry = {
   id: string;
   kind: Kind;

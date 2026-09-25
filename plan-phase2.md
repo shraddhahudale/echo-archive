@@ -15,7 +15,7 @@ Timeline tab
 ├── Header: "Good evening, Sarah" · "Your pregnancy journey" · "Trimester 02 / W22"
 ├── T2 Insights card ("See your T2 Wrapped", 12 insights ready, →)
 │   └── T2 Wrapped (full-screen story, 6 cards)
-│       1 Anxious → 2 3am → 3 Holocene → 4 68 times → 5 Echoes (new) → 6 Restless → Grounding
+│       1 Anxious → 2 3am → 3 Breathe Deeper → 4 68 times → 5 Echoes (new) → 6 Restless → Grounding
 │       └── ✕ or finish → back to Timeline
 ├── Calendar (month nav, dots per day, legend)
 │   └── Tap a date → Day panel (that day's songs, voice notes, echoes)
@@ -77,7 +77,9 @@ Timeline tab
 - Seed March and April the same way (lighter in March), so month navigation feels real.
 
 ### Totals that Wrapped and Heavy rotations read from
-- Heavy rotations: Holocene 41 plays, Breathe (2 AM) 36, Yellow 29. The Figma shows 41 on all three, so vary them.
+- Heavy rotations: **Breathe Deeper 44**, Holocene 41, Breathe (2 AM) 36.
+- Wrapped card 3 top song: **Breathe Deeper** by Tame Impala (not Holocene).
+- Wrapped card 6 hero: **Restless → Grounding** in bold serif italic.
 - Song moments in T2: 68 (Wrapped card 4).
 - Echoes in T2: 38 voice notes from 4 people (Mom 15, Grandma 12, Seema Aunty 6, Jake 5). These match the counts in the Phase 1 echo sheet.
 
@@ -156,10 +158,10 @@ Timeline tab
 |---|---|---|---|---|---|
 | 1 | `#A385F7` → `#6D2BDB` | Through your second trimester | *Anxious* | Mixed with happiness and excitement | You're not alone in feeling this way |
 | 2 | `#5DA4F4` → `#157898` | In the quiet hours of night | *3am* | is your most active hour | T2 unfolds when the world sleeps |
-| 3 | `#F7C9E6` → `#C32969` | When one song said it all | *Holocene* + 56px album art + *Bon Iver* | | No voice note. Just this song capturing the moments it held |
+| 3 | `#F7C9E6` → `#C32969` | When one song said it all | *Breathe Deeper* + 56px album art + *Tame Impala* | | No voice note. Just this song capturing the moments it held |
 | 4 | `#F6D2A8` → `#83431D` | You've turned to music | **68** *times* | seeking comfort and release | Every song held space for you |
 | **5** | **`#FFD98A` → `#E07A2E`** | **The voices around you** | **38** *echoes* + a row of 4 overlapping 36px avatars (Mom, Grandma, Seema Aunty, Jake) | **from four people who love you** | **Mom left the most: 15 voice notes** |
-| 6 | `#F06AB4` → `#8B2BCB` | Your emotional journey | Restless → *Grounding* | the shift Echo noticed | Look how far you've come |
+| 6 | `#F06AB4` → `#8B2BCB` | Your emotional journey | **Restless → Grounding** (bold serif italic) | the shift Echo noticed | Look how far you've come |
 
 - Fix from Figma: card 3's counter read "2 OF 5"; counters are now 1 to 6 "OF 6".
 - Card 5 avatars use the same initials / photos as the Phase 1 echo sheet, with a 2px white ring and -10px overlap.
@@ -202,7 +204,7 @@ state:
 | P2-1 | Timeline tab page shell, header, T2 Insights card (6 dots) | Tab opens the page; matches Figma header and card |
 | P2-2 | Seed data (Mar to May) + calendar grid, month nav, dots incl. amber, legend | May dots match the seed table; echoes sparse; today = 30 May; next disabled after May |
 | P2-3 | Day selection + day panel + inline play | Tapping 15 May shows Yellow and Breathe (2 AM); empty days show empty copy; panel animates |
-| P2-4 | Heavy rotations | 3 tiles with tinted shadow and 41 / 36 / 29 plays; tap sets the track |
+| P2-4 | Heavy rotations | 3 tiles with tinted shadow and **44 / 41 / 36** plays (Breathe Deeper, Holocene, Breathe (2 AM)); tap sets the track |
 | P2-5 | Live link to Phase 1 | Save a voice note, song or echo on Home → it appears on 30 May with the right dot |
 | P2-6 | Wrapped shell: open / close, navigation, progress, transitions | Card opens Wrapped; tap / swipe / arrows / Esc all work |
 | P2-7 | Wrapped cards 1 to 6 incl. new echo card | Content matches the table; numbers come from the store |
@@ -215,6 +217,8 @@ state:
 - Today moves from 10 May to 30 May so the dots don't show future days
 - Figma playlist names in the day panel are replaced with the app's real songs and voice notes
 - Wrapped grows from 5 to 6 cards, with the new echo card at position 5
-- Heavy rotations play counts are varied (41 / 36 / 29)
-- The mini player stays on Home only
-- Suggest updating the Figma timeline and Wrapped frames to match
+- Heavy rotations play counts are varied (**44 / 41 / 36**: Breathe Deeper, Holocene, Breathe (2 AM))
+- Wrapped card 3 uses **Breathe Deeper** (Tame Impala), not Holocene
+- Wrapped card 6 hero is **Restless → Grounding** in bold serif italic
+- Default mini-player track is **Let It Happen** by Tame Impala
+- The mini player stays on Home, Timeline and Archive (hidden on Breath and Wrapped)

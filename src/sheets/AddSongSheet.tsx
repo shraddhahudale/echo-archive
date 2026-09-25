@@ -19,10 +19,11 @@ export function AddSongSheet({ titleId }: AddSongSheetProps) {
   const reduce = useReducedMotion();
   const week = useArchiveStore((state) => state.user.week);
   const songs = useArchiveStore((state) => state.songs);
-  const currentId = useArchiveStore((state) => state.currentTrackId);
+  const nowPlaying = useArchiveStore((state) => state.nowPlaying);
   const playing = useArchiveStore((state) => state.playing);
   const togglePlay = useArchiveStore((state) => state.togglePlay);
   const skipTrack = useArchiveStore((state) => state.skipTrack);
+  const selectTrack = useArchiveStore((state) => state.selectTrack);
   const saveSong = useArchiveStore((state) => state.saveSong);
   const closeSheet = useArchiveStore((state) => state.closeSheet);
   const [phase, setPhase] = useState<Phase>(() => (useArchiveStore.getState().songDraftId ? "details" : "search"));
@@ -33,7 +34,9 @@ export function AddSongSheet({ titleId }: AddSongSheetProps) {
   const savedOnce = useRef(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
+  const currentId = nowPlaying.songId ?? songs[0]?.id;
   const current = songs.find((song) => song.id === currentId) ?? songs[0];
+  const sheetPlaying = playing && nowPlaying.kind === "song" && nowPlaying.songId === current?.id;
   const picked = songs.find((song) => song.id === songId) ?? null;
   const recent = sheetRecentlyPlayedIds
     .map((id) => songs.find((song) => song.id === id))
@@ -135,22 +138,25 @@ export function AddSongSheet({ titleId }: AddSongSheetProps) {
                 </div>
               ) : (
                 <>
-                  <p className="mt-4 text-[11px] leading-4 font-medium tracking-[0.06em] text-[#8E8E93] uppercase">Playing now</p>
+                  <p className="mt-4 text-[11px] leading-4 font-medium tracking-[0.06em] text-[var(--text-secondary)] uppercase">Playing now</p>
                   {current ? (
                     <div className="mt-2 flex items-center gap-3 rounded-[16px] bg-[var(--pink-50)] py-2 pr-4 pl-2">
                       <SongArt song={current} size={56} radius={8} />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-[17px] leading-[22px] font-semibold text-[#111111]">{current.title}</p>
-                        <p className="truncate text-[14px] leading-[18px] text-[#8E8E93]">{current.artist}</p>
+                        <p className="truncate text-[17px] leading-[22px] font-semibold text-[var(--text-900)]">{current.title}</p>
+                        <p className="truncate text-[14px] leading-[18px] text-[var(--text-secondary)]">{current.artist}</p>
                       </div>
-                      <div className="flex shrink-0 items-center gap-6 text-[#3F3A4A]">
+                      <div className="flex shrink-0 items-center gap-6 text-[var(--icon-control)]">
                         <button
                           type="button"
-                          aria-label={playing ? "Pause" : "Play"}
-                          onClick={togglePlay}
+                          aria-label={sheetPlaying ? "Pause" : "Play"}
+                          onClick={() => {
+                            if (nowPlaying.songId === current.id) togglePlay();
+                            else selectTrack(current.id);
+                          }}
                           className="relative -mx-[11px] grid h-11 w-11 place-items-center border-0 bg-transparent p-0 text-inherit"
                         >
-                          {playing ? <PauseBars /> : <PlayMark />}
+                          {sheetPlaying ? <PauseBars /> : <PlayMark />}
                         </button>
                         <button
                           type="button"
@@ -171,7 +177,7 @@ export function AddSongSheet({ titleId }: AddSongSheetProps) {
                       </div>
                     </div>
                   ) : null}
-                  <p className="mt-5 text-[11px] leading-4 font-medium tracking-[0.06em] text-[#8E8E93] uppercase">Recently played</p>
+                  <p className="mt-5 text-[11px] leading-4 font-medium tracking-[0.06em] text-[var(--text-secondary)] uppercase">Recently played</p>
                   <div className="mt-2">
                     {recent.map((song, index) => (
                       <SongRow key={song.id} song={song} divider={index < recent.length - 1} onAdd={() => choose(song.id)} />
@@ -217,14 +223,14 @@ function SongRow({ song, divider, onAdd }: { song: Song; divider: boolean; onAdd
     <div className={`flex h-[72px] items-center gap-3 py-3 ${divider ? "border-b border-[#E6E6EA]" : ""}`}>
       <SongArt song={song} size={56} radius={6} />
       <div className="flex min-w-0 flex-1 flex-col gap-[2px]">
-        <p className="truncate text-[16px] leading-5 font-semibold text-[#111111]">{song.title}</p>
-        <p className="truncate text-[14px] leading-[18px] text-[#8E8E93]">{song.artist}</p>
+        <p className="truncate text-[16px] leading-5 font-semibold text-[var(--text-900)]">{song.title}</p>
+        <p className="truncate text-[14px] leading-[18px] text-[var(--text-secondary)]">{song.artist}</p>
       </div>
       <button
         type="button"
         aria-label={`Add ${song.title}`}
         onClick={onAdd}
-        className="relative h-11 w-11 shrink-0 border-0 bg-transparent p-0 text-[#8E8E93]"
+        className="relative h-11 w-11 shrink-0 border-0 bg-transparent p-0 text-[var(--text-secondary)]"
       >
         <Plus size={20} strokeWidth={2} className="absolute top-1/2 right-0 -translate-y-1/2" />
       </button>

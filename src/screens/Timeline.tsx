@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode }
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, ChevronLeft, ChevronRight, Mic, Music, Users, type LucideIcon } from "lucide-react";
 import { AlbumTile } from "../components/AlbumTile";
-import { chromeBottomPad } from "../components/MiniPlayer";
+import { chromeBottomPad, PlayingBars } from "../components/MiniPlayer";
 import { timelineFirstMonth, timelineLastMonth, timelineToday } from "../data/timeline";
 import type { TimelineEntry } from "../data/types";
 import { entriesByDate, heavyRotations, monthDots, useArchiveStore } from "../store/useArchiveStore";
@@ -86,11 +86,11 @@ export function Timeline() {
         whileTap={reduce ? undefined : { scale: 0.98 }}
         transition={{ duration: 0.15, ease: "easeOut" }}
         onClick={openWrapped}
-        className="mt-4 w-full cursor-pointer rounded-[24px] border border-[#EDE4FB] bg-[var(--purple-50)] p-5 text-left font-[inherit]"
+        className="mt-4 w-full cursor-pointer rounded-[24px] border border-[var(--insight-line)] bg-[var(--purple-50)] p-5 text-left font-[inherit]"
       >
-        <p className="text-[12px] leading-4 font-medium tracking-[0.08em] text-[#6E6E73] uppercase">T2 Insights</p>
+        <p className="text-[12px] leading-4 font-medium tracking-[0.08em] text-[var(--text-muted)] uppercase">T2 Insights</p>
         <h2 className="mt-2 text-[24px] leading-[30px] font-bold text-[var(--text-900)]">See your T2 Wrapped</h2>
-        <p className="mt-1 text-[15px] leading-5 font-normal text-[#6E6E73]">
+        <p className="mt-1 text-[15px] leading-5 font-normal text-[var(--text-muted)]">
           Your second trimester in music and feeling
         </p>
         <div className="mt-4 flex gap-1.5" aria-hidden="true">
@@ -99,12 +99,12 @@ export function Timeline() {
           ))}
         </div>
         <div className="mt-3 flex items-center justify-between">
-          <p className="text-[15px] leading-5 font-normal text-[#6E6E73]">12 insights ready</p>
+          <p className="text-[15px] leading-5 font-normal text-[var(--text-muted)]">12 insights ready</p>
           <span
             aria-hidden="true"
             className="flex size-8 items-center justify-center rounded-full bg-[var(--purple-500)] text-white"
           >
-            <ArrowRight size={16} strokeWidth={2.25} />
+            <ArrowRight size={16} strokeWidth={2} />
           </span>
         </div>
       </motion.button>
@@ -116,7 +116,7 @@ export function Timeline() {
             disabled={visibleMonth <= timelineFirstMonth}
             onClick={() => shiftMonth(-1)}
           >
-            <ChevronLeft size={18} strokeWidth={2.25} />
+            <ChevronLeft size={18} strokeWidth={2} />
           </MonthButton>
           <h2 className="text-center text-[20px] leading-6 font-medium text-[var(--text-900)]">
             {monthNames[month - 1]} {year}
@@ -126,7 +126,7 @@ export function Timeline() {
             disabled={visibleMonth >= timelineLastMonth}
             onClick={() => shiftMonth(1)}
           >
-            <ChevronRight size={18} strokeWidth={2.25} />
+            <ChevronRight size={18} strokeWidth={2} />
           </MonthButton>
         </div>
 
@@ -134,7 +134,7 @@ export function Timeline() {
           {weekdays.map((day) => (
             <span
               key={day}
-              className="flex h-4 w-11 items-center justify-center text-[12px] leading-4 tracking-[0.04em] text-[#8E8E93]"
+              className="flex h-4 w-11 items-center justify-center text-[12px] leading-4 tracking-[0.04em] text-[var(--text-secondary)]"
             >
               {day}
             </span>
@@ -164,7 +164,7 @@ export function Timeline() {
 
         <div className="mt-4 flex items-center justify-center gap-5">
           {legend.map((item) => (
-            <span key={item.label} className="inline-flex items-center gap-1.5 text-[14px] leading-5 text-[#6E6E73]">
+            <span key={item.label} className="inline-flex items-center gap-1.5 text-[14px] leading-5 text-[var(--text-muted)]">
               <span aria-hidden="true" className="size-2 rounded-full" style={{ backgroundColor: item.color }} />
               {item.label}
             </span>
@@ -175,7 +175,7 @@ export function Timeline() {
       </article>
 
       <section className="mt-5" aria-labelledby="heavy-rotations">
-        <h2 id="heavy-rotations" className="text-[17px] leading-5 font-normal text-[#A1A5B0]">
+        <h2 id="heavy-rotations" className="text-[17px] leading-5 font-normal text-[var(--text-400)]">
           Heavy rotations
         </h2>
         <div className="mt-5 flex justify-between gap-2">
@@ -189,7 +189,7 @@ export function Timeline() {
               bordered={song.bordered}
               size={96}
               titleClassName="relative z-[1] mt-2 block truncate text-[15px] leading-5 font-semibold text-[var(--text-900)]"
-              artistClassName="relative z-[1] block truncate text-[13px] leading-4 text-[#8E8E93]"
+              artistClassName="relative z-[1] block truncate text-[13px] leading-4 text-[var(--text-secondary)]"
               meta={
                 <span className="relative z-[1] mt-1.5 inline-flex rounded-[var(--radius-pill)] bg-[var(--pink-50)] px-2 py-0.5 text-[12px] leading-4 text-[var(--pink-500)]">
                   {plays} plays
@@ -326,20 +326,14 @@ function formatClock(time: string) {
 function DayPanel({ selectedDate, reduce }: { selectedDate: string; reduce: boolean | null }) {
   const entries = useArchiveStore((state) => state.timelineEntries);
   const contributors = useArchiveStore((state) => state.contributors);
-  const currentTrackId = useArchiveStore((state) => state.currentTrackId);
+  const nowPlaying = useArchiveStore((state) => state.nowPlaying);
   const playing = useArchiveStore((state) => state.playing);
-  const selectTrack = useArchiveStore((state) => state.selectTrack);
-  const togglePlay = useArchiveStore((state) => state.togglePlay);
+  const playEntry = useArchiveStore((state) => state.playEntry);
   const dayEntries = useMemo(() => entriesByDate(entries, selectedDate), [entries, selectedDate]);
-  const [inlineId, setInlineId] = useState<string | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState<number | "auto">("auto");
   const [motionReady, setMotionReady] = useState(false);
   const label = formatDayLabel(selectedDate);
-
-  useEffect(() => {
-    setInlineId(null);
-  }, [selectedDate]);
 
   useEffect(() => {
     setMotionReady(true);
@@ -355,17 +349,6 @@ function DayPanel({ selectedDate, reduce }: { selectedDate: string; reduce: bool
     return () => observer.disconnect();
   }, [selectedDate, dayEntries]);
 
-  function onRow(entry: TimelineEntry) {
-    if (entry.kind === "song") {
-      if (!entry.songId) return;
-      setInlineId(null);
-      if (currentTrackId === entry.songId && playing) togglePlay();
-      else selectTrack(entry.songId);
-      return;
-    }
-    setInlineId((current) => (current === entry.id ? null : entry.id));
-  }
-
   return (
     <motion.div
       className="mt-3 overflow-hidden"
@@ -376,12 +359,12 @@ function DayPanel({ selectedDate, reduce }: { selectedDate: string; reduce: bool
       <div
         ref={contentRef}
         data-day-panel
-        className="rounded-[16px] border border-[#EFEFF4] bg-[#FAFAFC] p-3"
+        className="rounded-[16px] border border-[var(--day-panel-line)] bg-[var(--day-panel)] p-3"
         aria-label={label}
       >
-        <p className="text-[14px] leading-5 text-[#8E8E93]">{label}</p>
+        <p className="text-[14px] leading-5 text-[var(--text-secondary)]">{label}</p>
         {dayEntries.length === 0 ? (
-          <p className="mt-1 px-2 py-3 text-center text-[14px] leading-5 text-[#8E8E93]">
+          <p className="mt-1 px-2 py-3 text-center text-[14px] leading-5 text-[var(--text-secondary)]">
             Nothing saved on this day.
           </p>
         ) : (
@@ -391,9 +374,10 @@ function DayPanel({ selectedDate, reduce }: { selectedDate: string; reduce: bool
                 const style = rowStyle[entry.kind];
                 const Icon = style.icon;
                 const active =
-                  entry.kind === "song"
-                    ? !inlineId && playing && entry.songId === currentTrackId
-                    : inlineId === entry.id;
+                  playing &&
+                  (entry.kind === "song"
+                    ? nowPlaying.kind === "song" && nowPlaying.songId === entry.songId
+                    : nowPlaying.id === entry.id);
                 const title =
                   entry.kind === "echo"
                     ? `${contributors.find((person) => person.id === entry.contributorId)?.name ?? "Echo"}: ${entry.title}`
@@ -411,10 +395,10 @@ function DayPanel({ selectedDate, reduce }: { selectedDate: string; reduce: bool
                     animate={{ opacity: 1 }}
                     exit={reduce ? undefined : { opacity: 0 }}
                     transition={{ duration: reduce ? 0 : 0.2, delay: reduce ? 0 : index * 0.03 }}
-                    onClick={() => onRow(entry)}
+                    onClick={() => playEntry(entry, dayEntries)}
                     aria-pressed={active}
                     aria-label={`${active ? "Pause" : "Play"} ${title}, ${clock}`}
-                    className={`flex h-12 min-h-11 w-full cursor-pointer items-center gap-2.5 rounded-[var(--radius-pill)] border border-[#ECECF1] px-2 text-left font-[inherit] ${
+                    className={`flex h-12 min-h-11 w-full cursor-pointer items-center gap-2.5 rounded-[var(--radius-pill)] border border-[var(--day-row-line)] px-2 text-left font-[inherit] ${
                       active && entry.kind !== "song" ? style.tint : "bg-white"
                     }`}
                   >
@@ -424,15 +408,15 @@ function DayPanel({ selectedDate, reduce }: { selectedDate: string; reduce: bool
                       style={{ backgroundColor: style.tile, color: style.iconColor }}
                     >
                       {active ? (
-                        <PlayingBars color={style.iconColor} reduce={reduce} />
+                        <PlayingBars color={style.iconColor} count={3} />
                       ) : (
-                        <Icon size={15} strokeWidth={2.25} />
+                        <Icon size={15} strokeWidth={2} />
                       )}
                     </span>
                     <span className="min-w-0 flex-1 truncate text-[15px] leading-5 text-[var(--text-900)]">
                       {title}
                     </span>
-                    <span className="shrink-0 text-[14px] leading-5 text-[#8E8E93]">{clock}</span>
+                    <span className="shrink-0 text-[14px] leading-5 text-[var(--text-secondary)]">{clock}</span>
                   </motion.button>
                 );
               })}
@@ -441,23 +425,5 @@ function DayPanel({ selectedDate, reduce }: { selectedDate: string; reduce: bool
         )}
       </div>
     </motion.div>
-  );
-}
-
-function PlayingBars({ color, reduce }: { color: string; reduce: boolean | null }) {
-  return (
-    <span className="flex h-3 items-end gap-[2px]">
-      {[0, 1, 2].map((index) => (
-        <span
-          key={index}
-          className={`w-[2px] rounded-full ${reduce ? "" : "echo-bar"}`}
-          style={{
-            backgroundColor: color,
-            height: reduce ? [6, 12, 8][index] : 12,
-            animationDelay: `${index * 0.15}s`,
-          }}
-        />
-      ))}
-    </span>
   );
 }

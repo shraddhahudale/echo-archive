@@ -88,7 +88,7 @@ src/
 |---|---|---|
 | 1 Anxious | `#A385F7` | `#6D2BDB` |
 | 2 3am | `#5DA4F4` | `#157898` |
-| 3 Holocene | `#F7C9E6` | `#C32969` |
+| 3 Breathe Deeper | `#F7C9E6` | `#C32969` |
 | 4 68 times | `#F6D2A8` | `#83431D` |
 | 5 Restless to Grounding | `#F06AB4` | `#8B2BCB` |
 
@@ -138,9 +138,11 @@ src/
 - Timeline tab opens the calendar screen, Breath tab opens breathing mode
 
 ### MiniPlayer
-- Floating card above the tab bar on Home
-- Album art 44px (radius 8), title "Chandaniya" (600), artist "Sajid Wajid" (`--text-400`)
-- Controls: pause, skip, **+** (plus opens Add a Song sheet with this track preselected)
+- Floating card above the tab bar (Home, Timeline, Archive; hidden on Breath and Wrapped)
+- Default current track: **"Let It Happen"** by Tame Impala
+- Adapts by type: song (album art + artist + pause/skip/+), voice note (purple waveform tile, no +), echo (avatar + amber badge, no +)
+- Thin 2px progress line in the item's accent colour
+- Controls: pause, skip, **+** on songs only (opens Add a Song sheet with that track preselected)
 
 ### Orb (signature element)
 - 3 concentric circles in purple: outer ring `--purple-300` at 60%, middle ring, solid core `--purple-500`
@@ -280,8 +282,10 @@ Your pregnancy journey
 │ └─────────────────────────┘ │
 └─────────────────────────────┘
 Heavy rotations
-[Holocene][Breathe (2 AM)][Yellow]  each with "41 plays" pill
+[Holocene][Breathe (2 AM)][Yellow]  each with play-count pill
 ```
+
+- Heavy rotations (canonical): **Breathe Deeper 44**, Holocene 41, Breathe (2 AM) 36
 
 - "Trimester 02" bold, "/ W22" `--text-400`
 - Insight card: `--purple-50` bg, 20px radius; five small dots in purple, blue, pink, brown, pink (preview of Wrapped palettes); round purple arrow button → Wrapped
@@ -381,9 +385,10 @@ Instruction copy per phase:
 |---|---|---|---|---|
 | 1 | Through your second trimester | *Anxious* | Mixed with happiness and excitement | You're not alone in feeling this way |
 | 2 | In the quiet hours of night | *3am* | is your most active hour | T2 unfolds when the world sleeps |
-| 3 | When one song said it all | *Holocene* + album art + *Bon Iver* | | No voice note. Just this song capturing the moments it held |
+| 3 | When one song said it all | *Breathe Deeper* + album art + *Tame Impala* | | No voice note. Just this song capturing the moments it held |
 | 4 | You've turned to music | **68** *times* | seeking comfort and release | Every song held space for you |
-| 5 | Your emotional journey | Restless → *Grounding* | the shift Echo noticed | Look how far you've come |
+| 5 | The voices around you | **38** *echoes* | from four people who love you | Mom left the most: 15 voice notes |
+| 6 | Your emotional journey | **Restless → Grounding** (bold serif italic) | the shift Echo noticed | Look how far you've come |
 
 ---
 

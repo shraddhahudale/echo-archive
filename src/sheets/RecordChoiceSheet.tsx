@@ -27,7 +27,7 @@ function rise(delay: number, reduce: boolean | null) {
 export function RecordChoiceSheet({ titleId, onVoice, onSong, onEcho }: RecordChoiceSheetProps) {
   const reduce = useReducedMotion();
   const savedThisWeek = useArchiveStore(
-    (state) => state.entries.filter((entry) => entry.week === state.user.week).length,
+    (state) => state.entries.reduce((count, entry) => (entry.week === state.user.week ? count + 1 : count), 0),
   );
   const hint =
     savedThisWeek === 0
@@ -101,7 +101,7 @@ function ChoiceCard({
       onClick={onClick}
       variants={rise(delay, reduce)}
       whileTap={reduce ? undefined : { scale: 0.98 }}
-      className={`flex h-[72px] w-full items-center rounded-[20px] border border-[#E6E6EA] bg-white pr-4 pl-4 text-left shadow-[var(--shadow-card)] ${tint}`}
+      className={`flex h-[72px] w-full items-center rounded-[20px] border border-[var(--line)] bg-white pr-4 pl-4 text-left shadow-[var(--shadow-card)] ${tint}`}
     >
       <span
         className="grid size-10 shrink-0 place-items-center rounded-full text-white"
@@ -112,8 +112,8 @@ function ChoiceCard({
       >
         <Icon size={18} strokeWidth={2} aria-hidden="true" />
       </span>
-      <span className="ml-3.5 text-[16px] leading-5 font-medium text-[#111111]">{label}</span>
-      <ChevronRight size={20} strokeWidth={2} className="ml-auto shrink-0 text-[#C7C7CC]" aria-hidden="true" />
+      <span className="ml-3.5 text-[16px] leading-5 font-medium text-[var(--text-900)]">{label}</span>
+      <ChevronRight size={20} strokeWidth={2} className="ml-auto shrink-0 text-[var(--future-day)]" aria-hidden="true" />
     </motion.button>
   );
 }
