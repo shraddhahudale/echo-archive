@@ -20,10 +20,12 @@ import type {
   Contributor,
   EchoLaunch,
   Entry,
+  HomeScreen,
   Song,
   TimelineEntry,
 } from "../data/types";
 import type { TabId } from "../components/TabBar";
+import type { MoodPlaylistId } from "../data/moodPlaylists";
 
 type VoiceNoteInput = {
   title?: string;
@@ -68,6 +70,7 @@ type ArchiveState = {
   wrappedIndex: number;
   archiveSegment: ArchiveSegment;
   archiveScreen: ArchiveScreen;
+  homeScreen: HomeScreen;
   echoLaunch: EchoLaunch;
   requestTab: TabId | null;
   connectStone: () => void;
@@ -100,6 +103,9 @@ type ArchiveState = {
   popArchive: () => void;
   resetArchiveScreen: () => void;
   openArchiveFeeling: (feelings: string[], title?: string) => void;
+  openMoodPlaylist: (playlistId: MoodPlaylistId) => void;
+  popHomeScreen: () => void;
+  resetHomeScreen: () => void;
   openTimelineWeek: (week: number) => void;
   openEchoInvite: () => void;
   openEchoAddNote: (contributorId: string, noteId: string) => void;
@@ -171,6 +177,7 @@ export const useArchiveStore = create<ArchiveState>((set, get) => ({
   wrappedIndex: 0,
   archiveSegment: "weeks",
   archiveScreen: { name: "home" },
+  homeScreen: { name: "home" },
   echoLaunch: null,
   requestTab: null,
 
@@ -540,7 +547,14 @@ export const useArchiveStore = create<ArchiveState>((set, get) => ({
       requestTab: "archive",
       archiveScreen: { name: "feeling", feelings, title },
       archiveSegment: "feelings",
+      homeScreen: { name: "home" },
     }),
+
+  openMoodPlaylist: (playlistId) => set({ homeScreen: { name: "moodPlaylist", playlistId } }),
+
+  popHomeScreen: () => set({ homeScreen: { name: "home" } }),
+
+  resetHomeScreen: () => set({ homeScreen: { name: "home" } }),
 
   openTimelineWeek: (week) => {
     const start = weekStartDate(week);
@@ -626,7 +640,7 @@ export function heavyRotations(songs: Song[]) {
 
 export function wrappedStats(songs: Song[], contributors: Contributor[]) {
   const topSong = songById(songs, "breathe-deeper") ?? songs[0];
-  const order = ["mom", "grandma", "seema", "jake"] as const;
+  const order = ["mom", "grandma", "sophie", "jake"] as const;
   const people = order.map((id) => {
     const person = contributors.find((item) => item.id === id);
     return {

@@ -137,7 +137,7 @@ One value drives everything: **`breath`**, from 0 (empty lungs) to 1 (full lungs
 - **Reduced motion:** no scale changes. The blob only changes opacity (0.5 ↔ 0.9) over each phase, no ripple, and words cross-fade.
 - **Tab switching:** leaving the Breath tab mid-session ends the session quietly. Coming back shows B1.
 
-**Optional (only if there's time):** a line under the eyebrow, "Your Stone is breathing with you", fades in once the session starts, to tie the physical Stone to the experience.
+**Optional (only if there's time):** a line under the eyebrow, "Your Companion Stone is breathing with you", fades in once the session starts, to tie the physical Companion Stone to the experience.
 
 ---
 

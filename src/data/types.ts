@@ -85,6 +85,10 @@ export type ArchiveScreen =
   | { name: "playlist"; playlistId: string }
   | { name: "search" };
 
+export type HomeScreen =
+  | { name: "home" }
+  | { name: "moodPlaylist"; playlistId: string };
+
 export type EchoLaunch =
   | { mode: "invite" }
   | { mode: "addNote"; contributorId: string; noteId: string }

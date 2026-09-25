@@ -39,7 +39,7 @@ Timeline tab
 |---|---|
 | Songs | Chandaniya (Sajid Wajid), Breathe (2 AM) (Anna Nalick), Yellow (Coldplay), Holocene (Bon Iver), She Will Be Loved (Maroon 5), Hotel California (Eagles), Songs About Jane (Maroon 5), Bohemian Rhapsody (Queen) |
 | Voice notes | Missing Home, Her name, Late night, Lullabies, Lullaby (from the Archive Figma), plus anything saved in Phase 1 |
-| Echoes | Voice notes from Jake, Seema Aunty, Mom and Grandma, using the titles already seeded in Phase 1 (e.g. Mom's "Good morning, little one") |
+| Echoes | Voice notes from Jake, Aunt Sophie, Mom and Grandma, using the titles already seeded in Phase 1 (e.g. Mom's "Good morning, little one") |
 
 - Figma playlist names in the day panel ("Morning acoustic", "Throwback hits", "Lo-fi sunset", "Party playlist", "Reflections", "Voice note #20") are **replaced with real songs and voice notes** from the list above.
 - Use the same album art in `public/img` everywhere.
@@ -58,7 +58,7 @@ Timeline tab
 | 9 | song, voice |
 | 10 | song: Holocene 9:12 am |
 | 11 | voice |
-| **12** | **echo: Seema Aunty** |
+| **12** | **echo: Aunt Sophie** |
 | 13 | song |
 | 15 | song: Yellow 2:00 pm, song: Breathe (2 AM) 6:30 pm |
 | 17 | voice: Missing Home 7:15 am |
@@ -81,7 +81,7 @@ Timeline tab
 - Wrapped card 3 top song: **Breathe Deeper** by Tame Impala (not Holocene).
 - Wrapped card 6 hero: **Restless → Grounding** in bold serif italic.
 - Song moments in T2: 68 (Wrapped card 4).
-- Echoes in T2: 38 voice notes from 4 people (Mom 15, Grandma 12, Seema Aunty 6, Jake 5). These match the counts in the Phase 1 echo sheet.
+- Echoes in T2: 38 voice notes from 4 people (Mom 15, Grandma 12, Aunt Sophie 6, Jake 5). These match the counts in the Phase 1 echo sheet.
 
 ---
 
@@ -160,7 +160,7 @@ Timeline tab
 | 2 | `#5DA4F4` → `#157898` | In the quiet hours of night | *3am* | is your most active hour | T2 unfolds when the world sleeps |
 | 3 | `#F7C9E6` → `#C32969` | When one song said it all | *Breathe Deeper* + 56px album art + *Tame Impala* | | No voice note. Just this song capturing the moments it held |
 | 4 | `#F6D2A8` → `#83431D` | You've turned to music | **68** *times* | seeking comfort and release | Every song held space for you |
-| **5** | **`#FFD98A` → `#E07A2E`** | **The voices around you** | **38** *echoes* + a row of 4 overlapping 36px avatars (Mom, Grandma, Seema Aunty, Jake) | **from four people who love you** | **Mom left the most: 15 voice notes** |
+| **5** | **`#FFD98A` → `#E07A2E`** | **The voices around you** | **38** *echoes* + a row of 4 overlapping 36px avatars (Mom, Grandma, Aunt Sophie, Jake) | **from four people who love you** | **Mom left the most: 15 voice notes** |
 | 6 | `#F06AB4` → `#8B2BCB` | Your emotional journey | **Restless → Grounding** (bold serif italic) | the shift Echo noticed | Look how far you've come |
 
 - Fix from Figma: card 3's counter read "2 OF 5"; counters are now 1 to 6 "OF 6".

@@ -1,27 +1,75 @@
 import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Heart, Mic, Moon, Music, Sun, type LucideIcon } from "lucide-react";
 import { AlbumTile } from "../components/AlbumTile";
 import { chromeBottomPad } from "../components/MiniPlayer";
 import { Orb } from "../components/Orb";
 import { PageHeader } from "../components/PageHeader";
+import type { MoodPlaylistId } from "../data/moodPlaylists";
 import type { Entry, Song } from "../data/types";
 import { trimesterName, useArchiveStore } from "../store/useArchiveStore";
+import { MoodPlaylistPage } from "./MoodPlaylist";
 
-const feelings: { label: string; icon: LucideIcon; color: string; iconColor: string; archiveFeelings: string[]; title?: string }[] = [
-  { label: "Calm nights", icon: Moon, color: "#C9B8FF", iconColor: "#9B7BF0", archiveFeelings: ["calm"] },
-  { label: "Tender", icon: Heart, color: "#F7A8D0", iconColor: "#E86FAE", archiveFeelings: ["connected", "loved"], title: "Tender" },
-  { label: "Bright days", icon: Sun, color: "#FFD39A", iconColor: "#E89A5C", archiveFeelings: ["hopeful"] },
+const feelings: {
+  label: string;
+  icon: LucideIcon;
+  color: string;
+  iconColor: string;
+  playlistId: MoodPlaylistId;
+}[] = [
+  { label: "Calm nights", icon: Moon, color: "#C9B8FF", iconColor: "#9B7BF0", playlistId: "calm-nights" },
+  { label: "Tender", icon: Heart, color: "#F7A8D0", iconColor: "#E86FAE", playlistId: "tender" },
+  { label: "Bright days", icon: Sun, color: "#FFD39A", iconColor: "#E89A5C", playlistId: "bright-days" },
 ];
 
+const pushMotion = {
+  initial: { opacity: 0, x: 24 },
+  animate: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: -12 },
+};
+
 export function Home() {
+  const homeScreen = useArchiveStore((state) => state.homeScreen);
+  const reduce = useReducedMotion();
+  const transition = reduce
+    ? { duration: 0.15 }
+    : { duration: 0.25, ease: "easeOut" as const };
+  const fadeOnly = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 },
+  };
+  const motionProps = reduce ? fadeOnly : pushMotion;
+
+  return (
+    <div className="relative h-full overflow-hidden" aria-label="Home">
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={homeScreen.name === "home" ? "home" : `mood-${homeScreen.playlistId}`}
+          className="h-full"
+          initial={motionProps.initial}
+          animate={motionProps.animate}
+          exit={motionProps.exit}
+          transition={transition}
+        >
+          {homeScreen.name === "home" ? <HomeRoot /> : null}
+          {homeScreen.name === "moodPlaylist" ? (
+            <MoodPlaylistPage playlistId={homeScreen.playlistId as MoodPlaylistId} />
+          ) : null}
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function HomeRoot() {
   const user = useArchiveStore((state) => state.user);
   const recentlyPlayedIds = useArchiveStore((state) => state.recentlyPlayedIds);
   const songs = useArchiveStore((state) => state.songs);
   const selectTrack = useArchiveStore((state) => state.selectTrack);
   const openSheet = useArchiveStore((state) => state.openSheet);
   const entries = useArchiveStore((state) => state.entries);
-  const openArchiveFeeling = useArchiveStore((state) => state.openArchiveFeeling);
+  const openMoodPlaylist = useArchiveStore((state) => state.openMoodPlaylist);
   const stoneConnected = useArchiveStore((state) => state.stoneConnected);
   const reduce = useReducedMotion();
   const fade = reduce ? 0.2 : 0.5;
@@ -48,7 +96,7 @@ export function Home() {
 
   return (
     <section
-      aria-label="Home"
+      aria-label="Home feed"
       className="scroll-row h-full overflow-x-hidden overflow-y-auto px-5"
       style={{ paddingBottom: chromeBottomPad }}
     >
@@ -75,7 +123,7 @@ export function Home() {
               boxShadow: stoneConnected ? "inset 0 0 0 0px #D1D1D6" : "inset 0 0 0 1.5px #D1D1D6",
             }}
             transition={{ duration: fade, ease: "easeOut" }}
-            className="inline-flex items-center gap-2 rounded-[var(--radius-pill)] px-3.5 py-1.5 text-[12px] leading-4 font-medium"
+            className="inline-flex items-center gap-2 whitespace-nowrap rounded-[var(--radius-pill)] px-4 py-1.5 text-[12px] leading-4 font-medium"
           >
             <motion.span
               aria-hidden="true"
@@ -91,9 +139,9 @@ export function Home() {
               onAnimationComplete={() => {
                 if (dotPop) setDotPop(false);
               }}
-              className="size-2 rounded-full"
+              className="size-2 shrink-0 rounded-full"
             />
-            {stoneConnected ? "Stone connected" : "Stone not connected"}
+            {stoneConnected ? "Companion Stone connected" : "Companion Stone not connected"}
           </motion.p>
           <button
             type="button"
@@ -112,15 +160,7 @@ export function Home() {
         <DragRow>
           {feelings.map((feeling) => (
             <li key={feeling.label} className="shrink-0 snap-start">
-              <FeelingTile
-                {...feeling}
-                onOpen={() =>
-                  openArchiveFeeling(
-                    feeling.archiveFeelings,
-                    feeling.title,
-                  )
-                }
-              />
+              <FeelingTile {...feeling} onOpen={() => openMoodPlaylist(feeling.playlistId)} />
             </li>
           ))}
         </DragRow>

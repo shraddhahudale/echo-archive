@@ -46,8 +46,8 @@ Everything reads from the **same store entries** used by the Timeline calendar (
 - Echoes lean loved / connected. Entries saved in Phase 1 flows keep the chips the user picked.
 
 ### Echoes
-- Contributor data comes from the Phase 1 store (Jake, Seema Aunty, Mom, Grandma, plus anyone invited this session).
-- Counts must match the echo sheet (Mom 15, Grandma 12, Seema Aunty 6, Jake 5).
+- Contributor data comes from the Phase 1 store (Jake, Aunt Sophie, Mom, Grandma, plus anyone invited this session).
+- Counts must match the echo sheet (Mom 15, Grandma 12, Aunt Sophie 6, Jake 5).
 
 ### Songs
 - Only songs already in the catalogue: Let It Happen, Breathe Deeper, Holocene, Breathe (2 AM), Yellow, She Will Be Loved, Hotel California, Songs About Jane, Bohemian Rhapsody, Chandaniya. Real art from `public/img`.
@@ -162,8 +162,9 @@ Playlists → 4 cards (h-scroll)
 ---
 
 ## 7. Link from Home
-- The Home "Browse by feeling" tiles now open Archive → A3 for: Calm nights → calm, Tender → connected + loved (combined), Bright days → hopeful.
-- This is the only Home change in Phase 4.
+- The Home "Browse by feeling" tiles open **mood playlists** (not Archive filters): Calm nights, Tender, Bright days.
+- Each playlist has curated catalogue songs, Play / Shuffle, and a "From your archive" section (up to 3 of Sarah's moments for calm / connected+loved / hopeful) with "See all →" → Archive A3 for that feeling.
+- This is the only Home navigation change tied to Phase 4 feelings; the playlist UX itself lives on Home.
 
 ---
 
@@ -176,7 +177,7 @@ Playlists → 4 cards (h-scroll)
 | P4-3 | Feelings and People views + Playlists row | Counts are correct; Invite someone opens the invite flow |
 | P4-4 | A2 Week detail, A3 Feeling results, A4 Person detail, A5 Playlist detail with the shared row + ⋯ menu | Rename, edit feelings and delete update everywhere; Play week steps through the list |
 | P4-5 | A6 Search | "Mom", "hopeful" and "Holocene" all return the right grouped results with highlights |
-| P4-6 | Home feeling tiles link, motion, a11y, polish | Tiles open the right feeling; no console errors |
+| P4-6 | Home feeling tiles → mood playlists, motion, a11y, polish | Tiles open the right playlist; See all → A3; no console errors |
 
 ---
 

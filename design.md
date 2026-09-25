@@ -1,6 +1,6 @@
 # Echo Archive: Prototype Design Spec
 
-Build spec for a clickable, high-fidelity mobile prototype of **Echo Archive**, a pregnancy companion app that lets a mother capture songs, voice notes and feelings week by week, then reflect on them. It pairs with a physical "Stone" object (shown as "Stone connected" on Home).
+Build spec for a clickable, high-fidelity mobile prototype of **Echo Archive**, a pregnancy companion app that lets a mother capture songs, voice notes and feelings week by week, then reflect on them. It pairs with a physical Companion Stone (shown as "Companion Stone connected" on Home).
 
 Context: the product supports mothers through the in-between of becoming a parent. Tone is soft, calm, unhurried. Nothing should feel clinical or gamified.
 
@@ -36,6 +36,7 @@ src/
     AlbumTile.tsx
   screens/
     Home.tsx
+    MoodPlaylist.tsx
     Timeline.tsx
     Archive.tsx
     WeekDetail.tsx
@@ -46,7 +47,9 @@ src/
     VoiceNoteSheet.tsx
     AddSongSheet.tsx
     SavedSheet.tsx
-  data/mock.ts
+  data/
+    mock.ts
+    moodPlaylists.ts
   styles/tokens.css
 ```
 
@@ -67,8 +70,8 @@ src/
 | `--pink-500` | `#F472B6` | Song actions: music button, today marker, music dots, song flow accents |
 | `--pink-200` | `#FCCEE8` | Song "Saved" check tile |
 | `--pink-50` | `#FBF1FA` | Song surfaces: now playing card, note input, selected chip |
-| `--green-100` | `#D9EEB3` | "Stone connected" pill bg |
-| `--green-600` | `#5E9A2C` | Stone pill dot + text (suggested, adjust to match) |
+| `--green-100` | `#D9EEB3` | "Companion Stone connected" pill bg |
+| `--green-600` | `#5E9A2C` | Companion Stone pill dot + text (suggested, adjust to match) |
 | `--text-900` | `#111111` | Headings |
 | `--text-700` | `#3A3A3C` | Body, list titles |
 | `--text-400` | `#A1A5B0` | Secondary: greeting, "Week 22", subtitles |
@@ -190,7 +193,7 @@ Week 22 · Second Trimester
 ┌──────────────────────────────┐
 │   How are you feeling today ?│
 │            ( Orb )           │
-│       [● Stone connected]    │
+│  [● Companion Stone connected] │
 │     Tap to record a moment   │
 └──────────────────────────────┘
 Browse by feeling
@@ -203,8 +206,13 @@ Recently played
 
 - Background: white with a very faint lavender radial glow top right
 - Feeling card: white, 20px radius, 1px `--line`, centred content
-- "Stone connected" pill: `--green-100` bg, green dot + text
-- Browse by feeling tiles: 136 x 96, 20px radius, gradient fills (lavender `#C9B8FF`, pink `#F7A8D0`, peach `#FFD39A`), outline icon top left (moon, heart, sun), label bottom left (suggested labels: "Calm nights", "Tender", "Bright days")
+- "Companion Stone connected" pill: `--green-100` bg, green dot + text; widens to fit on one line (no wrap, same 12px text)
+- Browse by feeling tiles: 120×120, 20px radius, gradient fills (lavender `#C9B8FF`, pink `#F7A8D0`, peach `#FFD39A`), outline icon top left (moon, heart, sun), label bottom left ("Calm nights", "Tender", "Bright days")
+- **Tapping a feeling tile opens a mood playlist page** (Apple Music–style), not an Archive filter. Back chevron → Home; mini player and tab bar stay visible. Slide-in from the right (250ms); cover scales 0.96 → 1.
+- Mood playlist page: 200×200 cover (same tile gradient + icon, radius 20, centred); Display bold 30px title; subtitle "Echo · picked for you" 14px `#8E8E93`; one-line description 15px `#6E6E73`; full-pill [▶ Play] (filled in tile colour) + [Shuffle] (outline) side by side; track list with 48px art, title, artist, and + (opens Add a song at B2). Row tap plays that song and sets the playlist as the queue. Bottom "From your archive" shows up to 3 of Sarah's own moments for that feeling, with "See all →" → Archive A3.
+  - Calm nights: soft sleep songs (Holocene, To Build a Home, Chandaniya, Iktara, …)
+  - Tender: quiet loving songs (Beautiful Boy, Yellow, Sweet Pea, Breathe (2 AM), …)
+  - Bright days: warm hopeful songs (Here Comes the Sun, Let It Happen, Breathe Deeper, …)
 - Recently played: 88px square album tiles, title (600) + artist below
 - Page scrolls under the MiniPlayer and TabBar
 

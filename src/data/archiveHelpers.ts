@@ -150,7 +150,11 @@ export function contributorLabel(contributor?: { name?: string } | null) {
 
 export function contributorInitial(contributor?: { name?: string } | null) {
   const name = contributor?.name?.trim();
-  return name ? name.charAt(0).toUpperCase() : "?";
+  if (!name) return "?";
+  // Prefer the given name so "Aunt Sophie" → S, not A.
+  const parts = name.split(/\s+/);
+  const pick = parts[parts.length - 1] ?? name;
+  return pick.charAt(0).toUpperCase();
 }
 
 export function seedFeelingsFor(entry: Pick<TimelineEntry, "id" | "kind" | "date">): string[] {

@@ -22,6 +22,7 @@ export function App() {
   const requestTab = useArchiveStore((state) => state.requestTab);
   const clearRequestTab = useArchiveStore((state) => state.clearRequestTab);
   const resetArchiveScreen = useArchiveStore((state) => state.resetArchiveScreen);
+  const resetHomeScreen = useArchiveStore((state) => state.resetHomeScreen);
   const nowPlaying = useArchiveStore((state) => state.nowPlaying);
   const playing = useArchiveStore((state) => state.playing);
   const togglePlay = useArchiveStore((state) => state.togglePlay);
@@ -86,6 +87,7 @@ export function App() {
 
   function changeTab(next: TabId) {
     if (tab === "archive" && next !== "archive") resetArchiveScreen();
+    if (tab === "home" && next !== "home") resetHomeScreen();
     setTab(next);
   }
 

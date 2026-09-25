@@ -109,7 +109,7 @@ ADD A CONTRIBUTOR
 [ Search from contacts            🎤 ]
 RECENT CONTRIBUTORS
 (avatar) Jake            5 voice notes    +
-(avatar) Seema Aunty     6 voice notes    +
+(avatar) Aunt Sophie     6 voice notes    +
 (avatar) Mom            15 voice notes    +
 (avatar) Grandma        12 voice notes    +
 ```
@@ -204,7 +204,7 @@ type Contact = { id: string; name: string; phone?: string; email?: string };
 
 type Contributor = {
   id: string;
-  name: string;               // "Mom", "Seema Aunty"
+  name: string;               // "Mom", "Aunt Sophie"
   relationship: string;       // chip value
   avatar?: string;
   status: "invited" | "active";
@@ -230,7 +230,7 @@ actions: saveVoiceNote, saveSong,
          renameNote, removeNote, markSeen
 ```
 
-Seed: Jake (5), Seema Aunty (6), Mom (15), Grandma (12), each with 4 to 5 notes in `notes`, 1 to 2 of them unseen. Contacts: 8 to 10 names, including one existing contributor to test the "Contributor" label.
+Seed: Jake (5), Aunt Sophie (6), Mom (15), Grandma (12), each with 4 to 5 notes in `notes`, 1 to 2 of them unseen. Contacts: 8 to 10 names, including one existing contributor to test the "Contributor" label.
 
 ---
 
