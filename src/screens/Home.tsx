@@ -68,7 +68,7 @@ function HomeRoot() {
   const songs = useArchiveStore((state) => state.songs);
   const selectTrack = useArchiveStore((state) => state.selectTrack);
   const openSheet = useArchiveStore((state) => state.openSheet);
-  const entries = useArchiveStore((state) => state.entries);
+  const timelineEntries = useArchiveStore((state) => state.timelineEntries);
   const openMoodPlaylist = useArchiveStore((state) => state.openMoodPlaylist);
   const stoneConnected = useArchiveStore((state) => state.stoneConnected);
   const reduce = useReducedMotion();
@@ -85,8 +85,12 @@ function HomeRoot() {
   );
 
   const thisWeek = useMemo(
-    () => entries.filter((entry) => entry.week === user.week),
-    [entries, user.week],
+    () =>
+      timelineEntries
+        .filter((entry) => (entry.week ?? user.week) === user.week)
+        .slice()
+        .sort((a, b) => `${b.date}T${b.time}`.localeCompare(`${a.date}T${a.time}`)),
+    [timelineEntries, user.week],
   );
 
   useEffect(() => {
@@ -308,17 +312,35 @@ function formatToday(iso: string) {
   return date.toDateString() === new Date().toDateString() ? `Today, ${time}` : time;
 }
 
-function WeekCard({ entry }: { entry: Entry }) {
+type WeekMoment = {
+  id: string;
+  kind: Entry["kind"];
+  title: string;
+  art?: string;
+  week?: number;
+  number?: number;
+  createdAt?: string;
+  date?: string;
+  time?: string;
+};
+
+function weekMomentSubtitle(entry: WeekMoment) {
+  if (entry.kind === "voice" && entry.number) {
+    return `#${String(entry.number).padStart(2, "0")} / W ${entry.week}`;
+  }
+  if (entry.date && entry.time) {
+    return formatToday(`${entry.date}T${entry.time}:00`);
+  }
+  return entry.createdAt ? formatToday(entry.createdAt) : "";
+}
+
+function WeekCard({ entry }: { entry: WeekMoment }) {
   return (
     <article className="flex w-[200px] items-center gap-3 rounded-[16px] border border-[var(--line)] bg-white p-3 shadow-[var(--shadow-card)]">
       <WeekMark entry={entry} />
       <div className="min-w-0">
         <p className="truncate text-[15px] leading-5 font-semibold text-[var(--text-900)]">{entry.title}</p>
-        <p className="truncate text-[12px] leading-4 text-[var(--text-400)]">
-          {entry.kind === "voice" && entry.number
-            ? `#${String(entry.number).padStart(2, "0")} / W ${entry.week}`
-            : formatToday(entry.createdAt)}
-        </p>
+        <p className="truncate text-[12px] leading-4 text-[var(--text-400)]">{weekMomentSubtitle(entry)}</p>
       </div>
     </article>
   );
@@ -339,7 +361,7 @@ function SongWeekArt({ art }: { art: string }) {
   return <img src={art} alt="" className="size-11 shrink-0 rounded-[8px] object-cover" onError={() => setFailed(true)} />;
 }
 
-function WeekMark({ entry }: { entry: Entry }) {
+function WeekMark({ entry }: { entry: WeekMoment }) {
   if (entry.kind === "song" && entry.art) {
     return <SongWeekArt art={entry.art} />;
   }

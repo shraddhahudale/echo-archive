@@ -51,6 +51,22 @@ const songDuration: Record<string, number> = {
   "songs-about-jane": 210,
   "bohemian-rhapsody": 354,
   chandaniya: 280,
+  bloom: 215,
+  "sea-of-love": 195,
+  "rivers-and-roads": 268,
+  riptide: 204,
+  youth: 247,
+  "the-night-we-met": 208,
+  "moon-river": 166,
+  eventually: 318,
+  "lost-in-yesterday": 248,
+  "golden-slumbers": 91,
+  "stay-awake": 103,
+  "somewhere-over-the-rainbow": 213,
+  "hushabye-mountain": 150,
+  blackbird: 138,
+  "brahms-lullaby": 180,
+  "mr-blue-sky": 303,
 };
 
 export function songDurationSec(songId: string) {
@@ -305,9 +321,14 @@ export function countByKind(moments: TimelineEntry[]) {
 
 export function playlistTracks(entries: TimelineEntry[], id: PlaylistId) {
   if (id === "second-trimester") {
+    const seen = new Set<string>();
     return entries.filter((entry) => {
       const week = entry.week ?? weekFromDate(entry.date);
-      return entry.kind === "song" && week >= 14 && week <= 27;
+      if (entry.kind !== "song" || week < 14 || week > 27) return false;
+      const key = entry.songId ?? entry.title;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
     });
   }
   if (id === "first-trimester") {
