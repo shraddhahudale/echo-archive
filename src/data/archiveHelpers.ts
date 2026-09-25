@@ -105,8 +105,9 @@ export function formatDayLabel(iso: string) {
 }
 
 export function formatDuration(sec: number) {
-  const minutes = Math.floor(sec / 60);
-  const seconds = sec % 60;
+  const safe = Number.isFinite(sec) ? Math.max(0, Math.floor(sec)) : 0;
+  const minutes = Math.floor(safe / 60);
+  const seconds = safe % 60;
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
@@ -119,14 +120,33 @@ export function formatTotalLength(sec: number) {
 
 function pickFeelings(pool: readonly string[], count: number, seed: number) {
   const chosen: string[] = [];
-  let cursor = seed;
-  for (let i = 0; i < count; i += 1) {
+  let cursor = seed >>> 0;
+  const target = Math.min(Math.max(1, count), pool.length);
+  for (let attempt = 0; attempt < pool.length * 3 && chosen.length < target; attempt += 1) {
     const index = cursor % pool.length;
     const feeling = pool[index];
-    if (!chosen.includes(feeling)) chosen.push(feeling);
-    cursor = Math.imul(cursor, 1103515245) + 12345;
+    if (feeling && !chosen.includes(feeling)) chosen.push(feeling);
+    cursor = (Math.imul(cursor, 1103515245) + 12345) >>> 0;
+  }
+  for (const feeling of pool) {
+    if (chosen.length >= target) break;
+    if (feeling && !chosen.includes(feeling)) chosen.push(feeling);
   }
   return chosen;
+}
+
+export function sanitizeFeelings(feelings: Array<string | null | undefined> | undefined) {
+  return (feelings ?? []).filter((feeling): feeling is string => typeof feeling === "string" && feeling.length > 0);
+}
+
+export function contributorLabel(contributor?: { name?: string } | null) {
+  const name = contributor?.name?.trim();
+  return name || "Someone";
+}
+
+export function contributorInitial(contributor?: { name?: string } | null) {
+  const name = contributor?.name?.trim();
+  return name ? name.charAt(0).toUpperCase() : "?";
 }
 
 export function seedFeelingsFor(entry: Pick<TimelineEntry, "id" | "kind" | "date">): string[] {
@@ -171,11 +191,11 @@ export function seedDurationFor(
 }
 
 export function enrichTimelineEntry(entry: TimelineEntry, contributors: Contributor[] = []): TimelineEntry {
-  if (entry.feelings && entry.durationSec != null && entry.week != null) return entry;
+  const existing = sanitizeFeelings(entry.feelings);
   return {
     ...entry,
     week: entry.week ?? weekFromDate(entry.date),
-    feelings: entry.feelings ?? seedFeelingsFor(entry),
+    feelings: existing.length > 0 ? existing : seedFeelingsFor(entry),
     durationSec: entry.durationSec ?? seedDurationFor(entry, contributors),
   };
 }
@@ -187,7 +207,7 @@ export function enrichTimeline(entries: TimelineEntry[], contributors: Contribut
 export function matchesFilter(entry: TimelineEntry, filter: ArchiveFilter) {
   if (filter.type !== "all" && entry.kind !== filter.type) return false;
   if (filter.feelings.length === 0) return true;
-  const feelings = entry.feelings ?? [];
+  const feelings = sanitizeFeelings(entry.feelings);
   return filter.feelings.every((feeling) => feelings.includes(feeling));
 }
 
@@ -232,7 +252,7 @@ export function feelingSummaries(entries: TimelineEntry[], filter: ArchiveFilter
   const base = filter.type === "all" ? entries : entries.filter((entry) => entry.kind === filter.type);
   const counts = new Map<string, { count: number; kinds: Set<TimelineEntry["kind"]> }>();
   for (const entry of base) {
-    for (const feeling of entry.feelings ?? []) {
+    for (const feeling of sanitizeFeelings(entry.feelings)) {
       if (filter.feelings.length > 0 && !filter.feelings.includes(feeling)) continue;
       const current = counts.get(feeling) ?? { count: 0, kinds: new Set() };
       current.count += 1;
@@ -252,7 +272,7 @@ export function feelingSummaries(entries: TimelineEntry[], filter: ArchiveFilter
 export function dominantFeeling(moments: TimelineEntry[]) {
   const counts = new Map<string, number>();
   for (const moment of moments) {
-    for (const feeling of moment.feelings ?? []) {
+    for (const feeling of sanitizeFeelings(moment.feelings)) {
       counts.set(feeling, (counts.get(feeling) ?? 0) + 1);
     }
   }
@@ -291,13 +311,13 @@ export function playlistTracks(entries: TimelineEntry[], id: PlaylistId) {
   if (id === "3am") {
     return entries.filter((entry) => {
       if (entry.kind !== "song") return false;
-      const hour = Number(entry.time.slice(0, 2));
-      return hour >= 0 && hour < 4;
+      const hour = Number((entry.time ?? "99:00").slice(0, 2));
+      return Number.isFinite(hour) && hour >= 0 && hour < 4;
     });
   }
   return entries.filter((entry) => {
     if (entry.kind !== "song" && entry.kind !== "echo") return false;
-    const feelings = entry.feelings ?? [];
+    const feelings = sanitizeFeelings(entry.feelings);
     return feelings.includes("connected") || feelings.includes("loved");
   });
 }
@@ -340,11 +360,11 @@ export function searchArchive(
       ? contributors.find((item) => item.id === entry.contributorId)
       : undefined;
     const haystack = [
-      entry.title,
-      entry.artist ?? "",
       contributor?.name ?? "",
-      ...(entry.feelings ?? []),
+      ...sanitizeFeelings(entry.feelings),
       entry.note ?? "",
+      entry.artist ?? "",
+      entry.title ?? "",
     ]
       .join(" ")
       .toLowerCase();

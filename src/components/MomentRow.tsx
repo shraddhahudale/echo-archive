@@ -3,7 +3,14 @@ import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { MoreHorizontal, Pause, Play, Users } from "lucide-react";
 import { Chip } from "./Chip";
-import { EDIT_FEELINGS, formatDuration, kindAccent } from "../data/archiveHelpers";
+import {
+  EDIT_FEELINGS,
+  contributorInitial,
+  contributorLabel,
+  formatDuration,
+  kindAccent,
+  sanitizeFeelings,
+} from "../data/archiveHelpers";
 import type { Contributor, TimelineEntry } from "../data/types";
 import { useArchiveStore } from "../store/useArchiveStore";
 
@@ -26,33 +33,35 @@ export function MomentRow({ entry, contributor, playing, onPlay, titleOverride }
   const deleteMoment = useArchiveStore((state) => state.deleteMoment);
   const [menuOpen, setMenuOpen] = useState(false);
   const [renaming, setRenaming] = useState(false);
-  const [draft, setDraft] = useState(entry.title);
+  const [draft, setDraft] = useState(entry.title ?? "");
   const [feelingsOpen, setFeelingsOpen] = useState(false);
-  const [feelingDraft, setFeelingDraft] = useState(entry.feelings ?? []);
+  const [feelingDraft, setFeelingDraft] = useState(() => sanitizeFeelings(entry.feelings));
   const [confirmDelete, setConfirmDelete] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const reduce = useReducedMotion();
 
   useEffect(() => {
     if (renaming) {
-      setDraft(entry.title);
+      setDraft(entry.title ?? "");
       inputRef.current?.focus();
       inputRef.current?.select();
     }
   }, [renaming, entry.title]);
 
-  const feeling = entry.feelings?.[0];
+  const feelings = sanitizeFeelings(entry.feelings);
+  const feeling = feelings[0];
+  const personName = contributorLabel(contributor);
   const subtitleParts = [
     entry.durationSec != null ? formatDuration(entry.durationSec) : null,
     feeling,
   ].filter(Boolean);
   const title =
-    entry.kind === "echo" && contributor
-      ? `${contributor.name}: ${entry.title}`
-      : entry.title;
+    entry.kind === "echo"
+      ? `${personName}: ${entry.title ?? "Voice note"}`
+      : (entry.title ?? "Untitled");
 
   function commitRename() {
-    renameMoment(entry.id, draft.trim() || entry.title);
+    renameMoment(entry.id, draft.trim() || entry.title || "Untitled");
     setRenaming(false);
   }
 
@@ -125,7 +134,7 @@ export function MomentRow({ entry, contributor, playing, onPlay, titleOverride }
           label="Edit feelings"
           onClick={() => {
             setMenuOpen(false);
-            setFeelingDraft(entry.feelings ?? []);
+            setFeelingDraft(sanitizeFeelings(entry.feelings));
             setFeelingsOpen(true);
           }}
         />
@@ -215,7 +224,7 @@ function Thumbnail({
   }
 
   if (entry.kind === "echo") {
-    const initial = (contributor?.name ?? entry.title).trim().charAt(0).toUpperCase() || "E";
+    const initial = contributor ? contributorInitial(contributor) : "?";
     return (
       <span className="relative size-12 shrink-0">
         <span className="grid size-12 place-items-center rounded-[10px] bg-[var(--amber-50)] text-[15px] font-semibold text-[var(--amber-600)]">

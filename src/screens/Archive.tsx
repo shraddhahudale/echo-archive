@@ -6,6 +6,8 @@ import { tabBarHeight } from "../components/TabBar";
 import {
   ALL_FEELINGS,
   ARCHIVE_CURRENT_WEEK,
+  contributorInitial,
+  contributorLabel,
   countByKind,
   dominantFeeling,
   entriesByWeek,
@@ -19,6 +21,7 @@ import {
   playlistTracks,
   PLAYLISTS,
   recentMoments,
+  sanitizeFeelings,
   searchArchive,
   weekSummaries,
   type ArchiveFilter,
@@ -506,7 +509,7 @@ function RecentThumb({
   if (entry.kind === "echo") {
     return (
       <span className="grid size-full place-items-center bg-[var(--amber-50)] text-[18px] font-semibold text-[var(--amber-600)]">
-        {(contributor?.name ?? "E").charAt(0)}
+        {contributor ? contributorInitial(contributor) : "?"}
       </span>
     );
   }
@@ -660,7 +663,7 @@ function FeelingResults({ feelings, title }: { feelings: string[]; title?: strin
     return entries
       .filter((entry) => {
         if (type !== "all" && entry.kind !== type) return false;
-        const tags = entry.feelings ?? [];
+        const tags = sanitizeFeelings(entry.feelings);
         return anyMode ? feelings.some((feeling) => tags.includes(feeling)) : tags.includes(feelings[0]);
       })
       .slice()
@@ -998,7 +1001,7 @@ function SearchResults() {
             items={results.echo}
             render={(entry) => {
               const person = contributors.find((item) => item.id === entry.contributorId);
-              const full = person ? `${person.name}: ${entry.title}` : entry.title;
+              const full = `${contributorLabel(person)}: ${entry.title ?? "Voice note"}`;
               return (
                 <MomentRow
                   key={entry.id}
@@ -1063,13 +1066,13 @@ function SearchGroup({
   );
 }
 
-function PersonAvatar({ name, size }: { name: string; size: number }) {
+function PersonAvatar({ name, size }: { name?: string; size: number }) {
   return (
     <span
       className="grid shrink-0 place-items-center rounded-full bg-[var(--amber-50)] font-semibold text-[var(--amber-600)]"
       style={{ width: size, height: size, fontSize: size > 56 ? 22 : 15 }}
     >
-      {name.trim().charAt(0).toUpperCase()}
+      {contributorInitial(name ? { name } : null)}
     </span>
   );
 }

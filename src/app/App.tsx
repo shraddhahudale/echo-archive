@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { ArchiveErrorBoundary } from "../components/ArchiveErrorBoundary";
 import { PhoneFrame } from "../components/PhoneFrame";
 import { StatusBar } from "../components/StatusBar";
 import { TabBar, type TabId } from "../components/TabBar";
@@ -49,7 +50,16 @@ export function App() {
             <main className="min-h-0 flex-1 overflow-hidden" data-screen={tab}>
               {tab === "home" && <Home />}
               {tab === "timeline" && <Timeline />}
-              {tab === "archive" && <Archive />}
+              {tab === "archive" && (
+                <ArchiveErrorBoundary
+                  onBack={() => {
+                    resetArchiveScreen();
+                    changeTab("home");
+                  }}
+                >
+                  <Archive />
+                </ArchiveErrorBoundary>
+              )}
             </main>
             <div className="absolute inset-x-0 bottom-0 z-10">
               <TabBar active={tab} onChange={changeTab} />
