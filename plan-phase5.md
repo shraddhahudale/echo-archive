@@ -28,13 +28,14 @@ App opens (first time)
 
 - **Full screen** over the phone frame. The tab bar and mini player are hidden.
 - **Gradient background per screen** (135deg), cross-fading between screens like Wrapped.
-- **Eyebrow** at the top: the shared Eyebrow style (Inter 10px, uppercase, letter-spacing 0.2em, white 70%).
-- **Glass card** for the text: white 15%, `backdrop-filter: blur(12px)`, 24px radius, 1px white 20% border, 20px padding, centred horizontally, in the lower half of the screen.
-- **Titles** in the Display style (serif italic bold, 30px, white). **Body** Inter 15px, white 85%, centred, max 3 lines.
-- **Dots at the bottom only** (no footer text, same as Wrapped): 6 dots, 32px from the bottom; the active dot is a 20px white pill, the others 5px white 50%. The active dot slides smoothly.
-- **Navigation, same as Wrapped:** tap the right half = next, left half = back, swipe left / right with the same spring, arrow keys.
-  - Exception: on **O2** the user moves on by **tapping the orb** (see O2).
-- **Top right:** a small **Skip** text button (white 80%, 13px) on O1 to O5. It jumps to O6 (the Stone always shows). There's no ✕ close.
+- **Eyebrow** at the top of the screen (same position / style as Wrapped's "ECHO T2 INSIGHTS"): WELCOME, THIS IS YOUR ORB, etc. — not inside the glass card.
+- **Glass card** centred like Wrapped (max-width 320px, `px-6 py-8`, 24px radius, white 15% + blur, neighbour peek while swiping). Title + body only inside the card.
+- **Slide column** (centred, no overlaps): visual (orb / O3 icons / O5 previews / O6 Stone) → 20px → O2 hint (O2 only) → 24px → glass card. Orb sizes shrink to fit 390×844 between the eyebrow and dots with ≥24px clearance.
+- **Dots at the bottom only** (no footer text, no circular next button, same as Wrapped): 6 dots, centred, 32px from the bottom (`bottom-8`); the active dot is a 20px white pill, the others 5px white 50%. The active dot slides smoothly.
+- **Navigation, same as Wrapped** (shared StoryShell pager): tap the right half = next, left half = back, swipe left / right with the same spring (damping 30, stiffness 280), arrow keys. There is **no** chevron / circular next control.
+  - Exception: on **O2** advance by **tapping the orb**. Right-half tap / swipe forward are locked for the first 4s (right-half nudges the orb). After 4s the hint becomes **Tap the orb, or swipe to continue** and half-tap / swipe unlock.
+  - Exception: on **O6** half-taps don't navigate; use **Connect** / **I'll do this later** (swipe right still goes back).
+- **Top right:** **Skip** in the same spot as Wrapped's ✕ (white 85%, 13px, 12px padding) on O1 to O5. It jumps to O6. There's no ✕ close.
 - The same subtle top contrast gradient as Wrapped (rgba(0,0,0,0.10) fading out by 40%, no hard edge).
 
 ### Gradients
@@ -73,13 +74,13 @@ App opens (first time)
 ## 4. Screens and copy
 
 ### O0 Splash (app name)
-- A deep purple gradient screen with **no** glass card, no dots, no Skip. It's just the name.
-- The orb fades in first at 96px (light variant, breathing), centred slightly above the middle.
-- 400ms later, the name fades up under it: ***Echo Archive*** (Display, serif italic bold, 40px, white).
-- Under the name: **a sound diary for pregnancy** (Inter 14px, white 70%, letter-spacing 0.02em).
-- After 2.4s (or on tap anywhere), it moves to O1. The name fades out while the orb grows and moves into its O1 position (same `layoutId`), and the O1 gradient cross-fades in.
-- The splash shows every time onboarding runs (first open, Replay walkthrough, `?onboarding=1`). It isn't counted in the dots.
-- Reduced motion: the orb and name appear together with a simple fade, then it fades to O1.
+- A purple gradient screen (135deg, `#A385F7` → `#6D2BDB`) with **no** orb, glass card, dots, or Skip. It's just the name.
+- Vertically centred: ***Echo Archive*** (Display, serif italic bold, 40px, solid white).
+- 8px under the name: **a sound diary for pregnancy** (Inter 14px, white 80%).
+- Animation: the name fades up (y 12 → 0, 500ms), then the tagline 200ms later.
+- After 2.4s (or on tap anywhere), the splash cross-fades to O1. The shared light-variant orb appears for the first time on O1 (fade + scale 0.9 → 1); it is not on the splash.
+- The splash shows every time onboarding runs. It isn't counted in the dots.
+- Reduced motion: name and tagline appear with a simple fade, then it fades to O1.
 
 ### O1 Welcome
 - Eyebrow: **WELCOME**
@@ -93,8 +94,8 @@ App opens (first time)
 - Under the orb: **Tap the orb** (13px white) with a small finger-tap icon, and a pulsing white ring around the orb (it expands and fades every 1.6s).
 - **Interaction:**
   - Tapping the orb: it squeezes (0.94), a ripple ring expands, then it goes to O3.
-  - Tapping the right half here doesn't advance. Instead the orb gives a gentle "look at me" pulse (1 → 1.06 → 1).
-  - After 4s without a tap, a small "Next" text link appears under the hint (fallback for accessibility and demos). Swiping left still works too.
+  - For the first 4s, tapping the right half doesn't advance — the orb gives a gentle "look at me" pulse (1 → 1.06 → 1). Forward swipe is also locked.
+  - After 4s the hint becomes **Tap the orb, or swipe to continue**, and right-half tap / swipe forward unlock.
 
 ### O3 Keep a moment
 - Eyebrow: **TAP THE ORB TO…**
