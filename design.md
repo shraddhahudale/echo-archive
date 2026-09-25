@@ -95,16 +95,19 @@ src/
 ### Typography
 
 - **Sans (UI):** Inter (weights 400, 500, 600, 700). Fallback: `-apple-system, system-ui`.
-- **Serif (display):** Georgia-style serif. Suggested webfont: `"Source Serif 4"` or plain `Georgia`. Used for:
-  - Bold: "Echo Archive" (with *Archive* in italic regular), "Week 22"
-  - Italic regular: breathing screen text ("Choose your breathing", "inhale", "3"), Wrapped hero words
+- **Display = serif italic.** Bold (700) for names, page titles and Wrapped heroes; regular (400) in Breath mode. Shared `Display` component: Source Serif 4 / Georgia, italic, letter-spacing `-0.01em`, line-height `1.1`.
+  - **34px** `#111111`, **700**: "Sarah", "Echo Archive", "Week N", feeling and playlist titles
+  - **30px** white, **400**: "Choose your breathing"
+  - **44px** white, **400**: inhale / hold / exhale / paused
+  - **56px** white, **400**: countdown 3 / 2 / 1
+  - **40px** white, **700**: Wrapped heroes (Anxious, 3am, Breathe Deeper, 68 times, 38 echoes, Restless → Grounding)
+- Everything else (greetings, subtitles, eyebrows, buttons, body) stays Inter.
 
 | Style | Font | Size / line | Weight |
 |---|---|---|---|
 | Greeting | Inter | 15 / 20 | 400, `--text-400` |
-| Name (Sarah) | Inter | 34 / 40 | 700 |
+| Name / page title | Display | 34 / 1.1 | 700 italic |
 | Week line | Inter | 16 / 22 | 500, `--text-400` |
-| Page title serif | Serif | 36 / 40 | 700 |
 | Section label | Inter | 15 / 20 | 400, `--text-400` |
 | Card title | Inter | 15 / 20 | 600 |
 | Sheet title | Inter | 17 / 22 | 600 |
@@ -112,15 +115,18 @@ src/
 | List subtitle | Inter | 12 / 16 | 400, `--text-400` |
 | Chip | Inter | 12 / 16 | 400 |
 | Tab label | Inter | 11 / 14 | 500 |
-| Breathing word | Serif italic | 40 / 44 | 400, white |
+| Breath title | Display | 30 / 1.1 | 400 italic, white |
+| Breathing word | Display | 44 / 1.1 | 400 italic, white |
+| Countdown numeral | Display | 56 / 1.1 | 400 italic, white |
 | Breathing eyebrow | Inter | 10, letter-spacing 0.2em, uppercase | 500, white 50% |
-| Wrapped hero | Serif italic | 44 / 48 | 700, white |
+| Wrapped hero | Display | 40 / 1.1 | 700 italic, white |
 
 ### Spacing, radius, elevation
 
 - Screen side padding: **20px**
 - Vertical rhythm: 8px grid (8 / 12 / 16 / 24 / 32)
 - Radius: cards **20px**, list rows **16px**, album tiles **12px**, chips & pill buttons **999px**, bottom sheets **28px** top corners, record choice cards **28px**
+- **Action buttons are always full pills (999px). Cards and option tiles are rounded rectangles (16 to 20px).**
 - Shadow (cards, sheets): `0 8px 24px rgba(143, 89, 226, 0.08)`, plus 1px `--line` border on cards
 - Bottom sheet overlay: dims background to ~60% white wash (the screen behind goes grey, not black)
 
@@ -333,7 +339,7 @@ Heavy rotations
 
 ### 4.8 Breath (Relief Mode, dark)
 
-All breathing screens: `--dark-bg`, a tall vertical capsule of blurred `--dark-glow` in the centre (roughly 240 x 440, blur 60px), eyebrow at top, pill button at bottom (white text, 1px white 20% border, `rgba(255,255,255,0.06)` fill).
+All breathing screens: `--dark-bg`, a tall vertical capsule of blurred `--dark-glow` in the centre (roughly 240 x 440, blur 60px), eyebrow at top. Action buttons (Back to home, Cancel, End Session) use shared `DarkPill`: full pill **999px**, **44×160**, centred, `rgba(255,255,255,0.06)` fill, 1px `rgba(255,255,255,0.2)` border, white 13px / 500 Inter.
 
 **Choose**
 - Eyebrow "RELIEF MODE"

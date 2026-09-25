@@ -9,6 +9,8 @@ import {
 } from "react";
 import { animate, motion, useMotionValue, useReducedMotion, useTransform, type MotionValue } from "framer-motion";
 import { X } from "lucide-react";
+import { Display } from "../components/Display";
+import { Eyebrow } from "../components/Eyebrow";
 import { useArchiveStore, wrappedStats } from "../store/useArchiveStore";
 
 const TOTAL = 6;
@@ -54,7 +56,9 @@ export function Wrapped() {
         top: "Through your second trimester",
         body: (
           <>
-            <p className="font-serif text-[44px] leading-[48px] font-bold text-white italic">{stats.mood}</p>
+            <Display size={40} tone="light">
+              {stats.mood}
+            </Display>
             <p className="mt-3 text-[16px] leading-5 text-white/90">Mixed with happiness and excitement</p>
           </>
         ),
@@ -64,7 +68,9 @@ export function Wrapped() {
         top: "In the quiet hours of night",
         body: (
           <>
-            <p className="font-serif text-[44px] leading-[48px] font-bold text-white italic">{stats.activeHour}</p>
+            <Display size={40} tone="light">
+              {stats.activeHour}
+            </Display>
             <p className="mt-3 text-[16px] leading-5 text-white/90">is your most active hour</p>
           </>
         ),
@@ -74,7 +80,9 @@ export function Wrapped() {
         top: "When one song said it all",
         body: (
           <>
-            <p className="font-serif text-[44px] leading-[48px] font-bold text-white italic">{stats.topSong.title}</p>
+            <Display size={40} tone="light">
+              {stats.topSong.title}
+            </Display>
             {stats.topSong.art ? (
               <img
                 src={stats.topSong.art}
@@ -91,9 +99,9 @@ export function Wrapped() {
         top: "You've turned to music",
         body: (
           <>
-            <p className="font-serif text-[44px] leading-[48px] text-white">
-              <span className="font-bold not-italic">{stats.songMoments}</span> <span className="italic">times</span>
-            </p>
+            <Display size={40} tone="light">
+              {stats.songMoments} times
+            </Display>
             <p className="mt-3 text-[16px] leading-5 text-white/90">seeking comfort and release</p>
           </>
         ),
@@ -103,9 +111,9 @@ export function Wrapped() {
         top: "The voices around you",
         body: (
           <>
-            <p className="font-serif text-[44px] leading-[48px] text-white">
-              <span className="font-bold not-italic">{stats.echoes.total}</span> <span className="italic">echoes</span>
-            </p>
+            <Display size={40} tone="light">
+              {stats.echoes.total} echoes
+            </Display>
             <div className="mt-4 flex justify-center pl-2.5" aria-label="Contributors">
               {stats.echoes.people.map((person) => (
                 <span
@@ -126,9 +134,9 @@ export function Wrapped() {
         top: "Your emotional journey",
         body: (
           <>
-            <p className="font-serif text-[44px] leading-[48px] font-bold text-white italic">
+            <Display size={40} tone="light">
               {stats.journeyFrom} → {stats.journeyTo}
-            </p>
+            </Display>
             <p className="mt-3 text-[16px] leading-5 text-white/90">the shift Echo noticed</p>
           </>
         ),
@@ -307,7 +315,9 @@ export function Wrapped() {
         />
         <TopScrim />
         <CloseButton onClose={closeWrapped} />
-        <Eyebrow />
+        <Eyebrow absolute tone="strong">
+          ECHO T2 INSIGHTS
+        </Eyebrow>
         <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center px-6">
           <motion.div
             key={index}
@@ -343,7 +353,9 @@ export function Wrapped() {
 
       <TopScrim />
       <CloseButton onClose={closeWrapped} />
-      <Eyebrow />
+      <Eyebrow absolute tone="strong">
+        ECHO T2 INSIGHTS
+      </Eyebrow>
 
       <motion.div
         className="absolute inset-y-0 left-0 z-[2] flex"
@@ -372,14 +384,6 @@ function TopScrim() {
       aria-hidden="true"
       className="pointer-events-none absolute inset-x-0 top-0 z-[1] h-[40%] bg-[linear-gradient(to_bottom,rgba(0,0,0,0.10)_0%,transparent_100%)]"
     />
-  );
-}
-
-function Eyebrow() {
-  return (
-    <p className="pointer-events-none absolute inset-x-0 top-14 z-10 text-center text-[11px] leading-4 font-medium tracking-[0.04em] text-white/80">
-      Echo T2 Insights
-    </p>
   );
 }
 

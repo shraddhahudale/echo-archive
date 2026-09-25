@@ -2,7 +2,9 @@ import { useEffect, useMemo, useRef, useState, useCallback, type ReactNode } fro
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ChevronDown, ChevronLeft, Search } from "lucide-react";
 import { MomentRow, TypeDots, TypeFilterChips } from "../components/MomentRow";
+import { Display } from "../components/Display";
 import { chromeBottomPad } from "../components/MiniPlayer";
+import { PageHeader } from "../components/PageHeader";
 import {
   ALL_FEELINGS,
   ARCHIVE_CURRENT_WEEK,
@@ -100,19 +102,19 @@ function ArchiveHome() {
 
   return (
     <section
-      className="scroll-row h-full overflow-x-hidden overflow-y-auto px-5 pt-2"
+      className="scroll-row h-full overflow-x-hidden overflow-y-auto px-5"
       style={{ paddingBottom: chromeBottomPad }}
     >
-      <p className="text-[15px] leading-5 text-[var(--text-400)]">Your archive,</p>
-      <h1 className="mt-1 font-[family-name:var(--font-serif)] text-[36px] leading-10 font-bold text-[var(--text-900)]">
-        Echo <span className="italic font-normal">Archive</span>
-      </h1>
-      <p className="mt-1 text-[15px] leading-5 text-[var(--text-400)]">Your journey from day one</p>
+      <PageHeader
+        eyebrow="Your archive,"
+        title="Echo Archive"
+        subtitle="Your journey from day one"
+      />
 
       <button
         type="button"
         onClick={() => pushArchive({ name: "search" })}
-        className="mt-5 flex h-11 w-full items-center gap-2 rounded-full bg-[var(--chip-inactive)] px-3 text-left"
+        className="flex h-11 w-full items-center gap-2 rounded-full bg-[var(--chip-inactive)] px-3 text-left"
       >
         <Search size={18} strokeWidth={2} className="shrink-0 text-[var(--text-400)]" aria-hidden="true" />
         <span className="text-[15px] leading-5 text-[var(--text-400)]">Search songs, notes, people, feelings</span>
@@ -576,9 +578,9 @@ function WeekDetail({ week }: { week: number }) {
         onBack={popArchive}
         eyebrow={formatWeekRange(week)}
         title={
-          <h1 className="font-[family-name:var(--font-serif)] text-[36px] leading-10 font-bold text-[var(--text-900)]">
+          <Display as="h1" size={34}>
             Week {week}
-          </h1>
+          </Display>
         }
       />
       <div className="px-5">
@@ -664,9 +666,9 @@ function FeelingResults({ feelings, title }: { feelings: string[]; title?: strin
       <BackHeader
         onBack={popArchive}
         title={
-          <h1 className="font-[family-name:var(--font-serif)] text-[36px] leading-10 italic font-normal text-[var(--text-900)]">
+          <Display as="h1" size={34}>
             {label}
-          </h1>
+          </Display>
         }
       />
       <div className="px-5">
@@ -823,9 +825,9 @@ function PlaylistDetail({ playlistId }: { playlistId: PlaylistId }) {
                 <img src={arts[1]} alt="" className="absolute right-0 bottom-0 size-[88px] rounded-[12px] object-cover" />
               ) : null}
             </div>
-            <h1 className="mt-4 font-[family-name:var(--font-serif)] text-[36px] leading-10 font-bold text-[var(--text-900)]">
+            <Display as="h1" size={34} className="mt-4">
               {playlist?.name ?? "Playlist"}
-            </h1>
+            </Display>
             <p className="mt-1 text-[13px] text-[var(--text-secondary)]">
               {songCount} {songCount === 1 ? "song" : "songs"} · {formatTotalLength(total)}
             </p>

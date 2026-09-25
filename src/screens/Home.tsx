@@ -4,6 +4,7 @@ import { Heart, Mic, Moon, Music, Sun, type LucideIcon } from "lucide-react";
 import { AlbumTile } from "../components/AlbumTile";
 import { chromeBottomPad } from "../components/MiniPlayer";
 import { Orb } from "../components/Orb";
+import { PageHeader } from "../components/PageHeader";
 import type { Entry, Song } from "../data/types";
 import { trimesterName, useArchiveStore } from "../store/useArchiveStore";
 
@@ -48,26 +49,17 @@ export function Home() {
   return (
     <section
       aria-label="Home"
-      className="scroll-row h-full overflow-x-hidden overflow-y-auto px-5 pt-2"
+      className="scroll-row h-full overflow-x-hidden overflow-y-auto px-5"
       style={{ paddingBottom: chromeBottomPad }}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[15px] leading-5 font-normal text-[var(--text-400)]">Good evening,</p>
-          <h1
-            className="mt-2 font-[family-name:var(--font-serif)] text-[34px] leading-10 font-bold italic text-[#111111]"
-            style={{ letterSpacing: "-0.01em" }}
-          >
-            {user.name}
-          </h1>
-        </div>
-        <Avatar />
-      </div>
-      <p className="mt-2 text-[16px] leading-[22px] font-medium text-[var(--text-400)]">
-        Week {user.week} · {trimesterName(user.trimester)} Trimester
-      </p>
+      <PageHeader
+        eyebrow="Good evening,"
+        title={user.name}
+        subtitle={`Week ${user.week} · ${trimesterName(user.trimester)} Trimester`}
+        right={<Avatar />}
+      />
 
-      <article className="mt-6 rounded-[var(--radius-card)] border border-[var(--line)] bg-[var(--bg)] px-5 pt-6 pb-5 text-center shadow-[var(--shadow-card)]">
+      <article className="rounded-[var(--radius-card)] border border-[var(--line)] bg-[var(--bg)] px-5 pt-6 pb-5 text-center shadow-[var(--shadow-card)]">
         <h2 className="text-[15px] leading-5 font-semibold text-[var(--text-900)]">
           How are you feeling today?
         </h2>
@@ -339,7 +331,7 @@ function Avatar() {
   if (failed) {
     return (
       <div
-        className="size-16 shrink-0 rounded-full"
+        className="size-14 shrink-0 rounded-full"
         style={{ background: "linear-gradient(135deg, var(--purple-100), var(--purple-300))" }}
         role="img"
         aria-label="Sarah"
@@ -351,7 +343,7 @@ function Avatar() {
     <img
       src="/img/sarah.png"
       alt="Sarah"
-      className="size-16 shrink-0 rounded-full object-cover object-top"
+      className="size-14 shrink-0 rounded-full object-cover object-top"
       onError={() => setFailed(true)}
     />
   );

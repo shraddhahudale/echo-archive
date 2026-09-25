@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { Display } from "../../components/Display";
+import { Eyebrow } from "../../components/Eyebrow";
 import { breathPatterns, type BreathingPattern } from "../../data/breathPatterns";
 import { DarkPill } from "./DarkPill";
 
@@ -40,12 +42,10 @@ export function Choose({ onSelect, onBackHome, onBreathChange }: ChooseProps) {
   return (
     <div className="relative flex min-h-0 flex-1 flex-col px-5">
       <div className="relative z-10 pt-2">
-        <p className="text-center font-sans text-[10px] leading-3 font-medium tracking-[0.2em] text-white/50 uppercase">
-          Relief mode
-        </p>
-        <h1 className="mt-3 text-center font-[family-name:var(--font-serif)] text-[28px] leading-8 font-normal text-white italic">
+        <Eyebrow>Relief mode</Eyebrow>
+        <Display as="h1" size={30} tone="light" weight={400} className="mt-3 text-center">
           Choose your breathing
-        </h1>
+        </Display>
       </div>
 
       <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-3">
@@ -142,9 +142,7 @@ export function Countdown({ onDone, onCancel, onBreathChange }: CountdownProps) 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col px-5">
       <div className="relative z-10 pt-2">
-        <p className="text-center font-sans text-[10px] leading-3 font-medium tracking-[0.2em] text-white/50 uppercase">
-          Relief mode · Starting
-        </p>
+        <Eyebrow>Relief mode · Starting</Eyebrow>
       </div>
 
       <div className="relative z-10 flex flex-1 items-center justify-center">
@@ -155,10 +153,11 @@ export function Countdown({ onDone, onCancel, onBreathChange }: CountdownProps) 
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: reduce ? 1 : 0.96 }}
             transition={{ duration: 0.35, ease: "easeOut" }}
-            className="font-serif text-[44px] leading-[48px] font-normal text-white italic"
             aria-live="polite"
           >
-            {n}
+            <Display size={56} tone="light" weight={400}>
+              {n}
+            </Display>
           </motion.span>
         </AnimatePresence>
       </div>

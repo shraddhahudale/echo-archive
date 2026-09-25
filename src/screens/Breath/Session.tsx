@@ -5,8 +5,10 @@ import {
   type BreathPhase,
   type BreathingPattern,
 } from "../../data/breathPatterns";
-import { useBreathingCycle } from "../../hooks/useBreathingCycle";
 import { DarkPill } from "./DarkPill";
+import { Display } from "../../components/Display";
+import { Eyebrow } from "../../components/Eyebrow";
+import { useBreathingCycle } from "../../hooks/useBreathingCycle";
 
 type SessionProps = {
   pattern: BreathingPattern;
@@ -97,25 +99,24 @@ export function Session({
       />
 
       <div className="pointer-events-none relative z-10 pt-2">
-        <p className="text-center font-sans text-[10px] leading-3 font-medium tracking-[0.2em] text-white/50 uppercase">
-          Relief mode · {pattern.eyebrowName}
-        </p>
+        <Eyebrow>Relief mode · {pattern.eyebrowName}</Eyebrow>
       </div>
 
       <div className="pointer-events-none relative z-10 flex flex-1 flex-col items-center justify-center">
         <div className="flex flex-col items-center" style={{ transform: `translateY(${wordY}px)` }}>
           <AnimatePresence mode="wait">
-            <motion.p
+            <motion.div
               key={word}
               initial={{ opacity: 0, y: reduce ? 0 : 6 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: reduce ? 0 : -4 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
-              className="font-serif text-[44px] leading-[48px] font-normal text-white italic"
               aria-live="polite"
             >
-              {word}
-            </motion.p>
+              <Display size={44} tone="light" weight={400}>
+                {word}
+              </Display>
+            </motion.div>
           </AnimatePresence>
           <p className="mt-3 text-center font-sans text-[14px] leading-5 text-white/55">{instruction}</p>
         </div>
