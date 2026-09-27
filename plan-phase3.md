@@ -1,6 +1,6 @@
 # Echo Archive: Phase 3 Build Plan (Breath / Relief Mode)
 
-Phase 3 = the **Breath tab**: a dark, calm "Relief mode" where Sarah picks a breathing pattern, counts in 3-2-1, and breathes along with a glowing blob that **grows and brightens as she inhales, pauses while she holds, and shrinks and dims as she exhales**, in real time.
+Phase 3 = the **Breath tab**: a dark, calm "Relief mode" where Julie picks a breathing pattern, counts in 3-2-1, and breathes along with a glowing blob that **grows and brightens as she inhales, pauses while she holds, and shrinks and dims as she exhales**, in real time.
 
 - Visual tokens and components: `design.md` section 4.8 (Breath). Reuse the Phase 1 and 2 tokens, fonts (serif italic for the big words), PhoneFrame and button styles.
 - If this file and `design.md` conflict, this file wins for Phase 3.

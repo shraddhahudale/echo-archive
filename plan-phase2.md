@@ -12,7 +12,7 @@ Phase 2 = the **Timeline tab**: a calendar of every moment saved in the second t
 
 ```
 Timeline tab
-├── Header: "Good evening, Sarah" · "Your pregnancy journey" · "Trimester 02 / W22"
+├── Header: "Good evening, Julie" · "Your pregnancy journey" · "Trimester 02 / W22"
 ├── T2 Insights card ("See your T2 Wrapped", 12 insights ready, →)
 │   └── T2 Wrapped (full-screen story, 6 cards)
 │       1 Anxious → 2 3am → 3 Breathe Deeper → 4 68 times → 5 Echoes (new) → 6 Restless → Grounding
@@ -88,7 +88,7 @@ Timeline tab
 ## 3. Timeline page (match Figma "timeline")
 
 ### Header
-- "Good evening," 15px `#A1A5B0`; "Sarah" 34px/700; "Your pregnancy journey" 15px `#A1A5B0`.
+- "Good evening," 15px `#A1A5B0`; "Julie" 34px/700; "Your pregnancy journey" 15px `#A1A5B0`.
 - Centred "**Trimester 02** / W22": bold part `#111111`, "/ W22" `#A1A5B0`, 17px.
 - No avatar on this page (as in Figma).
 

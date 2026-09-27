@@ -19,7 +19,7 @@ export function AlbumTile({
   art,
   gradient,
   bordered,
-  size = 88,
+  size = 96,
   titleClassName,
   artistClassName,
   meta,
@@ -32,10 +32,10 @@ export function AlbumTile({
     <button
       type="button"
       onClick={onSelect}
-      className="flex shrink-0 cursor-pointer flex-col border-0 bg-transparent p-0 text-left transition-transform duration-100 motion-safe:active:scale-[0.96]"
+      className="flex min-w-0 shrink-0 cursor-pointer flex-col overflow-hidden border-0 bg-transparent p-0 text-left transition-transform duration-100 motion-safe:active:scale-[0.96]"
       style={{ width: size }}
     >
-      <span className="relative z-0 block" style={{ width: size, height: size }}>
+      <span className="relative z-0 block shrink-0" style={{ width: size, height: size }}>
         <span
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 rounded-[12px] bg-cover bg-center"
@@ -72,14 +72,15 @@ export function AlbumTile({
       <span
         className={
           titleClassName ??
-          "relative z-[1] mt-2 block truncate text-[13px] leading-4 font-semibold text-[var(--text-900)]"
+          "relative z-[1] mt-2 block w-full min-w-0 truncate overflow-hidden text-[13px] leading-4 font-semibold text-ellipsis whitespace-nowrap text-[var(--text-900)]"
         }
       >
         {title}
       </span>
       <span
         className={
-          artistClassName ?? "relative z-[1] block truncate text-[12px] leading-4 text-[var(--text-400)]"
+          artistClassName ??
+          "relative z-[1] block w-full min-w-0 truncate overflow-hidden text-[12px] leading-4 text-ellipsis whitespace-nowrap text-[var(--text-400)]"
         }
       >
         {artist}

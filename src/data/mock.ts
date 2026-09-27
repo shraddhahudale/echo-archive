@@ -1,7 +1,7 @@
 import type { Contact, Contributor, ContributorNote, Song, User } from "./types";
 
 export const user: User = {
-  name: "Sarah",
+  name: "Julie",
   week: 22,
   trimester: 2,
   stoneConnected: true,
@@ -369,7 +369,7 @@ export const contributors: Contributor[] = [
         { title: "Rest when you can", durationSec: 74, week: 21 },
         { title: "Strength you already have", durationSec: 88, week: 20, inArchive: true },
         { title: "Call me anytime", durationSec: 52, week: 18, inArchive: true },
-        { title: "Grandma's chai recipe", durationSec: 95, week: 18, inArchive: true },
+        { title: "Grandma's tea recipe", durationSec: 95, week: 18, inArchive: true },
         { title: "I'm so proud of you", durationSec: 71, week: 18, inArchive: true },
         { title: "Sunday call", durationSec: 55, week: 17, inArchive: true },
         { title: "Remember to breathe", durationSec: 49, week: 17, inArchive: true },
@@ -378,7 +378,7 @@ export const contributors: Contributor[] = [
         { title: "Stories from my pregnancy", durationSec: 112, week: 16, inArchive: true },
         { title: "Eat something warm", durationSec: 46, week: 15, inArchive: true },
         { title: "The day I knew", durationSec: 98, week: 14, inArchive: true },
-        { title: "Your nani's lullaby", durationSec: 68, week: 13, inArchive: true },
+        { title: "Grandma's lullaby", durationSec: 68, week: 13, inArchive: true },
         { title: "When you were born", durationSec: 135, week: 9, inArchive: true },
       ],
       2,
@@ -414,12 +414,14 @@ export const contributors: Contributor[] = [
 
 export const contacts: Contact[] = [
   { id: "mom", name: "Mom", phone: "0412 111 222" },
-  { id: "priya", name: "Priya Sharma", phone: "0412 345 678" },
-  { id: "priyanka", name: "Priyanka D", email: "priyanka@gmail.com" },
-  { id: "daniel", name: "Daniel Chen", email: "daniel@example.com" },
-  { id: "arun", name: "Arun Mehta", phone: "0413 222 018" },
-  { id: "neha", name: "Neha Kapoor", email: "neha@example.com" },
+  { id: "emma", name: "Emma Wilson", phone: "0412 345 678" },
+  { id: "olivia", name: "Olivia Brown", phone: "0413 222 018" },
+  { id: "charlotte", name: "Charlotte Davies", phone: "0414 556 789" },
+  { id: "grace", name: "Grace Mitchell", phone: "0415 667 890" },
+  { id: "tom", name: "Tom Harris", phone: "0433 100 452" },
+  { id: "ben", name: "Ben Cooper", phone: "0416 778 901" },
   { id: "liam", name: "Liam O'Brien", phone: "0421 880 014" },
-  { id: "aisha", name: "Aisha Rahman", email: "aisha@example.com" },
-  { id: "tom", name: "Tom Nguyen", phone: "0433 100 452" },
+  { id: "clare", name: "Aunt Clare", phone: "0417 889 012" },
+  { id: "meg", name: "Aunt Meg", phone: "0418 990 123" },
+  { id: "rosie", name: "Aunt Rosie", phone: "0419 101 234" },
 ];

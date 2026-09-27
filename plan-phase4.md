@@ -1,6 +1,6 @@
 # Echo Archive: Phase 4 Build Plan (Archive tab)
 
-Phase 4 = the **Archive tab**: one place to find anything Sarah has kept (voice notes, songs, echoes) by **week, feeling, person or search**.
+Phase 4 = the **Archive tab**: one place to find anything Julie has kept (voice notes, songs, echoes) by **week, feeling, person or search**.
 
 - Visual tokens and components: `design.md` (Archive is section 4.7). Reuse Phase 1 to 3 components, tokens, the store and the album art in `public/img`.
 - Colour logic stays: **purple = voice note, pink = song, amber = echo**.
@@ -163,7 +163,7 @@ Playlists → 4 cards (h-scroll)
 
 ## 7. Link from Home
 - The Home "Browse by feeling" tiles open **mood playlists** (not Archive filters): Calm nights, Tender, Bright days.
-- Each playlist has curated catalogue songs, Play / Shuffle, and a "From your archive" section (up to 3 of Sarah's moments for calm / connected+loved / hopeful) with "See all →" → Archive A3 for that feeling.
+- Each playlist has curated catalogue songs, Play / Shuffle, and a "From your archive" section (up to 3 of Julie's moments for calm / connected+loved / hopeful) with "See all →" → Archive A3 for that feeling.
 - This is the only Home navigation change tied to Phase 4 feelings; the playlist UX itself lives on Home.
 
 ---

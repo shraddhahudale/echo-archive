@@ -99,7 +99,7 @@ src/
 
 - **Sans (UI):** Inter (weights 400, 500, 600, 700). Fallback: `-apple-system, system-ui`.
 - **Display = serif italic.** Bold (700) for names, page titles and Wrapped heroes; regular (400) in Breath mode. Shared `Display` component: Source Serif 4 / Georgia, italic, letter-spacing `-0.01em`, line-height `1.1`.
-  - **34px** `#111111`, **700**: "Sarah", "Echo Archive", "Week N", feeling and playlist titles
+  - **34px** `#111111`, **700**: "Julie", "Echo Archive", "Week N", feeling and playlist titles
   - **30px** white, **400**: "Choose your breathing"
   - **44px** white, **400**: inhale / hold / exhale / paused
   - **56px** white, **400**: countdown 3 / 2 / 1
@@ -187,7 +187,7 @@ src/
 
 ```
 Good evening,                     (avatar 64px circle)
-Sarah
+Julie
 Week 22 · Second Trimester
 
 ┌──────────────────────────────┐
@@ -196,6 +196,8 @@ Week 22 · Second Trimester
 │  [● Companion Stone connected] │
 │     Tap to record a moment   │
 └──────────────────────────────┘
+This week
+[ week cards ] → horizontal scroll
 Browse by feeling
 [ moon / lavender ][ heart / pink ][ sun / peach ] → horizontal scroll
 Recently played
@@ -209,11 +211,11 @@ Recently played
 - "Companion Stone connected" pill: `--green-100` bg, green dot + text; widens to fit on one line (no wrap, same 12px text)
 - Browse by feeling tiles: 120×120, 20px radius, gradient fills (lavender `#C9B8FF`, pink `#F7A8D0`, peach `#FFD39A`), outline icon top left (moon, heart, sun), label bottom left ("Calm nights", "Tender", "Bright days")
 - **Tapping a feeling tile opens a mood playlist page** (Apple Music–style), not an Archive filter. Back chevron → Home; mini player and tab bar stay visible. Slide-in from the right (250ms); cover scales 0.96 → 1.
-- Mood playlist page: 200×200 cover (same tile gradient + icon, radius 20, centred); Display bold 30px title; subtitle "Echo · picked for you" 14px `#8E8E93`; one-line description 15px `#6E6E73`; full-pill [▶ Play] (filled in tile colour) + [Shuffle] (outline) side by side; track list with 48px art, title, artist, and + (opens Add a song at B2). Row tap plays that song and sets the playlist as the queue. Bottom "From your archive" shows up to 3 of Sarah's own moments for that feeling, with "See all →" → Archive A3.
+- Mood playlist page: 200×200 cover (same tile gradient + icon, radius 20, centred); Display bold 30px title; subtitle "Echo · picked for you" 14px `#8E8E93`; one-line description 15px `#6E6E73`; full-pill [▶ Play] (filled in tile colour) + [Shuffle] (outline) side by side; track list with 48px art, title, artist, and + (opens Add a song at B2). Row tap plays that song and sets the playlist as the queue. Bottom "From your archive" shows up to 3 of Julie's own moments for that feeling, with "See all →" → Archive A3.
   - Calm nights: soft sleep songs (Holocene, To Build a Home, Chandaniya, Golden Slumbers, …)
   - Tender: quiet loving songs (Beautiful Boy, Yellow, Sweet Pea, Breathe (2 AM), Stay Awake, …)
   - Bright days: warm hopeful songs (Here Comes the Sun, Let It Happen, Breathe Deeper, Mr. Blue Sky, …)
-- Recently played: 88px square album tiles, title (600) + artist below
+- Recently played: 96px square album tiles, title (600) + artist below; titles/artists one line with ellipsis inside the tile; 12px gap between tiles
 - Page scrolls under the MiniPlayer and TabBar
 
 ### 4.2 Record Choice sheet (opens from Orb tap)
@@ -277,7 +279,7 @@ State 3: Saved (pink variant, see 4.5)
 
 ```
 Good evening,
-Sarah
+Julie
 Your pregnancy journey
       Trimester 02 / W22
 ┌ T2 INSIGHTS ────────────────┐
@@ -449,7 +451,7 @@ type Entry = {
 
 type Playlist = { id: string; name: string; count: number; meta: string; status: "Active" | "Done"; art: string };
 
-const user = { name: "Sarah", week: 22, trimester: 2, stoneConnected: true };
+const user = { name: "Julie", week: 22, trimester: 2, stoneConnected: true };
 ```
 
 ---

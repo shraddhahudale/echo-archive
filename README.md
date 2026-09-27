@@ -11,7 +11,7 @@
 
 ## What's in the prototype
 
-A clickable, high-fidelity mobile prototype with mock data (no backend). The story follows **Sarah, week 22, second trimester**.
+A clickable, high-fidelity mobile prototype with mock data (no backend). The story follows **Julie, week 22, second trimester**.
 
 ### Home
 - Greeting, current week and trimester

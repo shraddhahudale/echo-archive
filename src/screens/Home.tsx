@@ -1,12 +1,18 @@
 import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Heart, Mic, Moon, Music, Sun, type LucideIcon } from "lucide-react";
+import { Heart, Moon, Music, Sun, Users, type LucideIcon } from "lucide-react";
 import { AlbumTile } from "../components/AlbumTile";
 import { chromeBottomPad } from "../components/MiniPlayer";
 import { Orb } from "../components/Orb";
 import { PageHeader } from "../components/PageHeader";
+import {
+  contributorInitial,
+  contributorLabel,
+  formatDuration,
+  weekFromDate,
+} from "../data/archiveHelpers";
 import type { MoodPlaylistId } from "../data/moodPlaylists";
-import type { Entry, Song } from "../data/types";
+import type { Song, TimelineEntry } from "../data/types";
 import { trimesterName, useArchiveStore } from "../store/useArchiveStore";
 import { MoodPlaylistPage } from "./MoodPlaylist";
 
@@ -99,12 +105,16 @@ function HomeRoot({
   const selectTrack = useArchiveStore((state) => state.selectTrack);
   const openSheet = useArchiveStore((state) => state.openSheet);
   const timelineEntries = useArchiveStore((state) => state.timelineEntries);
+  const playEntry = useArchiveStore((state) => state.playEntry);
   const openMoodPlaylist = useArchiveStore((state) => state.openMoodPlaylist);
   const stoneConnected = useArchiveStore((state) => state.stoneConnected);
   const reduce = useReducedMotion();
   const fade = reduce ? 0.2 : 0.5;
   const sawDisconnected = useRef(!stoneConnected);
   const [dotPop, setDotPop] = useState(false);
+  const thisWeekRowRef = useRef<HTMLUListElement>(null);
+  const prevWeekIds = useRef<string[] | null>(null);
+  const [freshWeekIds, setFreshWeekIds] = useState<Set<string>>(() => new Set());
 
   const recentlyPlayed = useMemo(
     () =>
@@ -117,11 +127,32 @@ function HomeRoot({
   const thisWeek = useMemo(
     () =>
       timelineEntries
-        .filter((entry) => (entry.week ?? user.week) === user.week)
+        .filter((entry) => (entry.week ?? weekFromDate(entry.date)) === user.week)
         .slice()
         .sort((a, b) => `${b.date}T${b.time}`.localeCompare(`${a.date}T${a.time}`)),
     [timelineEntries, user.week],
   );
+
+  useEffect(() => {
+    const ids = thisWeek.map((entry) => entry.id);
+    if (prevWeekIds.current === null) {
+      prevWeekIds.current = ids;
+      return;
+    }
+    const prev = new Set(prevWeekIds.current);
+    const added = ids.filter((id) => !prev.has(id));
+    prevWeekIds.current = ids;
+    if (added.length === 0) return;
+
+    setFreshWeekIds(new Set(added));
+    const row = thisWeekRowRef.current;
+    if (row) {
+      const preferReduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      row.scrollTo({ left: 0, behavior: preferReduce ? "auto" : "smooth" });
+    }
+    const clearId = window.setTimeout(() => setFreshWeekIds(new Set()), reduce ? 160 : 280);
+    return () => window.clearTimeout(clearId);
+  }, [thisWeek, reduce]);
 
   useEffect(() => {
     if (!stoneConnected || reduce || !sawDisconnected.current) return;
@@ -199,6 +230,37 @@ function HomeRoot({
         </div>
       </article>
 
+      <section className="mt-8" aria-labelledby="this-week">
+        <h2 id="this-week" className="text-[15px] leading-5 font-normal text-[var(--text-400)]">
+          This week
+        </h2>
+        {thisWeek.length === 0 ? (
+          <p className="mt-3 text-[13px] leading-5 text-[var(--text-400)]">
+            Nothing saved this week yet. Tap the orb to start.
+          </p>
+        ) : (
+          <DragRow className="pb-4" listRef={thisWeekRowRef}>
+            <AnimatePresence initial={false}>
+              {thisWeek.map((entry) => {
+                const isFresh = freshWeekIds.has(entry.id);
+                return (
+                  <motion.li
+                    key={entry.id}
+                    layout={!reduce}
+                    className="shrink-0 snap-start"
+                    initial={isFresh && !reduce ? { opacity: 0, scale: 0.95 } : false}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: reduce ? 0.15 : 0.25, ease: "easeOut" }}
+                  >
+                    <WeekCard entry={entry} onPlay={() => playEntry(entry, thisWeek)} />
+                  </motion.li>
+                );
+              })}
+            </AnimatePresence>
+          </DragRow>
+        )}
+      </section>
+
       <section className="mt-8" aria-labelledby="browse-feeling">
         <h2 id="browse-feeling" className="text-[15px] leading-5 font-normal text-[var(--text-400)]">
           Browse by feeling
@@ -231,31 +293,21 @@ function HomeRoot({
           ))}
         </DragRow>
       </section>
-
-      <section className="mt-8" aria-labelledby="this-week">
-        <h2 id="this-week" className="text-[15px] leading-5 font-normal text-[var(--text-400)]">
-          This week
-        </h2>
-        {thisWeek.length === 0 ? (
-          <p className="mt-3 text-[13px] leading-5 text-[var(--text-400)]">
-            Nothing saved this week yet. Tap the orb to start.
-          </p>
-        ) : (
-          <DragRow className="pb-4">
-            {thisWeek.map((entry) => (
-              <li key={entry.id} className="shrink-0 snap-start">
-                <WeekCard entry={entry} />
-              </li>
-            ))}
-          </DragRow>
-        )}
-      </section>
     </section>
   );
 }
 
-function DragRow({ className = "", children }: { className?: string; children: ReactNode }) {
-  const ref = useRef<HTMLUListElement>(null);
+function DragRow({
+  className = "",
+  children,
+  listRef,
+}: {
+  className?: string;
+  children: ReactNode;
+  listRef?: React.RefObject<HTMLUListElement | null>;
+}) {
+  const localRef = useRef<HTMLUListElement>(null);
+  const ref = listRef ?? localRef;
   const drag = useRef({
     pointerId: -1,
     startX: 0,
@@ -277,7 +329,7 @@ function DragRow({ className = "", children }: { className?: string; children: R
 
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
-  }, []);
+  }, [ref]);
 
   function onPointerDown(event: ReactPointerEvent<HTMLUListElement>) {
     if (event.button !== 0) return;
@@ -354,37 +406,38 @@ function formatToday(iso: string) {
   return date.toDateString() === new Date().toDateString() ? `Today, ${time}` : time;
 }
 
-type WeekMoment = {
-  id: string;
-  kind: Entry["kind"];
-  title: string;
-  art?: string;
-  week?: number;
-  number?: number;
-  createdAt?: string;
-  date?: string;
-  time?: string;
-};
+function WeekCard({ entry, onPlay }: { entry: TimelineEntry; onPlay: () => void }) {
+  const contributors = useArchiveStore((state) => state.contributors);
+  const contributor = contributors.find((item) => item.id === entry.contributorId);
+  const person = contributorLabel(contributor);
+  const duration = entry.durationSec != null ? formatDuration(entry.durationSec) : null;
 
-function weekMomentSubtitle(entry: WeekMoment) {
-  if (entry.kind === "voice" && entry.number) {
-    return `#${String(entry.number).padStart(2, "0")} / W ${entry.week}`;
-  }
-  if (entry.date && entry.time) {
-    return formatToday(`${entry.date}T${entry.time}:00`);
-  }
-  return entry.createdAt ? formatToday(entry.createdAt) : "";
-}
+  const title =
+    entry.kind === "echo" ? `${person}: ${entry.title}` : entry.title;
+  const subtitle =
+    entry.kind === "voice"
+      ? `Voice note · ${duration ?? "0:00"}`
+      : entry.kind === "echo"
+        ? `Echo · ${duration ?? "0:00"}`
+        : formatToday(`${entry.date}T${entry.time}:00`);
 
-function WeekCard({ entry }: { entry: WeekMoment }) {
   return (
-    <article className="flex w-[200px] items-center gap-3 rounded-[16px] border border-[var(--line)] bg-white p-3 shadow-[var(--shadow-card)]">
-      <WeekMark entry={entry} />
-      <div className="min-w-0">
-        <p className="truncate text-[15px] leading-5 font-semibold text-[var(--text-900)]">{entry.title}</p>
-        <p className="truncate text-[12px] leading-4 text-[var(--text-400)]">{weekMomentSubtitle(entry)}</p>
-      </div>
-    </article>
+    <button
+      type="button"
+      onClick={onPlay}
+      aria-label={`Play ${title}`}
+      className="flex w-[200px] min-w-0 cursor-pointer items-center gap-3 overflow-hidden rounded-[16px] border border-[var(--line)] bg-white p-3 text-left shadow-[var(--shadow-card)] transition-transform duration-100 motion-safe:active:scale-[0.98]"
+    >
+      <WeekMark entry={entry} contributorName={person} contributorAvatar={contributor?.avatar} />
+      <span className="min-w-0 flex-1 overflow-hidden">
+        <span className="block truncate overflow-hidden text-[15px] leading-5 font-semibold text-ellipsis whitespace-nowrap text-[var(--text-900)]">
+          {title}
+        </span>
+        <span className="block truncate overflow-hidden text-[12px] leading-4 text-ellipsis whitespace-nowrap text-[var(--text-400)]">
+          {subtitle}
+        </span>
+      </span>
+    </button>
   );
 }
 
@@ -403,28 +456,48 @@ function SongWeekArt({ art }: { art: string }) {
   return <img src={art} alt="" className="size-11 shrink-0 rounded-[8px] object-cover" onError={() => setFailed(true)} />;
 }
 
-function WeekMark({ entry }: { entry: WeekMoment }) {
-  if (entry.kind === "song" && entry.art) {
-    return <SongWeekArt art={entry.art} />;
-  }
+function WeekMark({
+  entry,
+  contributorName,
+  contributorAvatar,
+}: {
+  entry: TimelineEntry;
+  contributorName: string;
+  contributorAvatar?: string;
+}) {
   if (entry.kind === "song") {
+    if (entry.art) return <SongWeekArt art={entry.art} />;
     return (
       <span className="grid size-11 shrink-0 place-items-center rounded-[8px] bg-[var(--pink-50)] text-[var(--pink-500)]">
         <Music size={20} strokeWidth={2} aria-hidden="true" />
       </span>
     );
   }
+
   if (entry.kind === "echo") {
     return (
-      <span className="relative grid size-11 shrink-0 place-items-center rounded-full bg-[var(--amber-100)] text-[13px] font-semibold text-[var(--amber-500)]">
-        {(entry.title[0] ?? "E").toUpperCase()}
-        <span className="absolute -right-0.5 -bottom-0.5 size-3 rounded-full border-2 border-white bg-[var(--amber-500)]" />
+      <span className="relative size-11 shrink-0">
+        <span className="grid size-11 place-items-center overflow-hidden rounded-[8px] bg-[var(--amber-50)] text-[13px] font-semibold text-[var(--amber-600)]">
+          {contributorAvatar ? (
+            <img src={contributorAvatar} alt="" className="size-full object-cover" />
+          ) : (
+            contributorInitial({ name: contributorName })
+          )}
+        </span>
+        <span className="absolute -right-0.5 -bottom-0.5 grid size-3.5 place-items-center rounded-full bg-[var(--amber-500)] text-white">
+          <Users size={8} strokeWidth={2.5} aria-hidden="true" />
+        </span>
       </span>
     );
   }
+
   return (
-    <span className="grid size-11 shrink-0 place-items-center rounded-[8px] bg-[var(--purple-100)] text-[var(--purple-500)]">
-      <Mic size={20} strokeWidth={2} aria-hidden="true" />
+    <span className="grid size-11 shrink-0 place-items-center overflow-hidden rounded-[8px] bg-[var(--purple-50)]">
+      <span className="flex h-5 items-end gap-[2px]" aria-hidden="true">
+        {[10, 16, 8, 14, 11].map((height, index) => (
+          <span key={index} className="w-[3px] rounded-full bg-[var(--purple-500)]" style={{ height }} />
+        ))}
+      </span>
     </span>
   );
 }
@@ -458,7 +531,7 @@ function Avatar({ onReplayWalkthrough }: { onReplayWalkthrough?: () => void }) {
     />
   ) : (
     <img
-      src="/img/sarah.png"
+      src="/img/julie.png"
       alt=""
       className="size-14 rounded-full object-cover object-top"
       onError={() => setFailed(true)}
@@ -469,7 +542,7 @@ function Avatar({ onReplayWalkthrough }: { onReplayWalkthrough?: () => void }) {
     <div ref={rootRef} className="relative shrink-0">
       <button
         type="button"
-        aria-label="Sarah"
+        aria-label="Julie"
         aria-haspopup="menu"
         aria-expanded={menuOpen}
         onClick={() => setMenuOpen((open) => !open)}
@@ -528,7 +601,7 @@ function FeelingTile({
         color={iconColor}
         aria-hidden="true"
       />
-      <span className="absolute bottom-3 left-[14px] text-[15px] leading-5 font-semibold text-[var(--text-900)]">
+      <span className="absolute right-3 bottom-3 left-[14px] truncate text-[15px] leading-5 font-semibold text-[var(--text-900)]">
         {label}
       </span>
     </button>

@@ -99,7 +99,7 @@ All three flows share one pattern: **pick → anything to add? → saved.** Keep
 
 ## 6. Flow C: Add an echo
 
-**What an echo is:** a voice note someone close to Sarah recorded for her or the baby. Contributors send voice notes through an invite link. Sarah picks which ones join her week, like picking a song.
+**What an echo is:** a voice note someone close to Julie recorded for her or the baby. Contributors send voice notes through an invite link. Julie picks which ones join her week, like picking a song.
 
 ### E1. Add an Echo (match Figma "add an echo")
 
@@ -123,15 +123,15 @@ RECENT CONTRIBUTORS
 
 ```
 ‹ Add an Echo
-[ Search from contacts: pri|        🎤 ]
+[ Search from contacts: emm|        🎤 ]
 FROM YOUR CONTACTS
-(initial) Priya Sharma     0412 345 678     +
-(initial) Priyanka D       priyanka@...      +
+(initial) Emma Wilson      0412 345 678     +
+(initial) Olivia Brown     0413 222 018     +
 ────────────
 [ 🔗 Share an invite link instead ]
 ```
 
-- Filters a mock contact list live (8 to 10 names).
+- Filters a mock contact list live (common English / Australian names plus aunts Clare, Meg and Rosie; Liam O'Brien kept).
 - People who are already contributors show "Contributor" in grey instead of +.
 - Empty result: "No contacts match "{query}"." with the invite link button still shown.
 - + on a contact goes to E3.
@@ -141,15 +141,15 @@ FROM YOUR CONTACTS
 - Selected contact card on top (`--amber-50`): initial avatar, name, number.
 - "Who are they to you?" single-select chips: partner, mum, dad, sibling, grandparent, aunty / uncle, friend.
 - Message box (`--amber-50`), prefilled and editable:
-  "Hi Priya, I'm keeping a sound diary for our baby. Would you leave a voice note for week 22?"
+  "Hi Emma, I'm keeping a sound diary for our baby. Would you leave a voice note for week 22?"
 - Button: [Send invite] (amber text), disabled until a relationship is picked.
 
 ### E4. Sent
 
 - Amber check on `--amber-100`, "Sent."
-- Line: "Invite to Priya"
+- Line: "Invite to Emma"
 - Body: "When she leaves a voice note, it'll show up in your recent contributors."
-- Auto-closes to E1. Priya now appears at the top of Recent contributors with "Invite sent" in place of the count.
+- Auto-closes to E1. Emma now appears at the top of Recent contributors with "Invite sent" in place of the count.
 
 ### E5. Their voice notes (P1, P2...)
 
@@ -160,7 +160,7 @@ FROM YOUR CONTACTS
 VOICE NOTES
 (▶) Good morning, little one     0:42  Week 22   ○
 (▶) When you were born           2:15  Week 21   ●
-(▶) Your nani's lullaby          1:08  Week 20   ●
+(▶) Grandma's lullaby            1:08  Week 20   ●
 (▶) Sunday call                  0:55  Week 19   ○   In archive
 [ Add 2 to this week ]
 ```
@@ -169,7 +169,7 @@ VOICE NOTES
 - Circle on the right selects the note (amber fill when selected). Notes already archived show "In archive" and no circle.
 - Sticky bottom button counts the selection: "Add 1 to this week" / "Add 2 to this week". Disabled at 0 with "Select voice notes to add".
 - ✎ Edit mode: each row gets a rename (tap title) and remove (minus icon). ✎ becomes "Done". This is the "editable playlist" from the IA.
-- Invite-sent contributor (no notes yet): empty state "Priya hasn't left a voice note yet." + [Send a reminder] → toast "Reminder sent".
+- Invite-sent contributor (no notes yet): empty state "Emma hasn't left a voice note yet." + [Send a reminder] → toast "Reminder sent".
 - P1 and P2 use this same template with different data.
 
 ### E6. Anything to add?

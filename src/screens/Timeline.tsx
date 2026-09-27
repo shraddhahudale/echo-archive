@@ -176,7 +176,7 @@ export function Timeline() {
         <h2 id="heavy-rotations" className="text-[17px] leading-5 font-normal text-[var(--text-400)]">
           Heavy rotations
         </h2>
-        <div className="mt-5 flex justify-between gap-2">
+        <div className="mt-5 flex justify-between gap-3">
           {rotations.map(({ song, plays, title }) => (
             <AlbumTile
               key={song.id}
@@ -186,8 +186,8 @@ export function Timeline() {
               gradient={song.gradient}
               bordered={song.bordered}
               size={96}
-              titleClassName="relative z-[1] mt-2 block truncate text-[15px] leading-5 font-semibold text-[var(--text-900)]"
-              artistClassName="relative z-[1] block truncate text-[13px] leading-4 text-[var(--text-secondary)]"
+              titleClassName="relative z-[1] mt-2 block w-full min-w-0 truncate overflow-hidden text-[15px] leading-5 font-semibold text-ellipsis whitespace-nowrap text-[var(--text-900)]"
+              artistClassName="relative z-[1] block w-full min-w-0 truncate overflow-hidden text-[13px] leading-4 text-ellipsis whitespace-nowrap text-[var(--text-secondary)]"
               meta={
                 <span className="relative z-[1] mt-1.5 inline-flex rounded-[var(--radius-pill)] bg-[var(--pink-50)] px-2 py-0.5 text-[12px] leading-4 text-[var(--pink-500)]">
                   {plays} plays
