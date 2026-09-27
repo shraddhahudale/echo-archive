@@ -340,22 +340,6 @@ export const contributors: Contributor[] = [
     ], 2),
   },
   {
-    id: "seema",
-    name: "Seema Masi",
-    relationship: "aunty / uncle",
-    status: "active",
-    totalCount: 6,
-    since: 11,
-    notes: notes("seema", [
-      { title: "Your name", durationSec: 40, week: 20 },
-      { title: "From the wedding", durationSec: 55, week: 19, inArchive: true },
-      { title: "Masi's haldi doodh advice", durationSec: 95, week: 15, inArchive: true },
-      { title: "Don't take it too seriously", durationSec: 48, week: 15, inArchive: true },
-      { title: "Sleep, little one", durationSec: 62, week: 14, inArchive: true },
-      { title: "A blessing from Masi", durationSec: 70, week: 11, inArchive: true },
-    ], 1),
-  },
-  {
     id: "mom",
     name: "Mom",
     relationship: "mum",
@@ -410,12 +394,28 @@ export const contributors: Contributor[] = [
       1,
     ),
   },
+  {
+    id: "seema",
+    name: "Aunty Sophie",
+    relationship: "aunty / uncle",
+    status: "active",
+    totalCount: 6,
+    since: 11,
+    notes: notes("seema", [
+      { title: "Your name", durationSec: 40, week: 20 },
+      { title: "From the wedding", durationSec: 55, week: 19, inArchive: true },
+      { title: "Aunty Sophie's warm milk advice", durationSec: 95, week: 15, inArchive: true },
+      { title: "Don't take it too seriously", durationSec: 48, week: 15, inArchive: true },
+      { title: "Sleep, little one", durationSec: 62, week: 14, inArchive: true },
+      { title: "A blessing from Aunty Sophie", durationSec: 70, week: 11, inArchive: true },
+    ], 1),
+  },
 ];
 
 export const contacts: Contact[] = [
   { id: "mom", name: "Mom", phone: "0412 111 222" },
   { id: "nani", name: "Nani", phone: "+91 98200 11234" },
-  { id: "seema", name: "Seema Masi", phone: "+91 98330 45678" },
+  { id: "seema", name: "Aunty Sophie", phone: "0415 662 334" },
   { id: "priya", name: "Priya Sharma", phone: "+91 98112 33445" },
   { id: "anjali", name: "Anjali Mehta", phone: "+91 98221 55667" },
   { id: "kavya", name: "Kavya Iyer", phone: "+91 98440 77889" },

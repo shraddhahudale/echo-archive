@@ -452,6 +452,8 @@ type Entry = {
 type Playlist = { id: string; name: string; count: number; meta: string; status: "Active" | "Done"; art: string };
 
 const user = { name: "Julie", week: 22, trimester: 2, stoneConnected: true };
+
+// Echo contributors (38): Mom 15, Nani 12, Aunty Sophie 6, Jake 5
 ```
 
 ---

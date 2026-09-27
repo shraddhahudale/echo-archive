@@ -19,7 +19,7 @@ A clickable, high-fidelity mobile prototype with mock data (no backend). The sto
 - The **orb** ("How are you feeling today?") breathes gently; tap it to record a moment:
   - **Add a voice note**: record, rename, tag feelings, save to the week
   - **Archive a song**: search or pick a recent song, tag feelings, save
-  - **Add an echo**: invite a loved one, or add voice notes they've sent (Mom, Nani, Seema Masi, Jake)
+  - **Add an echo**: invite a loved one, or add voice notes they've sent (Mom, Nani, Aunty Sophie, Jake)
 - **Browse by feeling**: Calm nights, Tender and Bright days open mood playlists with song suggestions
 - **Recently played** and a **This week** row of saved moments
 
@@ -127,9 +127,9 @@ These override older Figma placeholders so Home, Timeline, Wrapped and Archive s
 | Wrapped card 3 top song | **Breathe Deeper**, Tame Impala |
 | Heavy rotations | **Breathe Deeper 44**, Holocene 41, Breathe (2 AM) 36 |
 | Wrapped card 6 hero | **Restless → Grounding** |
-| Echo contributors | Mom 15, Nani 12, Seema Masi 6, Jake 5 (38 echoes) |
+| Echo contributors | Mom 15, Nani 12, Aunty Sophie 6, Jake 5 (38 echoes) |
 | Family / culture | Julie: half Indian (mum), half Australian (dad); Jake Australian; light Indian touch in seed titles; only one Bollywood song: Chandaniya |
-| Contacts | Indian side (+91): Nani, Seema Masi, Priya, Anjali, Kavya, Rohan · Australian side (04xx): Emma, Olivia, Charlotte, Tom, Ben, Liam, Aunt Clare, Aunt Meg · Mom stays as Contributor |
+| Contacts | Indian side (+91): Nani, Priya, Anjali, Kavya, Rohan · Australian side (04xx): Aunty Sophie, Emma, Olivia, Charlotte, Tom, Ben, Liam, Aunt Clare, Aunt Meg · Mom stays as Contributor |
 
 ---
 
