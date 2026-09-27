@@ -2,15 +2,15 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode }
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Check, Hand, Loader2, Mic, Music, Users } from "lucide-react";
 import { Display } from "../components/Display";
-import { Eyebrow } from "../components/Eyebrow";
+import { EYEBROW_PAD, Eyebrow, STATUS_CLEARANCE } from "../components/Eyebrow";
 import { OnboardingOrb } from "../components/OnboardingOrb";
 import { PillButton } from "../components/PillButton";
 import {
+  ONBOARD_CARD_TOP,
   ONBOARD_STORY_SPRING,
-  StoryBackgroundLayer,
-  StoryMotionDots,
   StorySlide,
   StorySlideStatic,
+  StorySoftDots,
   StoryStaticDots,
   StoryTopScrim,
   useStoryPager,
@@ -25,18 +25,23 @@ const O2_FALLBACK_MS = 4000;
 const SPLASH_LIFT_MS = 1200;
 const SPLASH_CTA_AFTER_NOTE_MS = 1000;
 const SPLASH_GRADIENT = "linear-gradient(135deg, #A385F7, #6D2BDB)";
+const BG_FADE_MS = 700;
+const TEXT_MS = 0.45;
+const TEXT_STAGGER = 0.08;
+const VISUAL_FADE_MS = 0.45;
 
 const CONCEPT_NOTE =
   "Pregnancy is a time in between. Echo Archive is a sound diary for those weeks: the songs you play, the thoughts you say out loud, and the voices of the people who love you. Kept week by week, so you can listen back to how you became a mother.";
 
-/** Meet the orb → Keep a moment → Look back → Stone. */
-const ORB_SIZES = [148, 112, 110, 0] as const;
+/** Meet the orb → Keep a moment → Look back → Stone. Orb sizes for slides 0–2. */
+const ORB_BASE = 148;
+const ORB_SIZES = [148, 112, 110] as const;
 
 const GRADIENTS = [
   "linear-gradient(135deg, #A385F7, #5A1FC4)", // Meet the orb
   "linear-gradient(135deg, #E7A6D6, #8B2BCB)", // Keep a moment
   "linear-gradient(135deg, #F6C99A, #C0508F)", // Look back
-  "linear-gradient(135deg, #F06AB4, #8B2BCB)", // Companion Stone (Wrapped card 5 / Restless)
+  "linear-gradient(135deg, #F06AB4, #8B2BCB)", // Companion Stone
 ] as const;
 
 const EYEBROWS = ["THIS IS YOUR ORB", "TAP THE ORB TO…", "IT ALL ADDS UP", "ONE LAST THING"] as const;
@@ -127,6 +132,46 @@ function FitTitle({ children }: { children: string }) {
   );
 }
 
+/** Fade + 8px rise once when a slide becomes active — not while dragging. */
+function SettleReveal({
+  active,
+  step,
+  reduce,
+  className,
+  children,
+}: {
+  active: boolean;
+  step: number;
+  reduce: boolean;
+  className?: string;
+  children: ReactNode;
+}) {
+  const [tick, setTick] = useState(0);
+  const wasActive = useRef(false);
+
+  useEffect(() => {
+    if (active && !wasActive.current) setTick((n) => n + 1);
+    wasActive.current = active;
+  }, [active]);
+
+  return (
+    <motion.div
+      key={tick}
+      className={className}
+      initial={reduce || tick === 0 ? false : { opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={
+        reduce
+          ? { duration: 0.15 }
+          : { duration: TEXT_MS, delay: step * TEXT_STAGGER, ease: "easeInOut" }
+      }
+      style={{ willChange: "transform, opacity" }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
 export function Onboarding({ onComplete }: OnboardingProps) {
   const reduceMotion = useReducedMotion();
   const [phase, setPhase] = useState<"splash" | "slides">("splash");
@@ -154,7 +199,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
     enabled: phase === "slides" && stonePhase === "idle",
     spring: ONBOARD_STORY_SPRING,
     canGo: (from, to) => {
-      if (from === 3 && to > from) return false; // Companion Stone
+      if (from === 3 && to > from) return false;
       if (from === 0 && to > from && !orbUnlockedRef.current) return false;
       return true;
     },
@@ -190,6 +235,8 @@ export function Onboarding({ onComplete }: OnboardingProps) {
   }
 
   function goNextFromOrb() {
+    orbUnlockedRef.current = true;
+    setOrbUnlocked(true);
     pager.settleTo(1);
   }
 
@@ -255,60 +302,15 @@ export function Onboarding({ onComplete }: OnboardingProps) {
     [],
   );
 
-  function renderAbove(i: number, settled: boolean): ReactNode {
-    if (i === 3) {
-      return <CompanionStone phase={stonePhase} reduce={!!reduceMotion} />;
-    }
+  const reduce = !!(reduceMotion || pager.reduce);
+  const orbSlide = index <= 2;
+  const orbScale = orbSlide ? ORB_SIZES[Math.min(index, 2)] / ORB_BASE : ORB_SIZES[2] / ORB_BASE;
 
-    const size = ORB_SIZES[i];
-    if (size <= 0) return null;
-
-    return (
-      <div className="flex flex-col items-center">
-        <OnboardingOrb
-          size={size}
-          lookAtMe={i === 0 ? lookAtMe : 0}
-          hintRing={i === 0}
-          onClick={i === 0 ? goNextFromOrb : undefined}
-          ariaLabel="Tap the orb to continue"
-        />
-        {i === 1 ? (
-          <O3IconRow
-            settled={settled}
-            reduce={!!reduceMotion}
-            highlight={o3Highlight}
-            onHighlight={setO3Highlight}
-          />
-        ) : null}
-        {i === 0 ? (
-          <p className="mt-5 flex items-center justify-center gap-1.5 text-center text-[13px] text-white">
-            <Hand size={14} strokeWidth={2} aria-hidden="true" className="shrink-0" />
-            <span>{orbUnlocked ? "Tap the orb, or swipe to continue" : "Tap the orb"}</span>
-          </p>
-        ) : null}
-      </div>
-    );
-  }
-
-  function textDelay(settled: boolean, step: number) {
-    if (reduceMotion) return { duration: 0.15, delay: 0 };
-    return {
-      duration: 0.28,
-      delay: settled ? 0.06 + step * 0.04 : 0,
-      ease: "easeOut" as const,
-    };
-  }
-
-  function renderBody(i: number, settled: boolean): ReactNode {
+  function renderBody(i: number, active: boolean): ReactNode {
     const title = (
-      <motion.div
-        initial={false}
-        animate={{ opacity: settled ? 1 : 0, y: settled ? 0 : 8 }}
-        transition={textDelay(settled, 1)}
-        style={{ willChange: "transform, opacity" }}
-      >
+      <SettleReveal active={active} step={0} reduce={reduce}>
         <FitTitle>{TITLES[i]}</FitTitle>
-      </motion.div>
+      </SettleReveal>
     );
 
     switch (i) {
@@ -316,62 +318,50 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         return (
           <>
             {title}
-            <motion.p
-              initial={false}
-              animate={{ opacity: settled ? 1 : 0, y: settled ? 0 : 8 }}
-              transition={textDelay(settled, 2)}
-              style={{ willChange: "transform, opacity" }}
-              className="mx-auto mt-3 max-w-[280px] text-[15px] leading-[1.5] text-white/90"
-            >
-              Whenever something feels worth keeping, a song, a thought, a voice, just tap the orb.
-            </motion.p>
+            <SettleReveal active={active} step={1} reduce={reduce} className="mx-auto mt-3 max-w-[280px]">
+              <p className="text-[15px] leading-[1.5] text-white/90">
+                Whenever something feels worth keeping, a song, a thought, a voice, just tap the orb.
+              </p>
+            </SettleReveal>
           </>
         );
       case 1:
         return (
           <>
             {title}
-            <motion.ul
-              initial={false}
-              animate={{ opacity: settled ? 1 : 0, y: settled ? 0 : 8 }}
-              transition={textDelay(settled, 2)}
-              style={{ willChange: "transform, opacity" }}
-              className="mt-4 space-y-3 text-left"
-            >
-              {O3_ACTIONS.map((action) => (
-                <li key={action.id} className="flex items-start gap-3">
-                  <span
-                    className={`mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full border-2 border-white ${
-                      o3Highlight === action.id ? "ring-2 ring-white/80" : ""
-                    }`}
-                    style={{ background: action.color }}
-                    aria-hidden="true"
-                  >
-                    <action.Icon size={14} className="text-white" strokeWidth={2.25} />
-                  </span>
-                  <span>
-                    <span className="block text-[14px] font-semibold text-white">{action.label}</span>
-                    <span className="block text-[13px] leading-4 text-white/80">{action.line}</span>
-                  </span>
-                </li>
-              ))}
-            </motion.ul>
+            <SettleReveal active={active} step={1} reduce={reduce} className="mt-4">
+              <ul className="space-y-3 text-left">
+                {O3_ACTIONS.map((action) => (
+                  <li key={action.id} className="flex items-start gap-3">
+                    <span
+                      className={`mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full border-2 border-white ${
+                        o3Highlight === action.id ? "ring-2 ring-white/80" : ""
+                      }`}
+                      style={{ background: action.color }}
+                      aria-hidden="true"
+                    >
+                      <action.Icon size={14} className="text-white" strokeWidth={2.25} />
+                    </span>
+                    <span>
+                      <span className="block text-[14px] font-semibold text-white">{action.label}</span>
+                      <span className="block text-[13px] leading-4 text-white/80">{action.line}</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </SettleReveal>
           </>
         );
       case 2:
         return (
           <>
             {title}
-            <motion.p
-              initial={false}
-              animate={{ opacity: settled ? 1 : 0, y: settled ? 0 : 8 }}
-              transition={textDelay(settled, 2)}
-              style={{ willChange: "transform, opacity" }}
-              className="mx-auto mt-3 max-w-[280px] text-[15px] leading-[1.5] text-white/90"
-            >
-              See your weeks fill up, get your trimester wrapped, and breathe along with the glow whenever you need a
-              moment.
-            </motion.p>
+            <SettleReveal active={active} step={1} reduce={reduce} className="mx-auto mt-3 max-w-[280px]">
+              <p className="text-[15px] leading-[1.5] text-white/90">
+                See your weeks fill up, get your trimester wrapped, and breathe along with the glow whenever you need a
+                moment.
+              </p>
+            </SettleReveal>
           </>
         );
       case 3:
@@ -380,22 +370,13 @@ export function Onboarding({ onComplete }: OnboardingProps) {
           <>
             {title}
             {stonePhase === "connected" ? (
-              <motion.p
-                initial={false}
-                animate={{ opacity: settled ? 1 : 0, y: settled ? 0 : 8 }}
-                transition={textDelay(settled, 2)}
-                className="mt-4 text-[15px] leading-5 font-medium text-white"
-                aria-live="polite"
-              >
-                Connected. You're all set.
-              </motion.p>
+              <SettleReveal active={active} step={1} reduce={reduce}>
+                <p className="mt-4 text-[15px] leading-5 font-medium text-white" aria-live="polite">
+                  Connected. You're all set.
+                </p>
+              </SettleReveal>
             ) : (
-              <motion.div
-                initial={false}
-                animate={{ opacity: settled ? 1 : 0, y: settled ? 0 : 8 }}
-                transition={textDelay(settled, 2)}
-                style={{ willChange: "transform, opacity" }}
-              >
+              <SettleReveal active={active} step={1} reduce={reduce}>
                 <p className="mx-auto mt-3 max-w-[280px] text-[15px] leading-[1.5] text-white/90">
                   Hold it when you want to breathe or record. It glows along with your orb.
                 </p>
@@ -428,12 +409,16 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                     </button>
                   ) : null}
                 </div>
-              </motion.div>
+              </SettleReveal>
             )}
           </>
         );
     }
   }
+
+  const visualFade = reduce
+    ? { duration: 0.15 }
+    : { duration: VISUAL_FADE_MS, ease: "easeInOut" as const };
 
   return (
     <motion.div
@@ -444,7 +429,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       className="absolute inset-0 z-50 overflow-hidden touch-none select-none"
       initial={false}
       animate={{ opacity: exiting ? 0 : 1 }}
-      transition={{ duration: reduceMotion ? 0.15 : 0.4, ease: "easeOut" }}
+      transition={{ duration: reduce ? 0.15 : 0.4, ease: "easeOut" }}
       onPointerDown={
         phase === "splash"
           ? (event) => {
@@ -465,7 +450,6 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               const dx = event.clientX - start.x;
               const dy = event.clientY - start.y;
               const dist = Math.hypot(dx, dy);
-              // Tap or intentional swipe
               if (dist < 12 || dist >= 40) enterSlides();
             }
           : pager.onPointerUp
@@ -487,18 +471,22 @@ export function Onboarding({ onComplete }: OnboardingProps) {
             style={{ backgroundImage: SPLASH_GRADIENT }}
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: reduceMotion ? 0.15 : 0.4 }}
+            transition={{ duration: reduce ? 0.15 : 0.4 }}
           />
         ) : null}
       </AnimatePresence>
 
       {phase === "slides"
         ? GRADIENTS.map((gradient, i) => (
-            <StoryBackgroundLayer
+            <div
               key={gradient}
-              gradient={gradient}
-              cardIndex={i}
-              progress={pager.progress}
+              aria-hidden="true"
+              className="absolute inset-0"
+              style={{
+                backgroundImage: gradient,
+                opacity: index === i ? 1 : 0,
+                transition: reduce ? "opacity 150ms ease" : `opacity ${BG_FADE_MS}ms ease-in-out`,
+              }}
             />
           ))
         : null}
@@ -512,12 +500,12 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       {phase === "slides" ? (
         <motion.div
           key={EYEBROWS[index]}
-          initial={false}
+          initial={reduce ? false : { opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={
-            reduceMotion
+            reduce
               ? { duration: 0.15 }
-              : { duration: 0.28, delay: 0.06, ease: "easeOut" }
+              : { duration: TEXT_MS, delay: 0, ease: "easeInOut" }
           }
           style={{ willChange: "transform, opacity" }}
         >
@@ -549,7 +537,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
             className="pointer-events-none absolute inset-0 z-10"
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: reduceMotion ? 0.15 : 0.4 }}
+            transition={{ duration: reduce ? 0.15 : 0.4 }}
           >
             <motion.div
               className="absolute inset-x-0 flex flex-col items-center px-5 text-center"
@@ -559,21 +547,21 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                   ? { top: "30%", y: 0, x: 0 }
                   : { top: "50%", y: "-50%", x: 0 }
               }
-              transition={{ duration: reduceMotion ? 0.15 : 0.5, ease: "easeOut" }}
+              transition={{ duration: reduce ? 0.15 : 0.5, ease: "easeOut" }}
             >
               <motion.div
-                initial={reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
+                initial={reduce ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: reduceMotion ? 0.15 : 0.5, ease: "easeOut" }}
+                transition={{ duration: reduce ? 0.15 : 0.5, ease: "easeOut" }}
               >
                 <Display size={40} tone="light">
                   Echo Archive
                 </Display>
               </motion.div>
               <motion.p
-                initial={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
-                animate={{ opacity: taglineReady || reduceMotion ? 1 : 0 }}
-                transition={{ duration: reduceMotion ? 0.15 : 0.4, ease: "easeOut" }}
+                initial={reduce ? { opacity: 1 } : { opacity: 0 }}
+                animate={{ opacity: taglineReady || reduce ? 1 : 0 }}
+                transition={{ duration: reduce ? 0.15 : 0.4, ease: "easeOut" }}
                 className="mt-2 text-[14px] leading-5 text-white/80"
               >
                 a sound diary for pregnancy
@@ -584,9 +572,9 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               {showConceptNote ? (
                 <motion.p
                   key="concept-note"
-                  initial={reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
+                  initial={reduce ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: reduceMotion ? 0.15 : 0.6, ease: "easeOut" }}
+                  transition={{ duration: reduce ? 0.15 : 0.6, ease: "easeOut" }}
                   className="absolute top-[42%] left-1/2 w-full max-w-[300px] -translate-x-1/2 px-5 text-center text-[16px] leading-[1.6] text-white/90"
                 >
                   {CONCEPT_NOTE}
@@ -598,9 +586,9 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               {showTapHint ? (
                 <motion.p
                   key="tap-hint"
-                  initial={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
+                  initial={reduce ? { opacity: 1 } : { opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ duration: reduceMotion ? 0.15 : 0.4, ease: "easeOut" }}
+                  transition={{ duration: reduce ? 0.15 : 0.4, ease: "easeOut" }}
                   className="absolute bottom-10 left-0 right-0 text-center text-[12px] text-white/70"
                 >
                   Tap to begin
@@ -611,13 +599,88 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         ) : null}
       </AnimatePresence>
 
+      {/* Fixed visual stage — outside the track; never moves with slide drag */}
       {phase === "slides" ? (
-        reduceMotion || pager.reduce ? (
-          <StorySlideStatic
-            layout="fixedCard"
-            above={renderAbove(index, true)}
-            body={renderBody(index, true)}
-          />
+        <div
+          className="pointer-events-none absolute inset-x-0 z-[3] flex items-center justify-center"
+          style={{
+            top: STATUS_CLEARANCE + EYEBROW_PAD + 8,
+            bottom: `calc(100% - ${ONBOARD_CARD_TOP} + 8px)`,
+          }}
+        >
+          <div
+            className="relative flex w-full max-w-[320px] flex-col items-center px-6"
+            style={{ height: ORB_BASE + 72 }}
+          >
+            {/* Orb + Stone share one centred slot — scale/opacity only, no x */}
+            <div className="relative grid place-items-center" style={{ width: ORB_BASE, height: ORB_BASE }}>
+              <motion.div
+                className="absolute inset-0 grid place-items-center"
+                style={{ willChange: "opacity, transform", transformOrigin: "center center" }}
+                initial={false}
+                animate={{
+                  opacity: orbSlide ? 1 : 0,
+                  scale: orbScale,
+                }}
+                transition={visualFade}
+              >
+                <div
+                  className={index === 0 ? "pointer-events-auto" : "pointer-events-none"}
+                  style={{ width: ORB_BASE, height: ORB_BASE }}
+                >
+                  <OnboardingOrb
+                    size={ORB_BASE}
+                    lookAtMe={index === 0 ? lookAtMe : 0}
+                    hintRing={index === 0}
+                    onClick={index === 0 ? goNextFromOrb : undefined}
+                    ariaLabel="Tap the orb to continue"
+                  />
+                </div>
+              </motion.div>
+
+              <motion.div
+                className="pointer-events-none absolute inset-0 grid place-items-center"
+                initial={false}
+                animate={{ opacity: index === 3 ? 1 : 0 }}
+                transition={visualFade}
+              >
+                <CompanionStone phase={stonePhase} reduce={reduce} />
+              </motion.div>
+            </div>
+
+            {/* Hint + icons share the slot under the orb — opacity only */}
+            <div
+              className="absolute inset-x-0 flex justify-center"
+              style={{ top: ORB_BASE + 16 }}
+            >
+              <motion.p
+                className="absolute flex items-center justify-center gap-1.5 text-center text-[13px] text-white"
+                initial={false}
+                animate={{ opacity: index === 0 ? 1 : 0 }}
+                transition={visualFade}
+                aria-hidden={index !== 0}
+              >
+                <Hand size={14} strokeWidth={2} aria-hidden="true" className="shrink-0" />
+                <span>{orbUnlocked ? "Tap the orb, or swipe to continue" : "Tap the orb"}</span>
+              </motion.p>
+
+              <motion.div
+                className="absolute"
+                initial={false}
+                animate={{ opacity: index === 1 ? 1 : 0 }}
+                transition={visualFade}
+                style={{ pointerEvents: index === 1 ? "auto" : "none" }}
+              >
+                <O3IconRow reduce={reduce} highlight={o3Highlight} onHighlight={setO3Highlight} />
+              </motion.div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {phase === "slides" ? (
+        reduce ? (
+          <StorySlideStatic layout="fixedCard" body={renderBody(index, true)} />
         ) : (
           <motion.div
             className="absolute inset-y-0 left-0 z-[2] flex"
@@ -635,7 +698,6 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                 width={pager.width || 390}
                 trackX={pager.trackX}
                 settled={pager.settledIndex === i}
-                above={renderAbove(i, pager.settledIndex === i)}
                 body={renderBody(i, pager.settledIndex === i)}
               />
             ))}
@@ -644,10 +706,10 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       ) : null}
 
       {phase === "slides" ? (
-        reduceMotion || pager.reduce ? (
+        reduce ? (
           <StoryStaticDots active={index} count={SLIDE_COUNT} />
         ) : (
-          <StoryMotionDots progress={pager.progress} count={SLIDE_COUNT} />
+          <StorySoftDots active={index} count={SLIDE_COUNT} />
         )
       ) : null}
     </motion.div>
@@ -655,19 +717,17 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 }
 
 function O3IconRow({
-  settled,
   reduce,
   highlight,
   onHighlight,
 }: {
-  settled: boolean;
   reduce: boolean;
   highlight: string | null;
   onHighlight: (id: string) => void;
 }) {
   return (
-    <div className="mt-5 flex items-center justify-center gap-3">
-      {O3_ACTIONS.map((action, i) => {
+    <div className="flex items-center justify-center gap-3">
+      {O3_ACTIONS.map((action) => {
         const selected = highlight === action.id;
         return (
           <motion.button
@@ -677,22 +737,12 @@ function O3IconRow({
             aria-pressed={selected}
             className="flex size-12 items-center justify-center rounded-full border-2 border-white"
             style={{ background: action.color }}
-            initial={reduce ? false : { opacity: 0, scale: 0.6, y: 8 }}
-            animate={
-              settled
-                ? {
-                    opacity: 1,
-                    scale: selected ? 1.08 : 1,
-                    y: 0,
-                    boxShadow: selected ? "0 0 0 4px rgba(255,255,255,0.55)" : "0 0 0 0 rgba(255,255,255,0)",
-                  }
-                : { opacity: 0, scale: 0.6, y: 8 }
-            }
-            transition={
-              reduce
-                ? { duration: 0.15 }
-                : { type: "spring", damping: 18, stiffness: 220, delay: settled ? i * 0.12 : 0 }
-            }
+            initial={false}
+            animate={{
+              scale: selected ? 1.06 : 1,
+              boxShadow: selected ? "0 0 0 4px rgba(255,255,255,0.55)" : "0 0 0 0 rgba(255,255,255,0)",
+            }}
+            transition={reduce ? { duration: 0.15 } : { duration: 0.28, ease: "easeOut" }}
             onClick={(event) => {
               event.stopPropagation();
               onHighlight(action.id);
@@ -713,13 +763,7 @@ function CompanionStone({ phase, reduce }: { phase: StonePhase; reduce: boolean 
   const glowDuration = reduce ? 0 : fast ? 0.55 : 2.8;
 
   return (
-    <motion.div
-      className="relative grid place-items-center"
-      initial={reduce ? { opacity: 1 } : { opacity: 0, scale: 0.92 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: reduce ? 0.15 : 0.4 }}
-      aria-hidden={phase === "idle"}
-    >
+    <div className="relative grid place-items-center" aria-hidden={phase === "idle"}>
       <motion.span
         className="absolute top-1/2 left-1/2 size-36 -translate-x-1/2 -translate-y-1/2 rounded-full"
         style={{
@@ -763,6 +807,6 @@ function CompanionStone({ phase, reduce }: { phase: StonePhase; reduce: boolean 
         </AnimatePresence>
       </span>
       {phase === "connected" ? <span className="sr-only">Companion Stone connected</span> : null}
-    </motion.div>
+    </div>
   );
 }

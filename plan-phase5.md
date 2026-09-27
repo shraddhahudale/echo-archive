@@ -28,7 +28,7 @@ App opens
 - **Gradient background per screen** (135deg), cross-fading between screens like Wrapped.
 - **Eyebrow** at the top of the screen (same position / style as Wrapped's "ECHO T2 INSIGHTS"): THIS IS YOUR ORB, etc. — not inside the glass card.
 - **Glass cards on one line:** every slide's glass card has its **top edge at 58%** of the screen height, the same width (`max-w-[320px]`, `px-6` / 24px padding, `py-8`, 24px radius, white 15% + blur), and the same **min-height** (~280px). Content inside is vertically centred.
-- **Neighbour peek (same as Wrapped):** while swiping, only the **glass card edges** peek. Orb / icons / Stone stay clipped to the active slide and do not appear in the side peek.
+- **Neighbour peek:** while swiping, only the **glass card edges** peek. Orb / icons / Stone sit in a fixed layer outside the track and never move with the slides.
 - **Visual zone** between the eyebrow and the card (centred, ≥20px above the card): orb (O1–O3), O2 icons, O4 Stone, plus the O1 hint when on O1.
 - **Titles:** fit-to-width — start at Display **26px**, step down to a minimum of **22px** to stay on one line inside the card; if still too long, allow a clean centred 2-line wrap. Never clip or overflow the card. **Body** Inter 15px, white 90%, centred.
 - **Dots at the bottom only** (no footer text, no circular next button): **4 dots** (O1–O4), centred, 32px from the bottom (`bottom-8`); the active dot is a 20px white pill, the others 5px white 50%. Splash is not counted.
@@ -133,9 +133,15 @@ As soon as Home is visible, **the orb glows to invite the first tap**:
 
 ## 7. Motion
 
-- Screen changes use a continuous drag-follow track (same as Wrapped): cards and backgrounds move with the finger, then settle with a soft spring (damping 32, stiffness 240, mass 0.9). Gradients cross-fade with drag progress. Neighbour glass cards peek at the sides (orb / icons / Stone never peek). Text fades up 60ms after settle (eyebrow → title → body, 40ms stagger).
-- Text on each screen: title then body, fade when the slide settles.
-- Reduced motion: 150ms fades only, no fan-out, no ripples.
+- **Orb / icons / Stone never move with the slides.** They live in a fixed layer outside the pager track — no `layoutId`, no x-transform, no layout animation. Only opacity cross-fades between slides (and the orb’s own breathing / tap pulse). The glass cards alone follow the drag.
+- Slide spring (onboarding): damping **34**, stiffness **150**, mass **1** (slower, no bounce). Wrapped keeps its own spring.
+- Background gradients cross-fade over **700ms** ease-in-out (settled slide index — not drag-linked).
+- Text: gentle fade + **8px** rise, **450ms**, **80ms** stagger (eyebrow → title → body). Plays once when a slide becomes active, not while dragging.
+- Orb breathing: **4s**, scale max **1.025**. Tap = soft in-place pulse, then advance.
+- Dots: width + opacity transition **400ms**.
+- Swipe threshold: **25%** of card width or a flick; otherwise ease back to centre. Drag over **8px** cancels tap.
+- Active glass: `backdrop-blur`. Peeking neighbour cards: flat fill at **40%** opacity, **no** blur (avoids the left-edge stripe). Side peek from the second screen onward.
+- Reduced motion: cross-fades only (**150ms**), no slide track.
 
 ---
 

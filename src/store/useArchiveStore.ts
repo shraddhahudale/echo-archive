@@ -640,7 +640,7 @@ export function heavyRotations(songs: Song[]) {
 
 export function wrappedStats(songs: Song[], contributors: Contributor[]) {
   const topSong = songById(songs, "breathe-deeper") ?? songs[0];
-  const order = ["mom", "grandma", "sophie", "jake"] as const;
+  const order = ["mom", "nani", "seema", "jake"] as const;
   const people = order.map((id) => {
     const person = contributors.find((item) => item.id === id);
     return {

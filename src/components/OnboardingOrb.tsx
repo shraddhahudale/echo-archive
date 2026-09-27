@@ -1,12 +1,11 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ONBOARD_STORY_SPRING } from "./StoryShell";
 
 type OnboardingOrbProps = {
   size: number;
   onClick?: () => void;
   ariaLabel?: string;
-  /** Brief 1 → 1.06 → 1 nudge when the user taps the wrong place on Meet the orb. */
+  /** Brief soft pulse when the user taps the wrong place on Meet the orb. */
   lookAtMe?: number;
   /** Expanding ring that fades every 1.6s (Meet the orb hint). */
   hintRing?: boolean;
@@ -15,8 +14,8 @@ type OnboardingOrbProps = {
 };
 
 /**
- * Soft light-variant orb for onboarding gradients.
- * Shares `layoutId="orb"` so size/position morph between screens.
+ * Soft light-variant orb for onboarding.
+ * Stays fixed in place — no layoutId, no x-transform; only breathing + tap pulse.
  */
 export function OnboardingOrb({
   size,
@@ -34,8 +33,8 @@ export function OnboardingOrb({
 
   useEffect(() => {
     if (!lookAtMe || reduce) return;
-    setNudge(1.06);
-    const id = window.setTimeout(() => setNudge(1), 220);
+    setNudge(1.04);
+    const id = window.setTimeout(() => setNudge(1), 280);
     return () => window.clearTimeout(id);
   }, [lookAtMe, reduce]);
 
@@ -51,22 +50,14 @@ export function OnboardingOrb({
     }
     setSqueezed(true);
     setTapRipple((n) => n + 1);
-    window.setTimeout(() => setSqueezed(false), 160);
+    window.setTimeout(() => setSqueezed(false), 180);
     window.setTimeout(onClick, 280);
   }
 
   const inner = (
-    <motion.span
-      layoutId="orb"
+    <span
       className="relative grid place-items-center"
-      initial={false}
-      animate={{
-        width: size,
-        height: size,
-        scale: reduce ? 1 : squeezed ? 0.94 : nudge,
-      }}
-      transition={reduce ? { duration: 0.15 } : ONBOARD_STORY_SPRING}
-      style={{ willChange: "transform" }}
+      style={{ width: size, height: size }}
     >
       {/* Soft halo — 30% opacity, blur 30px, ≤1.25× orb */}
       <span
@@ -82,11 +73,26 @@ export function OnboardingOrb({
         }}
       />
 
-      {/* Breathing — 1 → 1.025 over 4s */}
+      {/* Breathing + tap pulse — scale only, transform-origin centre */}
       <motion.span
-        className="absolute inset-0"
-        animate={reduce ? { scale: 1 } : { scale: [1, 1.025, 1] }}
-        transition={reduce ? { duration: 0 } : { duration: 4, ease: "easeInOut", repeat: Infinity }}
+        className="absolute inset-0 origin-center"
+        initial={false}
+        animate={
+          reduce
+            ? { scale: 1 }
+            : squeezed
+              ? { scale: 0.96 }
+              : nudge !== 1
+                ? { scale: nudge }
+                : { scale: [1, 1.025, 1] }
+        }
+        transition={
+          reduce
+            ? { duration: 0 }
+            : squeezed || nudge !== 1
+              ? { duration: 0.2, ease: "easeOut" }
+              : { duration: 4, ease: "easeInOut", repeat: Infinity }
+        }
         style={{ willChange: "transform" }}
       >
         <span
@@ -136,13 +142,13 @@ export function OnboardingOrb({
             aria-hidden="true"
             className="pointer-events-none absolute inset-0 rounded-full border border-white/40"
             initial={{ scale: 1, opacity: 0.5 }}
-            animate={{ scale: 1.55, opacity: 0 }}
+            animate={{ scale: 1.45, opacity: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.45, ease: "easeOut" }}
           />
         ) : null}
       </AnimatePresence>
-    </motion.span>
+    </span>
   );
 
   if (onClick) {

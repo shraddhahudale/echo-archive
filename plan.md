@@ -109,9 +109,9 @@ ADD A CONTRIBUTOR
 [ Search from contacts            🎤 ]
 RECENT CONTRIBUTORS
 (avatar) Jake            5 voice notes    +
-(avatar) Aunt Sophie     6 voice notes    +
+(avatar) Seema Masi     6 voice notes    +
 (avatar) Mom            15 voice notes    +
-(avatar) Grandma        12 voice notes    +
+(avatar) Nani        12 voice notes    +
 ```
 
 - Avatars: 44px, radius 8 (same as song art in Figma). Use photos from `public/img/contributors/` if present, otherwise an initial on `--amber-50` with `--amber-600` text.
@@ -131,7 +131,7 @@ FROM YOUR CONTACTS
 [ 🔗 Share an invite link instead ]
 ```
 
-- Filters a mock contact list live (common English / Australian names plus aunts Clare, Meg and Rosie; Liam O'Brien kept).
+- Filters a mock contact list live (a mix of Indian-side and Australian-side family names (Nani, Seema Masi, Priya, Anjali, Kavya, Rohan; Emma, Olivia, Charlotte, Tom, Ben, Liam, Aunt Clare, Aunt Meg)).
 - People who are already contributors show "Contributor" in grey instead of +.
 - Empty result: "No contacts match "{query}"." with the invite link button still shown.
 - + on a contact goes to E3.
@@ -160,7 +160,7 @@ FROM YOUR CONTACTS
 VOICE NOTES
 (▶) Good morning, little one     0:42  Week 22   ○
 (▶) When you were born           2:15  Week 21   ●
-(▶) Grandma's lullaby            1:08  Week 20   ●
+(▶) Nani's lori for the baby     1:17  Week 20   ●
 (▶) Sunday call                  0:55  Week 19   ○   In archive
 [ Add 2 to this week ]
 ```
@@ -204,7 +204,7 @@ type Contact = { id: string; name: string; phone?: string; email?: string };
 
 type Contributor = {
   id: string;
-  name: string;               // "Mom", "Aunt Sophie"
+  name: string;               // "Mom", "Seema Masi"
   relationship: string;       // chip value
   avatar?: string;
   status: "invited" | "active";
@@ -230,7 +230,7 @@ actions: saveVoiceNote, saveSong,
          renameNote, removeNote, markSeen
 ```
 
-Seed: Jake (5), Aunt Sophie (6), Mom (15), Grandma (12), each with 4 to 5 notes in `notes`, 1 to 2 of them unseen. Contacts: 8 to 10 names, including one existing contributor to test the "Contributor" label.
+Seed: Jake (5), Seema Masi (6), Mom (15), Nani (12), each with 4 to 5 notes in `notes`, 1 to 2 of them unseen. Contacts: Indian (+91) and Australian (04xx) family names, including Mom as an existing contributor to test the "Contributor" label.
 
 ---
 

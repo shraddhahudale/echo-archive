@@ -4,18 +4,24 @@ import { animate, motion, useMotionValue, useReducedMotion, useTransform, type M
 import { EYEBROW_PAD, STATUS_CLEARANCE } from "./Eyebrow";
 
 export const STORY_SPRING = { type: "spring" as const, damping: 30, stiffness: 280 };
-/** Softer settle used by onboarding only (Wrapped keeps STORY_SPRING). */
+/** Mellow settle used by onboarding only (Wrapped keeps STORY_SPRING). */
 export const ONBOARD_STORY_SPRING = {
   type: "spring" as const,
-  damping: 32,
-  stiffness: 240,
-  mass: 0.9,
+  damping: 34,
+  stiffness: 150,
+  mass: 1,
 };
 export const STORY_FLICK = 560;
+/** Drag past this cancels tap (onboarding + Wrapped). */
+export const STORY_DRAG_SLOP = 8;
 
-/** Exact glass card chrome used by T2 Wrapped slides. */
+/** Exact glass card chrome used by T2 Wrapped slides / active onboarding card. */
 export const storyGlassClass =
   "w-full max-w-[320px] rounded-[24px] border border-white/20 bg-white/15 px-6 py-8 text-center shadow-[0_12px_40px_rgba(0,0,0,0.12)] backdrop-blur-[12px]";
+
+/** Onboarding neighbour peek: flat fill, no backdrop-blur (avoids edge stripe). */
+export const storyGlassPeekClass =
+  "w-full max-w-[320px] rounded-[24px] border border-white/20 bg-white/40 px-6 py-8 text-center shadow-[0_12px_40px_rgba(0,0,0,0.12)]";
 
 /** Onboarding: shared card top + min-height so every slide's card sits on one line. */
 export const ONBOARD_CARD_TOP = "58%";
@@ -45,8 +51,8 @@ export function StoryBackgroundLayer({
 
 /**
  * Story slide cell with neighbour peek.
- * - `center` (Wrapped): column centred vertically
- * - `fixedCard` (Onboarding): glass top edge at 58%, shared min-height; visual centred above
+ * - `center` (Wrapped): column centred vertically; visuals ride with the card
+ * - `fixedCard` (Onboarding): glass only — orb / icons / Stone live outside the track
  */
 export function StorySlide({
   width,
@@ -76,40 +82,48 @@ export function StorySlide({
     const distance = Math.min(1, Math.abs(current - cardIndex));
     return 1 - distance * 0.4;
   });
-  // Card-only neighbour peek: fade orb / icons / Stone; never show them in the side peek
-  const visualOpacity = useTransform(trackX, (value) => {
+  // Onboarding: active card full + blur; neighbour peek flat 40% (no blur, no x-parallax)
+  const activeGlassOpacity = useTransform(trackX, (value) => {
+    const current = width > 0 ? -value / width : cardIndex;
+    return Math.abs(current - cardIndex) < 0.5 ? 1 : 0;
+  });
+  const peekGlassOpacity = useTransform(trackX, (value) => {
     const current = width > 0 ? -value / width : cardIndex;
     const distance = Math.abs(current - cardIndex);
-    if (distance >= 0.5) return 0;
-    return Math.max(0, 1 - distance / 0.5);
+    // Flat bg-white/40 card; layer opacity 1 while peeking (never blur)
+    if (distance < 0.5 || distance >= 1) return 0;
+    return 1;
   });
 
   if (layout === "fixedCard") {
     return (
-      <div className="relative h-full shrink-0" style={{ width }}>
+      <div className="relative h-full shrink-0 overflow-hidden" style={{ width }}>
         <motion.div
-          className="absolute inset-x-6 flex flex-col items-center justify-center overflow-hidden"
+          className="absolute inset-x-6 z-[1] flex justify-center"
           style={{
-            top: STATUS_CLEARANCE + EYEBROW_PAD + 8,
-            bottom: "calc(42% + 20px)",
-            opacity: visualOpacity,
+            top: ONBOARD_CARD_TOP,
+            opacity: peekGlassOpacity,
+            pointerEvents: "none",
+            willChange: "opacity",
+          }}
+          aria-hidden="true"
+        >
+          <div
+            className={`${storyGlassPeekClass} flex flex-col justify-center overflow-hidden`}
+            style={{ minHeight: ONBOARD_CARD_MIN_H }}
+          />
+        </motion.div>
+        <motion.div
+          className="absolute inset-x-6 z-[2] flex justify-center"
+          style={{
+            top: ONBOARD_CARD_TOP,
+            opacity: activeGlassOpacity,
             pointerEvents: settled ? "auto" : "none",
             willChange: "opacity",
           }}
         >
-          {above}
-        </motion.div>
-        <motion.div
-          className="absolute inset-x-6 flex justify-center"
-          style={{
-            top: ONBOARD_CARD_TOP,
-            x: glassX,
-            opacity: glassOpacity,
-            willChange: "transform, opacity",
-          }}
-        >
           <div
-            className={`${storyGlassClass} flex flex-col justify-center`}
+            className={`${storyGlassClass} flex flex-col justify-center overflow-hidden`}
             style={{ minHeight: ONBOARD_CARD_MIN_H }}
           >
             {top}
@@ -183,7 +197,7 @@ export function StorySlideStatic({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.15 }}
-            className={`${storyGlassClass} flex flex-col justify-center`}
+            className={`${storyGlassClass} flex flex-col justify-center overflow-hidden`}
             style={{ minHeight: ONBOARD_CARD_MIN_H }}
           >
             {cardInner}
@@ -252,6 +266,27 @@ export function StoryStaticDots({ active, count }: { active: number; count: numb
             key={index}
             className="h-[5px] rounded-full bg-white"
             style={{ width: 5 + 15 * amount, opacity: 0.5 + 0.5 * amount }}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+/** Onboarding dots: width + opacity ease over 400ms (settled index, not drag). */
+export function StorySoftDots({ active, count }: { active: number; count: number }) {
+  return (
+    <div
+      className="pointer-events-none absolute inset-x-0 bottom-8 z-10 flex items-center justify-center gap-1.5"
+      aria-hidden="true"
+    >
+      {Array.from({ length: count }, (_, index) => {
+        const on = index === active;
+        return (
+          <span
+            key={index}
+            className="h-[5px] rounded-full bg-white transition-[width,opacity] duration-[400ms] ease-in-out"
+            style={{ width: on ? 20 : 5, opacity: on ? 1 : 0.5 }}
           />
         );
       })}
@@ -390,7 +425,7 @@ export function useStoryPager({
     const dx = event.clientX - state.startX;
     const dy = event.clientY - state.startY;
     if (!state.dragging) {
-      if (Math.hypot(dx, dy) < 6) return;
+      if (Math.hypot(dx, dy) < STORY_DRAG_SLOP) return;
       state.dragging = true;
     }
     trackX.set(rubberband(state.origin + dx));
@@ -413,34 +448,35 @@ export function useStoryPager({
       if (onSwipeDown) return;
     }
 
-    if (!state.dragging && Math.hypot(dx, dy) < 8) {
-      const bounds = event.currentTarget.getBoundingClientRect();
-      tryGo(event.clientX - bounds.left > bounds.width / 2 ? 1 : -1, "tap");
+    // Drag past slop cancels tap
+    if (state.dragging || Math.hypot(dx, dy) >= STORY_DRAG_SLOP) {
+      let target = current;
+      if (dx < -width * 0.25 || vx < -STORY_FLICK) target = current + 1;
+      else if (dx > width * 0.25 || vx > STORY_FLICK) target = current - 1;
+
+      if (target === current) {
+        settleTo(current);
+        return;
+      }
+      if (target < 0) {
+        settleTo(0);
+        return;
+      }
+      if (target >= count) {
+        onPastEnd?.();
+        settleTo(current);
+        return;
+      }
+      if (canGo && !canGo(current, target, "swipe")) {
+        settleTo(current);
+        return;
+      }
+      settleTo(target);
       return;
     }
 
-    let target = current;
-    if (dx < -width * 0.25 || vx < -STORY_FLICK) target = current + 1;
-    else if (dx > width * 0.25 || vx > STORY_FLICK) target = current - 1;
-
-    if (target === current) {
-      settleTo(current);
-      return;
-    }
-    if (target < 0) {
-      settleTo(0);
-      return;
-    }
-    if (target >= count) {
-      onPastEnd?.();
-      settleTo(current);
-      return;
-    }
-    if (canGo && !canGo(current, target, "swipe")) {
-      settleTo(current);
-      return;
-    }
-    settleTo(target);
+    const bounds = event.currentTarget.getBoundingClientRect();
+    tryGo(event.clientX - bounds.left > bounds.width / 2 ? 1 : -1, "tap");
   }
 
   function onPointerCancel() {

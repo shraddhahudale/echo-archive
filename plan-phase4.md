@@ -46,8 +46,8 @@ Everything reads from the **same store entries** used by the Timeline calendar (
 - Echoes lean loved / connected. Entries saved in Phase 1 flows keep the chips the user picked.
 
 ### Echoes
-- Contributor data comes from the Phase 1 store (Jake, Aunt Sophie, Mom, Grandma, plus anyone invited this session).
-- Counts must match the echo sheet (Mom 15, Grandma 12, Aunt Sophie 6, Jake 5).
+- Contributor data comes from the Phase 1 store (Jake, Seema Masi, Mom, Nani, plus anyone invited this session).
+- Counts must match the echo sheet (Mom 15, Nani 12, Seema Masi 6, Jake 5).
 
 ### Songs
 - Only songs already in the catalogue: Let It Happen, Breathe Deeper, Holocene, Breathe (2 AM), Yellow, She Will Be Loved, Hotel California, Songs About Jane, Bohemian Rhapsody, Chandaniya. Real art from `public/img`.
