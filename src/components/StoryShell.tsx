@@ -4,6 +4,13 @@ import { animate, motion, useMotionValue, useReducedMotion, useTransform, type M
 import { EYEBROW_PAD, STATUS_CLEARANCE } from "./Eyebrow";
 
 export const STORY_SPRING = { type: "spring" as const, damping: 30, stiffness: 280 };
+/** Softer settle used by onboarding only (Wrapped keeps STORY_SPRING). */
+export const ONBOARD_STORY_SPRING = {
+  type: "spring" as const,
+  damping: 32,
+  stiffness: 240,
+  mass: 0.9,
+};
 export const STORY_FLICK = 560;
 
 /** Exact glass card chrome used by T2 Wrapped slides. */
@@ -69,11 +76,49 @@ export function StorySlide({
     const distance = Math.min(1, Math.abs(current - cardIndex));
     return 1 - distance * 0.4;
   });
-  // Card-only neighbour peek: hide orb / icons / Stone whenever this slide isn't current
+  // Card-only neighbour peek: fade orb / icons / Stone; never show them in the side peek
   const visualOpacity = useTransform(trackX, (value) => {
     const current = width > 0 ? -value / width : cardIndex;
-    return Math.abs(current - cardIndex) < 0.04 ? 1 : 0;
+    const distance = Math.abs(current - cardIndex);
+    if (distance >= 0.5) return 0;
+    return Math.max(0, 1 - distance / 0.5);
   });
+
+  if (layout === "fixedCard") {
+    return (
+      <div className="relative h-full shrink-0" style={{ width }}>
+        <motion.div
+          className="absolute inset-x-6 flex flex-col items-center justify-center overflow-hidden"
+          style={{
+            top: STATUS_CLEARANCE + EYEBROW_PAD + 8,
+            bottom: "calc(42% + 20px)",
+            opacity: visualOpacity,
+            pointerEvents: settled ? "auto" : "none",
+            willChange: "opacity",
+          }}
+        >
+          {above}
+        </motion.div>
+        <motion.div
+          className="absolute inset-x-6 flex justify-center"
+          style={{
+            top: ONBOARD_CARD_TOP,
+            x: glassX,
+            opacity: glassOpacity,
+            willChange: "transform, opacity",
+          }}
+        >
+          <div
+            className={`${storyGlassClass} flex flex-col justify-center`}
+            style={{ minHeight: ONBOARD_CARD_MIN_H }}
+          >
+            {top}
+            <div className={top ? "mt-5" : undefined}>{body}</div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   const cardInner = (
     <>
@@ -89,39 +134,10 @@ export function StorySlide({
     </>
   );
 
-  if (layout === "fixedCard") {
-    return (
-      <div className="relative h-full shrink-0 overflow-hidden" style={{ width }}>
-        <motion.div
-          className="absolute inset-x-6 flex flex-col items-center justify-center"
-          style={{
-            top: STATUS_CLEARANCE + EYEBROW_PAD + 8,
-            bottom: "calc(42% + 20px)",
-            opacity: visualOpacity,
-            pointerEvents: settled ? "auto" : "none",
-          }}
-        >
-          {above}
-        </motion.div>
-        <motion.div
-          className="absolute inset-x-6 flex justify-center"
-          style={{ top: ONBOARD_CARD_TOP, x: glassX, opacity: glassOpacity }}
-        >
-          <div
-            className={`${storyGlassClass} flex flex-col justify-center`}
-            style={{ minHeight: ONBOARD_CARD_MIN_H }}
-          >
-            {cardInner}
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
-
   return (
     <div className="relative flex h-full shrink-0 items-center justify-center px-6" style={{ width }}>
       <motion.div
-        style={{ x: glassX, opacity: glassOpacity }}
+        style={{ x: glassX, opacity: glassOpacity, willChange: "transform, opacity" }}
         className="flex w-full max-w-[320px] flex-col items-center"
       >
         {above}
@@ -256,6 +272,8 @@ type PagerOptions = {
   /** Optional: tap on right half while blocked (e.g. O2 look-at-me). */
   onBlockedForwardTap?: (from: number) => void;
   enabled?: boolean;
+  /** Settle spring; defaults to STORY_SPRING (Wrapped). */
+  spring?: typeof STORY_SPRING & { mass?: number };
 };
 
 export function useStoryPager({
@@ -267,6 +285,7 @@ export function useStoryPager({
   canGo,
   onBlockedForwardTap,
   enabled = true,
+  spring = STORY_SPRING,
 }: PagerOptions) {
   const reduce = useReducedMotion();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -285,6 +304,8 @@ export function useStoryPager({
   const animating = useRef(false);
   const indexRef = useRef(index);
   indexRef.current = index;
+  const springRef = useRef(spring);
+  springRef.current = spring;
 
   useLayoutEffect(() => {
     const node = rootRef.current;
@@ -314,7 +335,7 @@ export function useStoryPager({
     animating.current = true;
     setIndex(next);
     animate(trackX, -next * width, {
-      ...STORY_SPRING,
+      ...springRef.current,
       onComplete: () => {
         animating.current = false;
         setSettledIndex(next);

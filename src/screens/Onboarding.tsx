@@ -6,6 +6,7 @@ import { Eyebrow } from "../components/Eyebrow";
 import { OnboardingOrb } from "../components/OnboardingOrb";
 import { PillButton } from "../components/PillButton";
 import {
+  ONBOARD_STORY_SPRING,
   StoryBackgroundLayer,
   StoryMotionDots,
   StorySlide,
@@ -35,7 +36,7 @@ const GRADIENTS = [
   "linear-gradient(135deg, #A385F7, #5A1FC4)", // Meet the orb
   "linear-gradient(135deg, #E7A6D6, #8B2BCB)", // Keep a moment
   "linear-gradient(135deg, #F6C99A, #C0508F)", // Look back
-  "linear-gradient(135deg, #5B4A8C, #241B3D)", // Stone
+  "linear-gradient(135deg, #F06AB4, #8B2BCB)", // Companion Stone (Wrapped card 5 / Restless)
 ] as const;
 
 const EYEBROWS = ["THIS IS YOUR ORB", "TAP THE ORB TO…", "IT ALL ADDS UP", "ONE LAST THING"] as const;
@@ -151,6 +152,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
     index,
     setIndex,
     enabled: phase === "slides" && stonePhase === "idle",
+    spring: ONBOARD_STORY_SPRING,
     canGo: (from, to) => {
       if (from === 3 && to > from) return false; // Companion Stone
       if (from === 0 && to > from && !orbUnlockedRef.current) return false;
@@ -261,33 +263,15 @@ export function Onboarding({ onComplete }: OnboardingProps) {
     const size = ORB_SIZES[i];
     if (size <= 0) return null;
 
-    const orb = (
-      <OnboardingOrb
-        size={size}
-        lookAtMe={i === 0 ? lookAtMe : 0}
-        hintRing={i === 0}
-        onClick={i === 0 ? goNextFromOrb : undefined}
-        ariaLabel="Tap the orb to continue"
-      />
-    );
-
     return (
       <div className="flex flex-col items-center">
-        {i === 0 ? (
-          <motion.div
-            initial={reduceMotion ? false : { opacity: 0, scale: 0.82 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={
-              reduceMotion
-                ? { duration: 0.15 }
-                : { duration: 0.55, ease: [0.22, 1, 0.36, 1] }
-            }
-          >
-            {orb}
-          </motion.div>
-        ) : (
-          orb
-        )}
+        <OnboardingOrb
+          size={size}
+          lookAtMe={i === 0 ? lookAtMe : 0}
+          hintRing={i === 0}
+          onClick={i === 0 ? goNextFromOrb : undefined}
+          ariaLabel="Tap the orb to continue"
+        />
         {i === 1 ? (
           <O3IconRow
             settled={settled}
@@ -306,22 +290,54 @@ export function Onboarding({ onComplete }: OnboardingProps) {
     );
   }
 
-  function renderBody(i: number): ReactNode {
+  function textDelay(settled: boolean, step: number) {
+    if (reduceMotion) return { duration: 0.15, delay: 0 };
+    return {
+      duration: 0.28,
+      delay: settled ? 0.06 + step * 0.04 : 0,
+      ease: "easeOut" as const,
+    };
+  }
+
+  function renderBody(i: number, settled: boolean): ReactNode {
+    const title = (
+      <motion.div
+        initial={false}
+        animate={{ opacity: settled ? 1 : 0, y: settled ? 0 : 8 }}
+        transition={textDelay(settled, 1)}
+        style={{ willChange: "transform, opacity" }}
+      >
+        <FitTitle>{TITLES[i]}</FitTitle>
+      </motion.div>
+    );
+
     switch (i) {
       case 0:
         return (
           <>
-            <FitTitle>{TITLES[0]}</FitTitle>
-            <p className="mx-auto mt-3 max-w-[280px] text-[15px] leading-[1.5] text-white/90">
+            {title}
+            <motion.p
+              initial={false}
+              animate={{ opacity: settled ? 1 : 0, y: settled ? 0 : 8 }}
+              transition={textDelay(settled, 2)}
+              style={{ willChange: "transform, opacity" }}
+              className="mx-auto mt-3 max-w-[280px] text-[15px] leading-[1.5] text-white/90"
+            >
               Whenever something feels worth keeping, a song, a thought, a voice, just tap the orb.
-            </p>
+            </motion.p>
           </>
         );
       case 1:
         return (
           <>
-            <FitTitle>{TITLES[1]}</FitTitle>
-            <ul className="mt-4 space-y-3 text-left">
+            {title}
+            <motion.ul
+              initial={false}
+              animate={{ opacity: settled ? 1 : 0, y: settled ? 0 : 8 }}
+              transition={textDelay(settled, 2)}
+              style={{ willChange: "transform, opacity" }}
+              className="mt-4 space-y-3 text-left"
+            >
               {O3_ACTIONS.map((action) => (
                 <li key={action.id} className="flex items-start gap-3">
                   <span
@@ -339,30 +355,47 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                   </span>
                 </li>
               ))}
-            </ul>
+            </motion.ul>
           </>
         );
       case 2:
         return (
           <>
-            <FitTitle>{TITLES[2]}</FitTitle>
-            <p className="mx-auto mt-3 max-w-[280px] text-[15px] leading-[1.5] text-white/90">
+            {title}
+            <motion.p
+              initial={false}
+              animate={{ opacity: settled ? 1 : 0, y: settled ? 0 : 8 }}
+              transition={textDelay(settled, 2)}
+              style={{ willChange: "transform, opacity" }}
+              className="mx-auto mt-3 max-w-[280px] text-[15px] leading-[1.5] text-white/90"
+            >
               See your weeks fill up, get your trimester wrapped, and breathe along with the glow whenever you need a
               moment.
-            </p>
+            </motion.p>
           </>
         );
       case 3:
       default:
         return (
           <>
-            <FitTitle>{TITLES[3]}</FitTitle>
+            {title}
             {stonePhase === "connected" ? (
-              <p className="mt-4 text-[15px] leading-5 font-medium text-white" aria-live="polite">
+              <motion.p
+                initial={false}
+                animate={{ opacity: settled ? 1 : 0, y: settled ? 0 : 8 }}
+                transition={textDelay(settled, 2)}
+                className="mt-4 text-[15px] leading-5 font-medium text-white"
+                aria-live="polite"
+              >
                 Connected. You're all set.
-              </p>
+              </motion.p>
             ) : (
-              <>
+              <motion.div
+                initial={false}
+                animate={{ opacity: settled ? 1 : 0, y: settled ? 0 : 8 }}
+                transition={textDelay(settled, 2)}
+                style={{ willChange: "transform, opacity" }}
+              >
                 <p className="mx-auto mt-3 max-w-[280px] text-[15px] leading-[1.5] text-white/90">
                   Hold it when you want to breathe or record. It glows along with your orb.
                 </p>
@@ -395,7 +428,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                     </button>
                   ) : null}
                 </div>
-              </>
+              </motion.div>
             )}
           </>
         );
@@ -477,9 +510,21 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       </div>
 
       {phase === "slides" ? (
-        <Eyebrow absolute tone="strong">
-          {EYEBROWS[index]}
-        </Eyebrow>
+        <motion.div
+          key={EYEBROWS[index]}
+          initial={false}
+          animate={{ opacity: 1, y: 0 }}
+          transition={
+            reduceMotion
+              ? { duration: 0.15 }
+              : { duration: 0.28, delay: 0.06, ease: "easeOut" }
+          }
+          style={{ willChange: "transform, opacity" }}
+        >
+          <Eyebrow absolute tone="strong">
+            {EYEBROWS[index]}
+          </Eyebrow>
+        </motion.div>
       ) : null}
 
       {phase === "slides" && index < 3 ? (
@@ -571,12 +616,16 @@ export function Onboarding({ onComplete }: OnboardingProps) {
           <StorySlideStatic
             layout="fixedCard"
             above={renderAbove(index, true)}
-            body={renderBody(index)}
+            body={renderBody(index, true)}
           />
         ) : (
           <motion.div
             className="absolute inset-y-0 left-0 z-[2] flex"
-            style={{ x: pager.trackX, width: Math.max(pager.width, 1) * SLIDE_COUNT }}
+            style={{
+              x: pager.trackX,
+              width: Math.max(pager.width, 1) * SLIDE_COUNT,
+              willChange: "transform",
+            }}
           >
             {slides.map((_, i) => (
               <StorySlide
@@ -587,7 +636,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                 trackX={pager.trackX}
                 settled={pager.settledIndex === i}
                 above={renderAbove(i, pager.settledIndex === i)}
-                body={renderBody(i)}
+                body={renderBody(i, pager.settledIndex === i)}
               />
             ))}
           </motion.div>

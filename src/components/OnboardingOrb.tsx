@@ -1,15 +1,14 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-
-const ORB_SPRING = { type: "spring" as const, damping: 26, stiffness: 220 };
+import { ONBOARD_STORY_SPRING } from "./StoryShell";
 
 type OnboardingOrbProps = {
   size: number;
   onClick?: () => void;
   ariaLabel?: string;
-  /** Brief 1 → 1.06 → 1 nudge when the user taps the wrong place on O2. */
+  /** Brief 1 → 1.06 → 1 nudge when the user taps the wrong place on Meet the orb. */
   lookAtMe?: number;
-  /** Expanding ring that fades every 1.6s (O2 hint). */
+  /** Expanding ring that fades every 1.6s (Meet the orb hint). */
   hintRing?: boolean;
   className?: string;
   style?: CSSProperties;
@@ -42,7 +41,7 @@ export function OnboardingOrb({
 
   const ringMid = size * 0.75;
   const core = size * 0.5;
-  const glow = size * 1.3;
+  const glow = size * 1.25;
 
   function handleClick() {
     if (!onClick) return;
@@ -66,9 +65,10 @@ export function OnboardingOrb({
         height: size,
         scale: reduce ? 1 : squeezed ? 0.94 : nudge,
       }}
-      transition={reduce ? { duration: 0.15 } : ORB_SPRING}
+      transition={reduce ? { duration: 0.15 } : ONBOARD_STORY_SPRING}
+      style={{ willChange: "transform" }}
     >
-      {/* Soft close halo — 40% opacity, blur 24px, ≤1.3× orb */}
+      {/* Soft halo — 30% opacity, blur 30px, ≤1.25× orb */}
       <span
         aria-hidden="true"
         className="pointer-events-none absolute top-1/2 left-1/2 rounded-full"
@@ -77,23 +77,24 @@ export function OnboardingOrb({
           height: glow,
           marginLeft: -glow / 2,
           marginTop: -glow / 2,
-          background: "radial-gradient(circle, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 48%, transparent 72%)",
-          filter: "blur(24px)",
+          background: "radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.08) 45%, transparent 70%)",
+          filter: "blur(30px)",
         }}
       />
 
-      {/* Breathing wrapper — subtle 1 → 1.03 */}
+      {/* Breathing — 1 → 1.025 over 4s */}
       <motion.span
         className="absolute inset-0"
-        animate={reduce ? { scale: 1 } : { scale: [1, 1.03, 1] }}
-        transition={reduce ? { duration: 0 } : { duration: 3, ease: "easeInOut", repeat: Infinity }}
+        animate={reduce ? { scale: 1 } : { scale: [1, 1.025, 1] }}
+        transition={reduce ? { duration: 0 } : { duration: 4, ease: "easeInOut", repeat: Infinity }}
+        style={{ willChange: "transform" }}
       >
         <span
           aria-hidden="true"
           className="absolute inset-0 rounded-full"
           style={{
-            background: "rgba(255,255,255,0.22)",
-            border: "1.5px solid rgba(255,255,255,0.55)",
+            background: "rgba(255,255,255,0.14)",
+            border: "1px solid rgba(255,255,255,0.25)",
           }}
         />
         <span
@@ -102,8 +103,8 @@ export function OnboardingOrb({
           style={{
             width: ringMid,
             height: ringMid,
-            background: "rgba(255,255,255,0.38)",
-            border: "1.5px solid rgba(255,255,255,0.55)",
+            background: "rgba(255,255,255,0.26)",
+            border: "1px solid rgba(255,255,255,0.25)",
           }}
         />
         <span
@@ -112,8 +113,8 @@ export function OnboardingOrb({
           style={{
             width: core,
             height: core,
-            background: "radial-gradient(circle at 40% 35%, #F3EDFF 0%, #D6C6FF 100%)",
-            border: "1.5px solid rgba(255,255,255,0.55)",
+            background: "radial-gradient(circle at 50% 45%, #F6F0FF 0%, #DCCDFF 55%, transparent 100%)",
+            filter: "blur(1px)",
           }}
         />
       </motion.span>
@@ -121,8 +122,8 @@ export function OnboardingOrb({
       {hintRing && !reduce ? (
         <motion.span
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 rounded-full border border-white/50"
-          initial={{ scale: 1, opacity: 0.45 }}
+          className="pointer-events-none absolute inset-0 rounded-full border border-white/25"
+          initial={{ scale: 1, opacity: 0.4 }}
           animate={{ scale: 1.35, opacity: 0 }}
           transition={{ duration: 1.6, ease: "easeOut", repeat: Infinity }}
         />
@@ -133,8 +134,8 @@ export function OnboardingOrb({
           <motion.span
             key={tapRipple}
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 rounded-full border-2 border-white/60"
-            initial={{ scale: 1, opacity: 0.6 }}
+            className="pointer-events-none absolute inset-0 rounded-full border border-white/40"
+            initial={{ scale: 1, opacity: 0.5 }}
             animate={{ scale: 1.55, opacity: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.45, ease: "easeOut" }}

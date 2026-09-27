@@ -47,7 +47,7 @@ App opens
 | O1 Meet the orb | `#A385F7` | `#5A1FC4` |
 | O2 Keep a moment | `#E7A6D6` | `#8B2BCB` |
 | O3 Look back | `#F6C99A` | `#C0508F` |
-| O4 Companion Stone | `#5B4A8C` | `#241B3D` (dusk, so the Stone's glow stands out) |
+| O4 Companion Stone | `#F06AB4` | `#8B2BCB` (Wrapped Restless → Grounding) |
 
 ---
 
@@ -133,7 +133,7 @@ As soon as Home is visible, **the orb glows to invite the first tap**:
 
 ## 7. Motion
 
-- Screen changes use the Wrapped slide and spring (drag follows the finger, rubber-band at the ends, snaps with damping 30, stiffness 280). The gradients cross-fade and the dots animate.
+- Screen changes use a continuous drag-follow track (same as Wrapped): cards and backgrounds move with the finger, then settle with a soft spring (damping 32, stiffness 240, mass 0.9). Gradients cross-fade with drag progress. Neighbour glass cards peek at the sides (orb / icons / Stone never peek). Text fades up 60ms after settle (eyebrow → title → body, 40ms stagger).
 - Text on each screen: title then body, fade when the slide settles.
 - Reduced motion: 150ms fades only, no fan-out, no ripples.
 
