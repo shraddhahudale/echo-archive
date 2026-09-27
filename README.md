@@ -7,6 +7,10 @@
 
 **Live prototype:** [echo-archive-jet.vercel.app](https://echo-archive-jet.vercel.app/)
 
+## Persona
+
+Julie is 22 weeks pregnant, in her second trimester, living in Australia with her Australian husband Jake. She migrated from India and is half Indian (her mum's side) and half Australian (her dad's side), so her family and their voices are spread across two countries. Echo Archive helps her hold onto both: chai recipes from Nani, blessings from Mom, and everyday moments with Jake, kept week by week for her baby.
+
 ---
 
 ## What's in the prototype

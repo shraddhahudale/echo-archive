@@ -1,10 +1,7 @@
 import { create } from "zustand";
 import {
-  ARCHIVE_CURRENT_WEEK,
   enrichTimeline,
-  weekFromDate,
   weekStartDate,
-  type PlaylistId,
 } from "../data/archiveHelpers";
 import { contributors as seedContributors, playbackQueueIds, recentlyPlayedIds, songs as seedSongs, user as seedUser } from "../data/mock";
 import {
@@ -580,30 +577,6 @@ export const useArchiveStore = create<ArchiveState>((set, get) => ({
   closeSheet: () => set({ sheet: null, songDraftId: null, echoLaunch: null }),
 }));
 
-export function selectNowPlaying(state: ArchiveState) {
-  return state.nowPlaying;
-}
-
-export function selectCurrentTrack(state: ArchiveState) {
-  const songId = state.nowPlaying.songId;
-  if (songId) return songById(state.songs, songId) ?? state.songs[0];
-  return songById(state.songs, "let-it-happen") ?? state.songs[0];
-}
-
-export function selectIsPlayingId(
-  state: ArchiveState,
-  target: { id?: string; songId?: string; kind?: NowPlayingItem["kind"] },
-) {
-  return state.playing && isSameNowPlaying(state.nowPlaying, target);
-}
-
-/** Stable song refs only — derive display titles in the component with useMemo. */
-export function selectRecentlyPlayed(state: ArchiveState) {
-  return state.recentlyPlayedIds
-    .map((id) => songById(state.songs, id))
-    .filter((song): song is Song => Boolean(song));
-}
-
 export function entriesByDate(entries: TimelineEntry[], date: string) {
   return entries
     .filter((entry) => entry.date === date)
@@ -672,13 +645,3 @@ const trimesterNames = ["First", "Second", "Third"];
 export function trimesterName(trimester: number) {
   return trimesterNames[trimester - 1] ?? "Second";
 }
-
-export function currentArchiveWeek() {
-  return ARCHIVE_CURRENT_WEEK;
-}
-
-export function playlistIdIsValid(id: string): id is PlaylistId {
-  return id === "second-trimester" || id === "first-trimester" || id === "3am" || id === "bonding";
-}
-
-export { weekFromDate };

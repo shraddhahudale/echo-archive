@@ -5,7 +5,7 @@ import { accentForKind, contributorAvatarLabel, type NowPlayingItem } from "../d
 import { tabBarHeight } from "./TabBar";
 
 /** Outer height of the mini player card (art 44 + vertical padding). */
-export const miniPlayerHeight = 60;
+const miniPlayerHeight = 60;
 
 /** Space above the tab bar where the floating player sits. */
 export const miniPlayerBottomGap = 8;

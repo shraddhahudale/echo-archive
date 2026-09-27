@@ -16,8 +16,6 @@ export const ALL_FEELINGS = [
   "don't know why",
 ] as const;
 
-export type ArchiveFeeling = (typeof ALL_FEELINGS)[number];
-
 export type ArchiveFilter = {
   type: "all" | TimelineEntry["kind"];
   feelings: string[];
@@ -25,7 +23,7 @@ export type ArchiveFilter = {
 
 export type PlaylistId = "second-trimester" | "first-trimester" | "3am" | "bonding";
 
-export type PlaylistDef = {
+type PlaylistDef = {
   id: PlaylistId;
   name: string;
 };
