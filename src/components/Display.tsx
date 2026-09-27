@@ -1,6 +1,7 @@
 import type { ElementType, ReactNode } from "react";
 
 const sizes = {
+  26: "text-[26px]",
   30: "text-[30px]",
   34: "text-[34px]",
   40: "text-[40px]",

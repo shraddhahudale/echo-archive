@@ -1,6 +1,7 @@
 import type { PointerEvent as ReactPointerEvent, ReactNode, RefObject } from "react";
 import { useLayoutEffect, useRef, useState } from "react";
 import { animate, motion, useMotionValue, useReducedMotion, useTransform, type MotionValue } from "framer-motion";
+import { EYEBROW_PAD, STATUS_CLEARANCE } from "./Eyebrow";
 
 export const STORY_SPRING = { type: "spring" as const, damping: 30, stiffness: 280 };
 export const STORY_FLICK = 560;
@@ -8,6 +9,10 @@ export const STORY_FLICK = 560;
 /** Exact glass card chrome used by T2 Wrapped slides. */
 export const storyGlassClass =
   "w-full max-w-[320px] rounded-[24px] border border-white/20 bg-white/15 px-6 py-8 text-center shadow-[0_12px_40px_rgba(0,0,0,0.12)] backdrop-blur-[12px]";
+
+/** Onboarding: shared card top + min-height so every slide's card sits on one line. */
+export const ONBOARD_CARD_TOP = "58%";
+export const ONBOARD_CARD_MIN_H = 280;
 
 export function StoryTopScrim() {
   return (
@@ -32,9 +37,9 @@ export function StoryBackgroundLayer({
 }
 
 /**
- * Wrapped slide cell: full-height column, centred glass with neighbour peek.
- * Optional `above` sits in the same peeking column (orb / stone / previews).
- * `top` mirrors Wrapped's card lead line; `body` fades in when settled.
+ * Story slide cell with neighbour peek.
+ * - `center` (Wrapped): column centred vertically
+ * - `fixedCard` (Onboarding): glass top edge at 58%, shared min-height; visual centred above
  */
 export function StorySlide({
   width,
@@ -44,6 +49,7 @@ export function StorySlide({
   above,
   top,
   body,
+  layout = "center",
 }: {
   width: number;
   trackX: MotionValue<number>;
@@ -52,6 +58,7 @@ export function StorySlide({
   above?: ReactNode;
   top?: ReactNode;
   body: ReactNode;
+  layout?: "center" | "fixedCard";
 }) {
   const glassX = useTransform(trackX, (value) => {
     const local = value + cardIndex * width;
@@ -62,6 +69,54 @@ export function StorySlide({
     const distance = Math.min(1, Math.abs(current - cardIndex));
     return 1 - distance * 0.4;
   });
+  // Card-only neighbour peek: hide orb / icons / Stone whenever this slide isn't current
+  const visualOpacity = useTransform(trackX, (value) => {
+    const current = width > 0 ? -value / width : cardIndex;
+    return Math.abs(current - cardIndex) < 0.04 ? 1 : 0;
+  });
+
+  const cardInner = (
+    <>
+      {top}
+      <motion.div
+        initial={false}
+        animate={{ y: settled ? 0 : 12, opacity: settled ? 1 : 0 }}
+        transition={{ duration: settled ? 0.28 : 0.14, ease: "easeOut" }}
+        className={top ? "mt-5" : undefined}
+      >
+        {body}
+      </motion.div>
+    </>
+  );
+
+  if (layout === "fixedCard") {
+    return (
+      <div className="relative h-full shrink-0 overflow-hidden" style={{ width }}>
+        <motion.div
+          className="absolute inset-x-6 flex flex-col items-center justify-center"
+          style={{
+            top: STATUS_CLEARANCE + EYEBROW_PAD + 8,
+            bottom: "calc(42% + 20px)",
+            opacity: visualOpacity,
+            pointerEvents: settled ? "auto" : "none",
+          }}
+        >
+          {above}
+        </motion.div>
+        <motion.div
+          className="absolute inset-x-6 flex justify-center"
+          style={{ top: ONBOARD_CARD_TOP, x: glassX, opacity: glassOpacity }}
+        >
+          <div
+            className={`${storyGlassClass} flex flex-col justify-center`}
+            style={{ minHeight: ONBOARD_CARD_MIN_H }}
+          >
+            {cardInner}
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative flex h-full shrink-0 items-center justify-center px-6" style={{ width }}>
@@ -70,17 +125,7 @@ export function StorySlide({
         className="flex w-full max-w-[320px] flex-col items-center"
       >
         {above}
-        <div className={storyGlassClass}>
-          {top}
-          <motion.div
-            initial={false}
-            animate={{ y: settled ? 0 : 12, opacity: settled ? 1 : 0 }}
-            transition={{ duration: settled ? 0.28 : 0.14, ease: "easeOut" }}
-            className={top ? "mt-5" : undefined}
-          >
-            {body}
-          </motion.div>
-        </div>
+        <div className={storyGlassClass}>{cardInner}</div>
       </motion.div>
     </div>
   );
@@ -91,11 +136,47 @@ export function StorySlideStatic({
   above,
   top,
   body,
+  layout = "center",
 }: {
   above?: ReactNode;
   top?: ReactNode;
   body: ReactNode;
+  layout?: "center" | "fixedCard";
 }) {
+  const cardInner = (
+    <>
+      {top}
+      <div className={top ? "mt-5" : undefined}>{body}</div>
+    </>
+  );
+
+  if (layout === "fixedCard") {
+    return (
+      <div className="pointer-events-none absolute inset-0 z-10">
+        <div
+          className="absolute inset-x-6 flex flex-col items-center justify-center"
+          style={{
+            top: STATUS_CLEARANCE + EYEBROW_PAD + 8,
+            bottom: "calc(42% + 20px)",
+          }}
+        >
+          {above}
+        </div>
+        <div className="pointer-events-auto absolute inset-x-6 flex justify-center" style={{ top: ONBOARD_CARD_TOP }}>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.15 }}
+            className={`${storyGlassClass} flex flex-col justify-center`}
+            style={{ minHeight: ONBOARD_CARD_MIN_H }}
+          >
+            {cardInner}
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center px-6">
       <motion.div
@@ -105,10 +186,7 @@ export function StorySlideStatic({
         className="pointer-events-auto flex w-full max-w-[320px] flex-col items-center"
       >
         {above}
-        <div className={storyGlassClass}>
-          {top}
-          <div className={top ? "mt-5" : undefined}>{body}</div>
-        </div>
+        <div className={storyGlassClass}>{cardInner}</div>
       </motion.div>
     </div>
   );

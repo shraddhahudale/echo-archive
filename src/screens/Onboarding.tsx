@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Check, Hand, Loader2, Mic, Music, Users } from "lucide-react";
 import { Display } from "../components/Display";
@@ -18,42 +18,34 @@ import {
 export type OnboardingResult = { stoneConnected: boolean };
 type StonePhase = "idle" | "connecting" | "connected";
 
-const SLIDE_COUNT = 6;
-const SPLASH_MS = 2400;
+/** Story slides only (splash is separate). Meet the orb → … → Stone. */
+const SLIDE_COUNT = 4;
 const O2_FALLBACK_MS = 4000;
+const SPLASH_LIFT_MS = 1200;
+const SPLASH_CTA_AFTER_NOTE_MS = 1000;
 const SPLASH_GRADIENT = "linear-gradient(135deg, #A385F7, #6D2BDB)";
 
-/** Sized to fit 390×844 between eyebrow and dots with ≥24px clearance. */
-const ORB_SIZES = [132, 148, 112, 96, 0, 0] as const;
+const CONCEPT_NOTE =
+  "Pregnancy is a time in between. Echo Archive is a sound diary for those weeks: the songs you play, the thoughts you say out loud, and the voices of the people who love you. Kept week by week, so you can listen back to how you became a mother.";
+
+/** Meet the orb → Keep a moment → Look back → Stone. */
+const ORB_SIZES = [148, 112, 110, 0] as const;
 
 const GRADIENTS = [
-  "linear-gradient(135deg, #B79BFA, #6D2BDB)",
-  "linear-gradient(135deg, #A385F7, #5A1FC4)",
-  "linear-gradient(135deg, #E7A6D6, #8B2BCB)",
-  "linear-gradient(135deg, #9FB8F7, #6D2BDB)",
-  "linear-gradient(135deg, #F6C99A, #C0508F)",
-  "linear-gradient(135deg, #5B4A8C, #241B3D)",
+  "linear-gradient(135deg, #A385F7, #5A1FC4)", // Meet the orb
+  "linear-gradient(135deg, #E7A6D6, #8B2BCB)", // Keep a moment
+  "linear-gradient(135deg, #F6C99A, #C0508F)", // Look back
+  "linear-gradient(135deg, #5B4A8C, #241B3D)", // Stone
 ] as const;
 
-const EYEBROWS = [
-  "WELCOME",
-  "THIS IS YOUR ORB",
-  "TAP THE ORB TO…",
-  "EVERY MOMENT HAS A FEELING",
-  "IT ALL ADDS UP",
-  "ONE LAST THING",
-] as const;
+const EYEBROWS = ["THIS IS YOUR ORB", "TAP THE ORB TO…", "IT ALL ADDS UP", "ONE LAST THING"] as const;
 
 const TITLES = [
-  "Hi, Sarah",
   "It breathes with you",
   "Keep a moment",
-  "How are you feeling?",
   "Look back, week by week",
-  "Meet your Companion Stone",
+  "Your Companion Stone",
 ] as const;
-
-const O4_CHIPS = ["calm", "hopeful", "anxious", "connected", "tearful", "don't know why"] as const;
 
 const O3_ACTIONS = [
   {
@@ -83,22 +75,76 @@ type OnboardingProps = {
   onComplete: (result: OnboardingResult) => void;
 };
 
+function FitTitle({ children }: { children: string }) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  const [fontSize, setFontSize] = useState(26);
+  const [allowWrap, setAllowWrap] = useState(false);
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const fit = () => {
+      const parent = el.parentElement;
+      if (!parent) return;
+      const maxWidth = parent.clientWidth;
+      if (maxWidth <= 0) return;
+
+      setAllowWrap(false);
+      let size = 26;
+      el.style.whiteSpace = "nowrap";
+      el.style.fontSize = `${size}px`;
+
+      while (size > 22 && el.scrollWidth > maxWidth) {
+        size -= 1;
+        el.style.fontSize = `${size}px`;
+      }
+
+      if (el.scrollWidth > maxWidth) {
+        setAllowWrap(true);
+        el.style.whiteSpace = "normal";
+      }
+      setFontSize(size);
+    };
+
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(el.parentElement ?? el);
+    return () => ro.disconnect();
+  }, [children]);
+
+  return (
+    <p
+      ref={ref}
+      className={`w-full max-w-full text-center font-[family-name:var(--font-serif)] leading-[1.1] font-bold italic text-white ${
+        allowWrap ? "" : "whitespace-nowrap"
+      }`}
+      style={{ fontSize, letterSpacing: "-0.01em" }}
+    >
+      {children}
+    </p>
+  );
+}
+
 export function Onboarding({ onComplete }: OnboardingProps) {
   const reduceMotion = useReducedMotion();
   const [phase, setPhase] = useState<"splash" | "slides">("splash");
   const [index, setIndex] = useState(0);
   const [taglineReady, setTaglineReady] = useState(false);
+  const [splashLifted, setSplashLifted] = useState(false);
+  const [showConceptNote, setShowConceptNote] = useState(false);
+  const [showTapHint, setShowTapHint] = useState(false);
   const [lookAtMe, setLookAtMe] = useState(0);
-  const [o2Unlocked, setO2Unlocked] = useState(false);
+  const [orbUnlocked, setOrbUnlocked] = useState(false);
   const [o3Highlight, setO3Highlight] = useState<string | null>(null);
-  const [o4Feeling, setO4Feeling] = useState<string | null>(null);
   const [stonePhase, setStonePhase] = useState<StonePhase>("idle");
   const [exiting, setExiting] = useState(false);
   const finishing = useRef(false);
-  const o2UnlockedRef = useRef(false);
-  o2UnlockedRef.current = o2Unlocked;
+  const orbUnlockedRef = useRef(false);
+  orbUnlockedRef.current = orbUnlocked;
   const phaseRef = useRef(phase);
   phaseRef.current = phase;
+  const splashPointer = useRef<{ x: number; y: number } | null>(null);
 
   const pager = useStoryPager({
     count: SLIDE_COUNT,
@@ -106,13 +152,12 @@ export function Onboarding({ onComplete }: OnboardingProps) {
     setIndex,
     enabled: phase === "slides" && stonePhase === "idle",
     canGo: (from, to) => {
-      if (from === 5 && to > from) return false;
-      // O2: forward locked until 4s unlock (orb tap still advances via settleTo)
-      if (from === 1 && to > from && !o2UnlockedRef.current) return false;
+      if (from === 3 && to > from) return false; // Companion Stone
+      if (from === 0 && to > from && !orbUnlockedRef.current) return false;
       return true;
     },
     onBlockedForwardTap: (from) => {
-      if (from === 1 && !o2UnlockedRef.current) setLookAtMe((n) => n + 1);
+      if (from === 0 && !orbUnlockedRef.current) setLookAtMe((n) => n + 1);
     },
   });
 
@@ -142,46 +187,60 @@ export function Onboarding({ onComplete }: OnboardingProps) {
     if (pager.width > 0) pager.trackX.set(0);
   }
 
-  function goNextFromO2() {
-    pager.settleTo(2);
+  function goNextFromOrb() {
+    pager.settleTo(1);
   }
 
   useEffect(() => {
     if (phase !== "splash") return;
-    const taglineId = window.setTimeout(() => setTaglineReady(true), reduceMotion ? 0 : 200);
-    const advanceId = window.setTimeout(enterSlides, reduceMotion ? 150 : SPLASH_MS);
+
+    if (reduceMotion) {
+      setTaglineReady(true);
+      setSplashLifted(true);
+      setShowConceptNote(true);
+      setShowTapHint(true);
+      return;
+    }
+
+    const taglineId = window.setTimeout(() => setTaglineReady(true), 200);
+    const liftId = window.setTimeout(() => {
+      setSplashLifted(true);
+      setShowConceptNote(true);
+    }, SPLASH_LIFT_MS);
+    const ctaId = window.setTimeout(
+      () => setShowTapHint(true),
+      SPLASH_LIFT_MS + SPLASH_CTA_AFTER_NOTE_MS,
+    );
+
     return () => {
       window.clearTimeout(taglineId);
-      window.clearTimeout(advanceId);
+      window.clearTimeout(liftId);
+      window.clearTimeout(ctaId);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, reduceMotion]);
 
   useEffect(() => {
-    if (phase !== "slides" || index !== 1) {
-      setO2Unlocked(false);
+    if (phase !== "slides" || index !== 0) {
+      setOrbUnlocked(false);
       return;
     }
-    setO2Unlocked(false);
-    const id = window.setTimeout(() => setO2Unlocked(true), O2_FALLBACK_MS);
+    setOrbUnlocked(false);
+    const id = window.setTimeout(() => setOrbUnlocked(true), O2_FALLBACK_MS);
     return () => window.clearTimeout(id);
   }, [phase, index]);
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
       if (phaseRef.current === "splash") {
-        if (event.key === "Enter" || event.key === " ") {
+        if (event.key === "Enter" || event.key === " " || event.key === "ArrowRight") {
           event.preventDefault();
           enterSlides();
         }
         return;
       }
       if (event.key === "ArrowRight") {
-        event.preventDefault();
         pager.tryGo(1, "key");
-      }
-      if (event.key === "ArrowLeft") {
-        event.preventDefault();
+      } else if (event.key === "ArrowLeft") {
         pager.tryGo(-1, "key");
       }
     }
@@ -190,60 +249,57 @@ export function Onboarding({ onComplete }: OnboardingProps) {
   });
 
   const slides = useMemo(
-    () =>
-      TITLES.map((title, i) => ({
-        gradient: GRADIENTS[i],
-        eyebrow: EYEBROWS[i],
-        title,
-      })),
+    () => TITLES.map((_, i) => ({ gradient: GRADIENTS[i], eyebrow: EYEBROWS[i] })),
     [],
   );
 
-  /**
-   * Column above the glass card:
-   * visual → (O2 only: 20px + hint) → 24px → card
-   */
   function renderAbove(i: number, settled: boolean): ReactNode {
-    let visual: ReactNode = null;
-
-    if (i === 5) {
-      visual = <CompanionStone phase={stonePhase} reduce={!!reduceMotion} />;
-    } else if (i === 4) {
-      visual = <O5Previews settled={settled} />;
-    } else {
-      const size = ORB_SIZES[i];
-      if (size > 0) {
-        visual = (
-          <div className="relative flex flex-col items-center">
-            <OnboardingOrb
-              size={size}
-              lookAtMe={i === 1 || i === 3 ? lookAtMe : 0}
-              hintRing={i === 1}
-              onClick={i === 1 ? goNextFromO2 : undefined}
-              ariaLabel="Tap the orb to continue"
-            />
-            {i === 2 ? (
-              <O3IconRow
-                settled={settled}
-                reduce={!!reduceMotion}
-                highlight={o3Highlight}
-                onHighlight={setO3Highlight}
-              />
-            ) : null}
-          </div>
-        );
-      }
+    if (i === 3) {
+      return <CompanionStone phase={stonePhase} reduce={!!reduceMotion} />;
     }
 
-    if (!visual && i !== 1) return null;
+    const size = ORB_SIZES[i];
+    if (size <= 0) return null;
+
+    const orb = (
+      <OnboardingOrb
+        size={size}
+        lookAtMe={i === 0 ? lookAtMe : 0}
+        hintRing={i === 0}
+        onClick={i === 0 ? goNextFromOrb : undefined}
+        ariaLabel="Tap the orb to continue"
+      />
+    );
 
     return (
-      <div className="flex w-full flex-col items-center pb-6">
-        {visual}
+      <div className="flex flex-col items-center">
+        {i === 0 ? (
+          <motion.div
+            initial={reduceMotion ? false : { opacity: 0, scale: 0.82 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={
+              reduceMotion
+                ? { duration: 0.15 }
+                : { duration: 0.55, ease: [0.22, 1, 0.36, 1] }
+            }
+          >
+            {orb}
+          </motion.div>
+        ) : (
+          orb
+        )}
         {i === 1 ? (
+          <O3IconRow
+            settled={settled}
+            reduce={!!reduceMotion}
+            highlight={o3Highlight}
+            onHighlight={setO3Highlight}
+          />
+        ) : null}
+        {i === 0 ? (
           <p className="mt-5 flex items-center justify-center gap-1.5 text-center text-[13px] text-white">
             <Hand size={14} strokeWidth={2} aria-hidden="true" className="shrink-0" />
-            <span>{o2Unlocked ? "Tap the orb, or swipe to continue" : "Tap the orb"}</span>
+            <span>{orbUnlocked ? "Tap the orb, or swipe to continue" : "Tap the orb"}</span>
           </p>
         ) : null}
       </div>
@@ -255,32 +311,16 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       case 0:
         return (
           <>
-            <Display size={30} tone="light">
-              {TITLES[0]}
-            </Display>
+            <FitTitle>{TITLES[0]}</FitTitle>
             <p className="mx-auto mt-3 max-w-[280px] text-[15px] leading-[1.5] text-white/90">
-              A sound diary for the weeks in between. The songs, voices and feelings that carry you to meeting your
-              baby.
+              Whenever something feels worth keeping, a song, a thought, a voice, just tap the orb.
             </p>
           </>
         );
       case 1:
         return (
           <>
-            <Display size={30} tone="light">
-              {TITLES[1]}
-            </Display>
-            <p className="mx-auto mt-3 max-w-[280px] text-[15px] leading-[1.5] text-white/90">
-              Whenever something feels worth keeping, a song, a thought, a voice, just tap the orb.
-            </p>
-          </>
-        );
-      case 2:
-        return (
-          <>
-            <Display size={30} tone="light">
-              {TITLES[2]}
-            </Display>
+            <FitTitle>{TITLES[1]}</FitTitle>
             <ul className="mt-4 space-y-3 text-left">
               {O3_ACTIONS.map((action) => (
                 <li key={action.id} className="flex items-start gap-3">
@@ -302,57 +342,21 @@ export function Onboarding({ onComplete }: OnboardingProps) {
             </ul>
           </>
         );
-      case 3:
+      case 2:
         return (
           <>
-            <Display size={30} tone="light">
-              {TITLES[3]}
-            </Display>
+            <FitTitle>{TITLES[2]}</FitTitle>
             <p className="mx-auto mt-3 max-w-[280px] text-[15px] leading-[1.5] text-white/90">
-              Add a feeling when you save something. Over the weeks, Echo gently notices the patterns.
+              See your weeks fill up, get your trimester wrapped, and breathe along with the glow whenever you need a
+              moment.
             </p>
-            <div className="mt-4 flex flex-wrap justify-center gap-2">
-              {O4_CHIPS.map((label) => {
-                const selected = o4Feeling === label;
-                return (
-                  <button
-                    key={label}
-                    type="button"
-                    aria-pressed={selected}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      setO4Feeling(label);
-                      setLookAtMe((n) => n + 1);
-                    }}
-                    onPointerDown={(event) => event.stopPropagation()}
-                    onPointerUp={(event) => event.stopPropagation()}
-                    className="min-h-11 rounded-full border border-white/30 px-3.5 py-1.5 text-[12px] leading-4"
-                    style={
-                      selected
-                        ? { background: "#FFFFFF", color: "var(--purple-500)", borderColor: "#FFFFFF" }
-                        : { background: "rgba(255,255,255,0.18)", color: "#FFFFFF" }
-                    }
-                  >
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
           </>
         );
-      case 4:
-        return (
-          <Display size={30} tone="light">
-            {TITLES[4]}
-          </Display>
-        );
-      case 5:
+      case 3:
       default:
         return (
           <>
-            <Display size={30} tone="light">
-              {TITLES[5]}
-            </Display>
+            <FitTitle>{TITLES[3]}</FitTitle>
             {stonePhase === "connected" ? (
               <p className="mt-4 text-[15px] leading-5 font-medium text-white" aria-live="polite">
                 Connected. You're all set.
@@ -408,17 +412,37 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       initial={false}
       animate={{ opacity: exiting ? 0 : 1 }}
       transition={{ duration: reduceMotion ? 0.15 : 0.4, ease: "easeOut" }}
-      onPointerDown={phase === "slides" ? pager.onPointerDown : undefined}
-      onPointerMove={phase === "slides" ? pager.onPointerMove : undefined}
-      onPointerUp={phase === "slides" ? pager.onPointerUp : undefined}
-      onPointerCancel={phase === "slides" ? pager.onPointerCancel : undefined}
-      onClick={
+      onPointerDown={
         phase === "splash"
           ? (event) => {
-              event.preventDefault();
-              enterSlides();
+              splashPointer.current = { x: event.clientX, y: event.clientY };
             }
-          : undefined
+          : pager.onPointerDown
+      }
+      onPointerMove={phase === "slides" ? pager.onPointerMove : undefined}
+      onPointerUp={
+        phase === "splash"
+          ? (event) => {
+              const start = splashPointer.current;
+              splashPointer.current = null;
+              if (!start) {
+                enterSlides();
+                return;
+              }
+              const dx = event.clientX - start.x;
+              const dy = event.clientY - start.y;
+              const dist = Math.hypot(dx, dy);
+              // Tap or intentional swipe
+              if (dist < 12 || dist >= 40) enterSlides();
+            }
+          : pager.onPointerUp
+      }
+      onPointerCancel={
+        phase === "splash"
+          ? () => {
+              splashPointer.current = null;
+            }
+          : pager.onPointerCancel
       }
     >
       <AnimatePresence>
@@ -458,12 +482,12 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         </Eyebrow>
       ) : null}
 
-      {phase === "slides" && index < 5 ? (
+      {phase === "slides" && index < 3 ? (
         <button
           type="button"
           onClick={(event) => {
             event.stopPropagation();
-            pager.settleTo(5);
+            pager.settleTo(3);
           }}
           onPointerDown={(event) => event.stopPropagation()}
           onPointerUp={(event) => event.stopPropagation()}
@@ -477,35 +501,78 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         {phase === "splash" ? (
           <motion.div
             key="splash-copy"
-            className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center px-5 text-center"
+            className="pointer-events-none absolute inset-0 z-10"
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: reduceMotion ? 0.15 : 0.4 }}
           >
             <motion.div
-              initial={reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
+              className="absolute inset-x-0 flex flex-col items-center px-5 text-center"
+              initial={false}
+              animate={
+                splashLifted
+                  ? { top: "30%", y: 0, x: 0 }
+                  : { top: "50%", y: "-50%", x: 0 }
+              }
               transition={{ duration: reduceMotion ? 0.15 : 0.5, ease: "easeOut" }}
             >
-              <Display size={40} tone="light">
-                Echo Archive
-              </Display>
+              <motion.div
+                initial={reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: reduceMotion ? 0.15 : 0.5, ease: "easeOut" }}
+              >
+                <Display size={40} tone="light">
+                  Echo Archive
+                </Display>
+              </motion.div>
+              <motion.p
+                initial={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
+                animate={{ opacity: taglineReady || reduceMotion ? 1 : 0 }}
+                transition={{ duration: reduceMotion ? 0.15 : 0.4, ease: "easeOut" }}
+                className="mt-2 text-[14px] leading-5 text-white/80"
+              >
+                a sound diary for pregnancy
+              </motion.p>
             </motion.div>
-            <motion.p
-              initial={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
-              animate={{ opacity: taglineReady || reduceMotion ? 1 : 0 }}
-              transition={{ duration: reduceMotion ? 0.15 : 0.4, ease: "easeOut" }}
-              className="mt-2 text-[14px] leading-5 text-white/80"
-            >
-              a sound diary for pregnancy
-            </motion.p>
+
+            <AnimatePresence>
+              {showConceptNote ? (
+                <motion.p
+                  key="concept-note"
+                  initial={reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: reduceMotion ? 0.15 : 0.6, ease: "easeOut" }}
+                  className="absolute top-[42%] left-1/2 w-full max-w-[300px] -translate-x-1/2 px-5 text-center text-[16px] leading-[1.6] text-white/90"
+                >
+                  {CONCEPT_NOTE}
+                </motion.p>
+              ) : null}
+            </AnimatePresence>
+
+            <AnimatePresence>
+              {showTapHint ? (
+                <motion.p
+                  key="tap-hint"
+                  initial={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: reduceMotion ? 0.15 : 0.4, ease: "easeOut" }}
+                  className="absolute bottom-10 left-0 right-0 text-center text-[12px] text-white/70"
+                >
+                  Tap to begin
+                </motion.p>
+              ) : null}
+            </AnimatePresence>
           </motion.div>
         ) : null}
       </AnimatePresence>
 
       {phase === "slides" ? (
         reduceMotion || pager.reduce ? (
-          <StorySlideStatic above={renderAbove(index, true)} body={renderBody(index)} />
+          <StorySlideStatic
+            layout="fixedCard"
+            above={renderAbove(index, true)}
+            body={renderBody(index)}
+          />
         ) : (
           <motion.div
             className="absolute inset-y-0 left-0 z-[2] flex"
@@ -514,6 +581,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
             {slides.map((_, i) => (
               <StorySlide
                 key={EYEBROWS[i]}
+                layout="fixedCard"
                 cardIndex={i}
                 width={pager.width || 390}
                 trackX={pager.trackX}
@@ -588,76 +656,6 @@ function O3IconRow({
         );
       })}
     </div>
-  );
-}
-
-function O5Previews({ settled }: { settled: boolean }) {
-  const reduce = useReducedMotion();
-  const rows = [
-    {
-      key: "weeks",
-      content: (
-        <>
-          <span className="flex gap-1" aria-hidden="true">
-            {["#F472B6", "#8F59E2", "#F2A541", "#F472B6", "#8F59E2", "#F2A541", "#8F59E2"].map((c, i) => (
-              <span key={i} className="size-1.5 rounded-full" style={{ background: c }} />
-            ))}
-          </span>
-          <span className="text-[13px] leading-4 text-white/90">See your weeks fill up with moments.</span>
-        </>
-      ),
-    },
-    {
-      key: "wrapped",
-      content: (
-        <>
-          <span
-            className="rounded-full px-2 py-0.5 text-[11px] font-medium italic text-white"
-            style={{ background: "linear-gradient(135deg, #A385F7, #6D2BDB)" }}
-          >
-            Anxious → Hopeful
-          </span>
-          <span className="text-[13px] leading-4 text-white/90">Get your trimester, wrapped.</span>
-        </>
-      ),
-    },
-    {
-      key: "breathe",
-      content: (
-        <>
-          <span className="relative flex size-6 items-center justify-center rounded-full bg-[#1A1A1A]">
-            <span
-              className="size-3 rounded-full"
-              style={{
-                background: "radial-gradient(circle, #B28DEC 0%, #7B579D 100%)",
-                boxShadow: "0 0 8px rgba(178,141,236,0.8)",
-              }}
-            />
-          </span>
-          <span className="text-[13px] leading-4 text-white/90">Need a moment? Breathe along with the glow.</span>
-        </>
-      ),
-    },
-  ];
-
-  return (
-    <ul className="w-full space-y-2.5 text-left">
-      {rows.map((row, i) => (
-        <motion.li
-          key={row.key}
-          initial={reduce ? false : { opacity: 0, y: 6 }}
-          animate={settled ? { opacity: 1, y: 0 } : { opacity: 0.85, y: 0 }}
-          transition={
-            reduce
-              ? { duration: 0.15 }
-              : { duration: 0.3, ease: "easeOut", delay: settled ? 0.12 + i * 0.12 : 0 }
-          }
-          className="flex items-center gap-3 rounded-[14px] border border-white/20 bg-white/15 px-3 py-2.5 backdrop-blur-[8px]"
-        >
-          {row.content}
-        </motion.li>
-      ))}
-    </ul>
   );
 }
 

@@ -2,7 +2,7 @@
 
 A short first-time walkthrough before Home, **styled like T2 Wrapped**: full-screen gradient story cards, glass card for the words, dots at the bottom, tap or swipe to move on. It explains the app through **the orb**: what it is, that you tap it, and the three ways to keep a moment. It ends by connecting the Companion Stone, then Home opens with **the orb glowing to guide the first tap**.
 
-- Tokens and components: `design.md`. Reuse the **Wrapped shell** (gradient background, glass card, eyebrow, dots, swipe), the **Orb**, Display type, PillButton, chips and the purple / pink / amber colour logic.
+- Tokens and components: `design.md`. Reuse the **Wrapped shell** / shared StoryShell (gradient background, glass card, eyebrow, dots, swipe), the **Orb**, Display type, PillButton, chips and the purple / pink / amber colour logic.
 - Don't change Home, Timeline, Archive, Breath or Wrapped, except the hooks in section 6.
 - If this file and `design.md` conflict, this file wins for Phase 5.
 
@@ -11,15 +11,13 @@ A short first-time walkthrough before Home, **styled like T2 Wrapped**: full-scr
 ## 1. Flow
 
 ```
-App opens (first time)
-└── O0 Splash: "Echo Archive" (auto-advances after 2.4s, or tap)
-    └── O1 Welcome
-        └── O2 Meet the orb        (tap the orb to continue)
-            └── O3 Keep a moment
-                └── O4 How are you feeling?
-                    └── O5 Look back, week by week
-                        └── O6 Meet your Companion Stone
-                            └── Home: the orb glows and pulses + "Tap the orb to keep your first moment"
+App opens
+└── O0 Splash: "Echo Archive" + concept note (tap / swipe to begin; no auto-advance)
+    └── O1 Meet the orb        (tap the orb to continue; orb fades + scales in)
+        └── O2 Keep a moment
+            └── O3 Look back, week by week
+                └── O4 Your Companion Stone
+                    └── Home: the orb glows and pulses + "Tap the orb to keep your first moment"
 ```
 
 ---
@@ -28,121 +26,91 @@ App opens (first time)
 
 - **Full screen** over the phone frame. The tab bar and mini player are hidden.
 - **Gradient background per screen** (135deg), cross-fading between screens like Wrapped.
-- **Eyebrow** at the top of the screen (same position / style as Wrapped's "ECHO T2 INSIGHTS"): WELCOME, THIS IS YOUR ORB, etc. — not inside the glass card.
-- **Glass card** centred like Wrapped (max-width 320px, `px-6 py-8`, 24px radius, white 15% + blur, neighbour peek while swiping). Title + body only inside the card.
-- **Slide column** (centred, no overlaps): visual (orb / O3 icons / O5 previews / O6 Stone) → 20px → O2 hint (O2 only) → 24px → glass card. Orb sizes shrink to fit 390×844 between the eyebrow and dots with ≥24px clearance.
-- **Dots at the bottom only** (no footer text, no circular next button, same as Wrapped): 6 dots, centred, 32px from the bottom (`bottom-8`); the active dot is a 20px white pill, the others 5px white 50%. The active dot slides smoothly.
-- **Navigation, same as Wrapped** (shared StoryShell pager): tap the right half = next, left half = back, swipe left / right with the same spring (damping 30, stiffness 280), arrow keys. There is **no** chevron / circular next control.
-  - Exception: on **O2** advance by **tapping the orb**. Right-half tap / swipe forward are locked for the first 4s (right-half nudges the orb). After 4s the hint becomes **Tap the orb, or swipe to continue** and half-tap / swipe unlock.
-  - Exception: on **O6** half-taps don't navigate; use **Connect** / **I'll do this later** (swipe right still goes back).
-- **Top right:** **Skip** in the same spot as Wrapped's ✕ (white 85%, 13px, 12px padding) on O1 to O5. It jumps to O6. There's no ✕ close.
-- The same subtle top contrast gradient as Wrapped (rgba(0,0,0,0.10) fading out by 40%, no hard edge).
+- **Eyebrow** at the top of the screen (same position / style as Wrapped's "ECHO T2 INSIGHTS"): THIS IS YOUR ORB, etc. — not inside the glass card.
+- **Glass cards on one line:** every slide's glass card has its **top edge at 58%** of the screen height, the same width (`max-w-[320px]`, `px-6` / 24px padding, `py-8`, 24px radius, white 15% + blur), and the same **min-height** (~280px). Content inside is vertically centred.
+- **Neighbour peek (same as Wrapped):** while swiping, only the **glass card edges** peek. Orb / icons / Stone stay clipped to the active slide and do not appear in the side peek.
+- **Visual zone** between the eyebrow and the card (centred, ≥20px above the card): orb (O1–O3), O2 icons, O4 Stone, plus the O1 hint when on O1.
+- **Titles:** fit-to-width — start at Display **26px**, step down to a minimum of **22px** to stay on one line inside the card; if still too long, allow a clean centred 2-line wrap. Never clip or overflow the card. **Body** Inter 15px, white 90%, centred.
+- **Dots at the bottom only** (no footer text, no circular next button): **4 dots** (O1–O4), centred, 32px from the bottom (`bottom-8`); the active dot is a 20px white pill, the others 5px white 50%. Splash is not counted.
+- **Navigation, same as Wrapped** (shared StoryShell pager): tap right half = next, left half = back, swipe, arrow keys. No chevron / circular next.
+  - Exception: on **O1** advance by tapping the orb. Right-half / swipe forward locked for 4s (nudge on right-half). After 4s hint becomes **Tap the orb, or swipe to continue** and unlocks.
+  - Exception: on **O4** half-taps don't navigate; use **Connect** / **I'll do this later** (swipe right still goes back).
+- **Top right:** **Skip** where Wrapped's ✕ sits (white 85%, 13px, 12px padding) on O1–O3. Jumps to O4. No ✕ close.
+- The same subtle top contrast gradient as Wrapped.
+- **Status bar:** empty safe-area spacer only (no time / signal / wifi / battery), same as the rest of the app.
 
 ### Gradients
 
 | Screen | From | To |
 |---|---|---|
-| O0 Splash | `#3B2470` | `#1E1238` |
-| O1 Welcome | `#B79BFA` | `#6D2BDB` |
-| O2 Meet the orb | `#A385F7` | `#5A1FC4` |
-| O3 Keep a moment | `#E7A6D6` | `#8B2BCB` |
-| O4 How are you feeling? | `#9FB8F7` | `#6D2BDB` |
-| O5 Look back | `#F6C99A` | `#C0508F` |
-| O6 Companion Stone | `#5B4A8C` | `#241B3D` (dusk, so the Stone's glow stands out) |
+| O0 Splash | `#A385F7` | `#6D2BDB` |
+| O1 Meet the orb | `#A385F7` | `#5A1FC4` |
+| O2 Keep a moment | `#E7A6D6` | `#8B2BCB` |
+| O3 Look back | `#F6C99A` | `#C0508F` |
+| O4 Companion Stone | `#5B4A8C` | `#241B3D` (dusk, so the Stone's glow stands out) |
 
 ---
 
 ## 3. The orb is the thread
 
-- **One orb stays on screen through O1 to O5.** It moves and resizes between screens (Framer Motion `layoutId="orb"`) instead of cutting.
-- On the gradients it uses a **light variant**: rings in white at 35% and 55%, a core of `#FFFFFF` → `#E9DDFF`, 2px white borders, and a soft white glow behind it. That way it reads clearly on purple.
-- It keeps its breathing pulse (3s cycle) on every screen.
-- It sits in the **upper half**, above the glass card.
+- Light-variant orb on O1–O3 (breathing, soft lilac core). O4 uses the Stone.
+- Orb sizes (fit between eyebrow and fixed card):
 
-| Screen | Orb size |
+| Screen | Orb / visual |
 |---|---|
-| O0 | 96px, centred above the name |
-| O1 | 180px |
-| O2 | 220px |
-| O3 | 140px, with 3 icons around it |
-| O4 | 110px |
-| O5 | 80px |
-| O6 | fades out; the Stone takes its place |
+| O0 | none (name + concept note) |
+| O1 | 148px (fades + scales in from splash) |
+| O2 | 112px + icon row |
+| O3 | 110px |
+| O4 | Companion Stone (~100px) |
 
 ---
 
 ## 4. Screens and copy
 
-### O0 Splash (app name)
-- A purple gradient screen (135deg, `#A385F7` → `#6D2BDB`) with **no** orb, glass card, dots, or Skip. It's just the name.
-- Vertically centred: ***Echo Archive*** (Display, serif italic bold, 40px, solid white).
-- 8px under the name: **a sound diary for pregnancy** (Inter 14px, white 80%).
-- Animation: the name fades up (y 12 → 0, 500ms), then the tagline 200ms later.
-- After 2.4s (or on tap anywhere), the splash cross-fades to O1. The shared light-variant orb appears for the first time on O1 (fade + scale 0.9 → 1); it is not on the splash.
-- The splash shows every time onboarding runs. It isn't counted in the dots.
-- Reduced motion: name and tagline appear with a simple fade, then it fades to O1.
+### O0 Splash (app name + concept note)
+- Purple gradient (135deg, `#A385F7` → `#6D2BDB`); no orb, glass, dots, or Skip.
+- Initially centred: ***Echo Archive*** (Display bold italic, 40px, solid white).
+- 8px under: **a sound diary for pregnancy** (Inter 14px, white 80%).
+- Name fades up (y 12 → 0, 500ms), tagline 200ms later.
+- After **1.2s**: name + tagline ease up to about **30%** of the screen height (500ms). A **concept note** slides up from the bottom (y 40 → 0, fade in, 600ms), centred, max-width 300px, Inter 16px, line-height 1.6, white 90%:
 
-### O1 Welcome
-- Eyebrow: **WELCOME**
-- Title: ***Hi, Sarah***
-- Body: **A sound diary for the weeks in between. The songs, voices and feelings that carry you to meeting your baby.**
+  > Pregnancy is a time in between. Echo Archive is a sound diary for those weeks: the songs you play, the thoughts you say out loud, and the voices of the people who love you. Kept week by week, so you can listen back to how you became a mother.
 
-### O2 Meet the orb
+- **1s after the note appears:** **Tap to begin** fades in near the bottom (Inter 12px, white 70%).
+- **No auto-advance.** Tap or swipe → O1 Meet the orb.
+- Not counted in the dots.
+
+### O1 Meet the orb
 - Eyebrow: **THIS IS YOUR ORB**
 - Title: ***It breathes with you***
 - Body: **Whenever something feels worth keeping, a song, a thought, a voice, just tap the orb.**
-- Under the orb: **Tap the orb** (13px white) with a small finger-tap icon, and a pulsing white ring around the orb (it expands and fades every 1.6s).
-- **Interaction:**
-  - Tapping the orb: it squeezes (0.94), a ripple ring expands, then it goes to O3.
-  - For the first 4s, tapping the right half doesn't advance — the orb gives a gentle "look at me" pulse (1 → 1.06 → 1). Forward swipe is also locked.
-  - After 4s the hint becomes **Tap the orb, or swipe to continue**, and right-half tap / swipe forward unlock.
+- Hint under orb: **Tap the orb** (+ hand icon, pulsing ring). After 4s: **Tap the orb, or swipe to continue**.
+- Tap orb → O2. Right-half / swipe locked until 4s (right-half nudges).
+- Orb fades and scales in on arrival from splash.
 
-### O3 Keep a moment
+### O2 Keep a moment
 - Eyebrow: **TAP THE ORB TO…**
 - Title: ***Keep a moment***
-- The three icons **fan out from the orb** (staggered 120ms, spring) and sit around it, each a 48px circle with a white 2px border and a white icon:
+- Icon row under the orb + three labelled rows in the glass card (Voice note / Song / Echo). Tap to highlight.
 
-| Icon | Label (14px / 600, white) | Line (13px, white 80%) |
-|---|---|---|
-| Mic on `--purple-500` | Voice note | Say it out loud. Your voice, today. |
-| Music on `--pink-500` | Song | The song holding you this week. |
-| People on `--amber-500` | Echo | Voices from the people who love you. |
-
-- The three rows sit inside the glass card, under the title.
-- Tapping an icon highlights it (scale 1.08, white glow ring). Just for exploring.
-
-### O4 How are you feeling?
-- Eyebrow: **EVERY MOMENT HAS A FEELING**
-- Title: ***How are you feeling?***
-- Body: **Add a feeling when you save something. Over the weeks, Echo gently notices the patterns.**
-- Chips in a glass style (white 18% fill, white text; selected = white fill with `--purple-500` text): calm, hopeful, anxious, connected, tearful, don't know why
-- Tapping a chip selects it and the orb gives a small pulse in response.
-
-### O5 Look back, week by week
+### O3 Look back, week by week
 - Eyebrow: **IT ALL ADDS UP**
-- Title: ***Look back, week by week***
-- Three small glass preview rows inside the card, fading in one after another:
-  - A 7-dot strip (pink / purple / amber): **See your weeks fill up with moments.**
-  - A tiny purple gradient chip saying *Anxious → Hopeful*: **Get your trimester, wrapped.**
-  - A tiny dark chip with a glowing blob: **Need a moment? Breathe along with the glow.**
+- Title: ***Look back, week by week*** (one line; fit-to-width 26→22px)
+- Body: **See your weeks fill up, get your trimester wrapped, and breathe along with the glow whenever you need a moment.**
+- Visual: shared light orb, **110px**, centred (same as other orb screens). No preview rows.
 
-### O6 Meet your Companion Stone
-- The orb fades out and a **Stone** appears in the upper half: a smooth pebble shape (rounded blob, `#EDE7F6` → `#CFC4E6`, subtle inner shadow) with a soft purple glow beneath it that breathes slowly.
+### O4 Your Companion Stone
 - Eyebrow: **ONE LAST THING**
-- Title: ***Meet your Companion Stone***
+- Title: ***Your Companion Stone***
 - Body: **Hold it when you want to breathe or record. It glows along with your orb.**
-- Button inside the glass card: [Connect] (full pill, white fill, `--purple-500` text).
-  - On tap: it becomes "Connecting…" with a small spinner, and the Stone's glow pulses faster for 2s.
-  - Then a green check appears on the Stone and the text becomes **Connected. You're all set.**
-  - After 1s, it transitions to Home.
-- Text link under the button: **I'll do this later** (goes to Home with the Stone not connected; Home then plays its existing 2s connect intro).
-- Tapping the halves doesn't navigate on O6. Swiping right goes back.
+- Stone in the visual zone. [Connect] → Connecting… → Connected. You're all set. → Home. Or **I'll do this later**.
 
 ---
 
 ## 5. Arriving on Home: the orb guides the first tap
 
-The transition from O6 to Home: the gradient fades to the Home background (400ms) while the Home UI fades in.
+The transition from O4 to Home: the gradient fades to the Home background (400ms) while the Home UI fades in.
 
 As soon as Home is visible, **the orb glows to invite the first tap**:
 - The halo glow brightens (opacity 0.7 → 1) and grows (scale 1 → 1.15), then settles slightly, repeating slowly (2.4s cycle) on top of the normal breathing.
@@ -156,9 +124,9 @@ As soon as Home is visible, **the orb glows to invite the first tap**:
 
 ## 6. Hooks into the rest of the app
 
-1. **Every load (prototype / demo mode):** onboarding state lives in memory only — no localStorage. Every page load / refresh shows the walkthrough (O0 → … → O6 → Home). Within a session, once finished or skipped, switching tabs or returning to Home does not show it again.
-2. **Stone:** if O6 connected the Stone, Home skips its 2s "not connected" intro for that session.
-3. **Replay for demos:** tapping Sarah's avatar on Home opens a small menu with **Replay walkthrough**. The URL `?onboarding=1` is optional (onboarding already shows on every load).
+1. **Every load (prototype / demo mode):** onboarding state lives in memory only — no localStorage. Every page load / refresh shows the walkthrough (O0 → … → O4 → Home). Within a session, once finished or skipped, switching tabs or returning to Home does not show it again.
+2. **Stone:** if O4 connected the Stone, Home skips its 2s "not connected" intro for that session.
+3. **Replay for demos:** tapping the avatar on Home opens a small menu with **Replay walkthrough**. The URL `?onboarding=1` is optional (onboarding already shows on every load).
 4. The tab bar and mini player are hidden during onboarding.
 
 ---
@@ -166,18 +134,17 @@ As soon as Home is visible, **the orb glows to invite the first tap**:
 ## 7. Motion
 
 - Screen changes use the Wrapped slide and spring (drag follows the finger, rubber-band at the ends, snaps with damping 30, stiffness 280). The gradients cross-fade and the dots animate.
-- The orb morphs size and position between screens (`layoutId`, spring damping 26, stiffness 220).
-- Text on each screen: eyebrow, then title, then body, staggered 60ms after the slide settles.
-- Reduced motion: 150ms fades only, no orb travel, no fan-out, no ripples.
+- Text on each screen: title then body, fade when the slide settles.
+- Reduced motion: 150ms fades only, no fan-out, no ripples.
 
 ---
 
 ## 8. Accessibility
 
-- 44px targets; Skip and the O2 "Next" fallback are keyboard reachable.
-- The orb on O2 is a button labelled "Tap the orb to continue".
+- 44px targets; Skip is keyboard reachable.
+- The orb on O1 is a button labelled "Tap the orb to continue".
 - Each screen's title is announced (`aria-live="polite"`).
-- The O3 icons all have labels; colour isn't the only cue.
+- The O2 icons all have labels; colour isn't the only cue.
 
 ---
 
@@ -185,7 +152,7 @@ As soon as Home is visible, **the orb glows to invite the first tap**:
 
 | Step | Build | Done when |
 |---|---|---|
-| P5-1 | O0 splash + onboarding shell reusing the Wrapped look: gradients, glass card, eyebrow, dots, tap / swipe, Skip, first-run check | A fresh load shows the Echo Archive splash, then O1 in the Wrapped style; Skip goes to O6; the second load goes straight to Home |
-| P5-2 | Shared light-variant orb (`layoutId`) across O1 to O5; tap-to-continue on O2; fan-out on O3; chip pulses on O4; O5 previews | The orb feels like one object; tapping it on O2 moves on |
-| P5-3 | O6 Stone with the connect animation and "I'll do this later" | Connect → Connected → Home, with the Stone already connected |
+| P5-1 | O0 splash (name → concept note → tap to begin) + onboarding shell; 4 story slides; Skip | Splash never auto-advances; tap/swipe → Meet the orb; Skip → Companion Stone |
+| P5-2 | Light-variant orb on O1–O3; tap-to-continue on O1; O2 icons; O3 110px orb + body | The orb / visuals feel clear; tapping the orb on O1 moves on |
+| P5-3 | O4 Stone with the connect animation and "I'll do this later" | Connect → Connected → Home, with the Stone already connected |
 | P5-4 | Home arrival: glowing orb + ripple + tooltip; avatar "Replay walkthrough"; `?onboarding=1`; reduced motion; a11y | The orb glows until the first tap; replay works; no console errors |

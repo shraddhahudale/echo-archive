@@ -138,7 +138,7 @@ src/
 ## 3. Global components
 
 ### StatusBar
-- 9:41 left, signal / wifi / battery right. Black on light screens, hidden or white on dark breathing screens.
+- Empty top safe-area spacer only (47px). No time, signal, wifi, or battery. Same empty bar on every screen (onboarding, Home, Timeline, Archive, Breath, Wrapped, sheets) so layout does not shift.
 
 ### TabBar (4 tabs)
 - Home (house), Timeline (clock), Archive (archive box), Breath (heart)
